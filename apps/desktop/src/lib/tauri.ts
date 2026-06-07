@@ -191,3 +191,143 @@ export async function checkUpdate(): Promise<UpdateInfo> {
 export async function getAppVersion(): Promise<string> {
   return invoke<string>("get_app_version");
 }
+
+// --- Performance A/B Testing ---
+
+export interface ExperimentMetrics {
+  response_time: [number, number];
+  accuracy: [number, number];
+  token_usage: [number, number];
+  success_rate: [number, number];
+}
+
+export interface Experiment {
+  id: string;
+  name: string;
+  status: string;
+  config_a: string;
+  config_b: string;
+  vendor: string;
+  runs: number;
+  winner: string | null;
+  created_at: string;
+  metrics: ExperimentMetrics;
+}
+
+export async function listExperiments(): Promise<Experiment[]> {
+  return invoke<Experiment[]>("list_experiments");
+}
+
+// --- Prompt Testing ---
+
+export interface PromptTestResult {
+  vendor: string;
+  status: string;
+  response_time: number;
+  output: string;
+}
+
+export interface PromptTestCase {
+  id: string;
+  name: string;
+  prompt: string;
+  expected_behavior: string;
+  vendors: string[];
+  results: PromptTestResult[];
+}
+
+export async function listPromptTests(): Promise<PromptTestCase[]> {
+  return invoke<PromptTestCase[]>("list_prompt_tests");
+}
+
+// --- AI Assist ---
+
+export interface AiSuggestion {
+  id: string;
+  suggestion_type: string;
+  title: string;
+  description: string;
+  diff: string;
+  confidence: number;
+}
+
+export async function getAiSuggestions(projectDir: string): Promise<AiSuggestion[]> {
+  return invoke<AiSuggestion[]>("get_ai_suggestions", { projectDir });
+}
+
+// --- Config Analytics ---
+
+export interface ConceptUsage {
+  concept: string;
+  count: number;
+  coverage: number;
+  trend: string;
+}
+
+export interface VendorCoverageInfo {
+  vendor: string;
+  supported: number;
+  total: number;
+  gaps: string[];
+}
+
+export interface AnalyticsData {
+  concepts: ConceptUsage[];
+  vendors: VendorCoverageInfo[];
+  total_concepts: number;
+  avg_coverage: number;
+  rule_hit_rate: number;
+  unused_rules: number;
+}
+
+export async function getConfigAnalytics(projectDir: string): Promise<AnalyticsData> {
+  return invoke<AnalyticsData>("get_config_analytics", { projectDir });
+}
+
+// --- Environments ---
+
+export interface EnvironmentOverride {
+  concept: string;
+  field: string;
+  base_value: string;
+  override_value: string;
+}
+
+export interface EnvironmentInfo {
+  id: string;
+  name: string;
+  label: string;
+  is_active: boolean;
+  last_deployed: string;
+  overrides: EnvironmentOverride[];
+}
+
+export async function listEnvironments(projectDir: string): Promise<EnvironmentInfo[]> {
+  return invoke<EnvironmentInfo[]>("list_environments", { projectDir });
+}
+
+// --- Inheritance ---
+
+export interface InheritanceNode {
+  id: string;
+  name: string;
+  path: string;
+  is_remote: boolean;
+  children: string[];
+  field_count: number;
+}
+
+export interface ResolvedField {
+  key: string;
+  value: string;
+  source: string;
+}
+
+export interface InheritanceData {
+  nodes: InheritanceNode[];
+  resolved: ResolvedField[];
+}
+
+export async function getInheritanceTree(projectDir: string): Promise<InheritanceData> {
+  return invoke<InheritanceData>("get_inheritance_tree", { projectDir });
+}

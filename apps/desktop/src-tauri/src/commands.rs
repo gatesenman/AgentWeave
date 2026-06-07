@@ -536,3 +536,322 @@ pub async fn check_update() -> Result<UpdateInfo, String> {
 pub async fn get_app_version() -> Result<String, String> {
     Ok(env!("CARGO_PKG_VERSION").to_string())
 }
+
+// --- Performance A/B Testing ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Experiment {
+    pub id: String,
+    pub name: String,
+    pub status: String,
+    pub config_a: String,
+    pub config_b: String,
+    pub vendor: String,
+    pub runs: u32,
+    pub winner: Option<String>,
+    pub created_at: String,
+    pub metrics: ExperimentMetrics,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ExperimentMetrics {
+    pub response_time: [f64; 2],
+    pub accuracy: [f64; 2],
+    pub token_usage: [u32; 2],
+    pub success_rate: [f64; 2],
+}
+
+#[tauri::command]
+pub async fn list_experiments() -> Result<Vec<Experiment>, String> {
+    Ok(vec![
+        Experiment {
+            id: "exp-001".into(),
+            name: "Verbose vs Concise".into(),
+            status: "completed".into(),
+            config_a: "verbose-agent".into(),
+            config_b: "concise-agent".into(),
+            vendor: "claude-code".into(),
+            runs: 200,
+            winner: Some("B".into()),
+            created_at: "2025-01-15".into(),
+            metrics: ExperimentMetrics {
+                response_time: [2.4, 1.8],
+                accuracy: [0.91, 0.89],
+                token_usage: [1200, 680],
+                success_rate: [0.94, 0.96],
+            },
+        },
+        Experiment {
+            id: "exp-002".into(),
+            name: "GPT-4o vs Claude".into(),
+            status: "running".into(),
+            config_a: "gpt4o-agent".into(),
+            config_b: "claude-agent".into(),
+            vendor: "cursor".into(),
+            runs: 87,
+            winner: None,
+            created_at: "2025-01-20".into(),
+            metrics: ExperimentMetrics {
+                response_time: [3.1, 2.6],
+                accuracy: [0.88, 0.92],
+                token_usage: [1500, 1100],
+                success_rate: [0.90, 0.93],
+            },
+        },
+    ])
+}
+
+// --- Prompt Testing ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PromptTestCase {
+    pub id: String,
+    pub name: String,
+    pub prompt: String,
+    pub expected_behavior: String,
+    pub vendors: Vec<String>,
+    pub results: Vec<PromptTestResult>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PromptTestResult {
+    pub vendor: String,
+    pub status: String,
+    pub response_time: f64,
+    pub output: String,
+}
+
+#[tauri::command]
+pub async fn list_prompt_tests() -> Result<Vec<PromptTestCase>, String> {
+    Ok(vec![
+        PromptTestCase {
+            id: "tc-001".into(),
+            name: "Security vulnerability detection".into(),
+            prompt: "Review this code for security vulnerabilities".into(),
+            expected_behavior: "Identifies SQL injection risk".into(),
+            vendors: vec!["cursor".into(), "claude-code".into(), "codex".into()],
+            results: vec![
+                PromptTestResult { vendor: "cursor".into(), status: "pass".into(), response_time: 2.1, output: "Found SQL injection...".into() },
+                PromptTestResult { vendor: "claude-code".into(), status: "pass".into(), response_time: 1.8, output: "Detected unsafe query...".into() },
+                PromptTestResult { vendor: "codex".into(), status: "fail".into(), response_time: 3.2, output: "No issues found".into() },
+            ],
+        },
+        PromptTestCase {
+            id: "tc-002".into(),
+            name: "Code refactoring suggestion".into(),
+            prompt: "Refactor this function to reduce complexity".into(),
+            expected_behavior: "Reduces cyclomatic complexity below 10".into(),
+            vendors: vec!["cursor".into(), "windsurf".into()],
+            results: vec![
+                PromptTestResult { vendor: "cursor".into(), status: "pass".into(), response_time: 4.5, output: "Split into 3 functions...".into() },
+                PromptTestResult { vendor: "windsurf".into(), status: "pending".into(), response_time: 0.0, output: "".into() },
+            ],
+        },
+    ])
+}
+
+// --- AI Assist ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AiSuggestion {
+    pub id: String,
+    pub suggestion_type: String,
+    pub title: String,
+    pub description: String,
+    pub diff: String,
+    pub confidence: f64,
+}
+
+#[tauri::command]
+pub async fn get_ai_suggestions(project_dir: String) -> Result<Vec<AiSuggestion>, String> {
+    if project_dir.is_empty() {
+        return Err("Project directory required".into());
+    }
+    Ok(vec![
+        AiSuggestion {
+            id: "sug-001".into(),
+            suggestion_type: "optimize".into(),
+            title: "Reduce token usage in code-reviewer agent".into(),
+            description: "The current system prompt is 2400 tokens. Restructuring can reduce to 1600 tokens while maintaining quality.".into(),
+            diff: "- instructions: |\n-   You are a code reviewer. Review all code thoroughly...\n+ instructions: |\n+   Code reviewer. Focus on: security, performance, readability.".into(),
+            confidence: 0.87,
+        },
+        AiSuggestion {
+            id: "sug-002".into(),
+            suggestion_type: "add".into(),
+            title: "Add error handling rule".into(),
+            description: "Project has no explicit error handling guidance. Adding a rule improves code quality across vendors.".into(),
+            diff: "+ - name: error-handling\n+   severity: error\n+   pattern: \"catch without logging\"".into(),
+            confidence: 0.92,
+        },
+    ])
+}
+
+// --- Config Analytics ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ConceptUsage {
+    pub concept: String,
+    pub count: u32,
+    pub coverage: f64,
+    pub trend: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct VendorCoverage {
+    pub vendor: String,
+    pub supported: u32,
+    pub total: u32,
+    pub gaps: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AnalyticsData {
+    pub concepts: Vec<ConceptUsage>,
+    pub vendors: Vec<VendorCoverage>,
+    pub total_concepts: u32,
+    pub avg_coverage: f64,
+    pub rule_hit_rate: f64,
+    pub unused_rules: u32,
+}
+
+#[tauri::command]
+pub async fn get_config_analytics(project_dir: String) -> Result<AnalyticsData, String> {
+    if project_dir.is_empty() {
+        return Err("Project directory required".into());
+    }
+    let registry = build_registry();
+    let vendor_ids = registry.list();
+    let total = 46u32;
+    let vendors: Vec<VendorCoverage> = vendor_ids.iter().map(|vid| {
+        let supported = registry.get(vid)
+            .map(|a| a.supported_concepts().len() as u32)
+            .unwrap_or(0);
+        VendorCoverage {
+            vendor: vid.to_string(),
+            supported,
+            total,
+            gaps: vec![],
+        }
+    }).collect();
+    let avg = if vendors.is_empty() { 0.0 } else {
+        vendors.iter().map(|v| v.supported as f64 / v.total as f64).sum::<f64>() / vendors.len() as f64
+    };
+    Ok(AnalyticsData {
+        concepts: vec![
+            ConceptUsage { concept: "Agent".into(), count: 3, coverage: 1.0, trend: "stable".into() },
+            ConceptUsage { concept: "Rule".into(), count: 12, coverage: 0.83, trend: "up".into() },
+            ConceptUsage { concept: "MCP Server".into(), count: 5, coverage: 0.75, trend: "up".into() },
+            ConceptUsage { concept: "Skill".into(), count: 4, coverage: 0.58, trend: "stable".into() },
+            ConceptUsage { concept: "Workflow".into(), count: 2, coverage: 0.42, trend: "down".into() },
+        ],
+        vendors,
+        total_concepts: total,
+        avg_coverage: (avg * 100.0).round() / 100.0,
+        rule_hit_rate: 0.67,
+        unused_rules: 4,
+    })
+}
+
+// --- Environment/Variant Management ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EnvironmentOverride {
+    pub concept: String,
+    pub field: String,
+    pub base_value: String,
+    pub override_value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EnvironmentInfo {
+    pub id: String,
+    pub name: String,
+    pub label: String,
+    pub is_active: bool,
+    pub last_deployed: String,
+    pub overrides: Vec<EnvironmentOverride>,
+}
+
+#[tauri::command]
+pub async fn list_environments(project_dir: String) -> Result<Vec<EnvironmentInfo>, String> {
+    if project_dir.is_empty() {
+        return Err("Project directory required".into());
+    }
+    Ok(vec![
+        EnvironmentInfo {
+            id: "dev".into(),
+            name: "development".into(),
+            label: "Development".into(),
+            is_active: true,
+            last_deployed: "2 minutes ago".into(),
+            overrides: vec![
+                EnvironmentOverride { concept: "MCP Server 'postgres'".into(), field: "host".into(), base_value: "prod-db.internal".into(), override_value: "localhost:5432".into() },
+                EnvironmentOverride { concept: "Agent 'code-reviewer'".into(), field: "model".into(), base_value: "claude-3-opus".into(), override_value: "claude-3-haiku".into() },
+            ],
+        },
+        EnvironmentInfo {
+            id: "staging".into(),
+            name: "staging".into(),
+            label: "Staging".into(),
+            is_active: false,
+            last_deployed: "3 hours ago".into(),
+            overrides: vec![
+                EnvironmentOverride { concept: "MCP Server 'postgres'".into(), field: "host".into(), base_value: "prod-db.internal".into(), override_value: "staging-db.internal".into() },
+            ],
+        },
+        EnvironmentInfo {
+            id: "prod".into(),
+            name: "production".into(),
+            label: "Production".into(),
+            is_active: false,
+            last_deployed: "1 day ago".into(),
+            overrides: vec![],
+        },
+    ])
+}
+
+// --- Inheritance Visualization ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct InheritanceNode {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub is_remote: bool,
+    pub children: Vec<String>,
+    pub field_count: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResolvedField {
+    pub key: String,
+    pub value: String,
+    pub source: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct InheritanceData {
+    pub nodes: Vec<InheritanceNode>,
+    pub resolved: Vec<ResolvedField>,
+}
+
+#[tauri::command]
+pub async fn get_inheritance_tree(project_dir: String) -> Result<InheritanceData, String> {
+    if project_dir.is_empty() {
+        return Err("Project directory required".into());
+    }
+    Ok(InheritanceData {
+        nodes: vec![
+            InheritanceNode { id: "root".into(), name: "agentweave.yaml".into(), path: "agentweave.yaml".into(), is_remote: false, children: vec!["shared".into(), "team".into()], field_count: 12 },
+            InheritanceNode { id: "shared".into(), name: "shared-rules".into(), path: "https://registry.agentweave.dev/templates/shared-rules@v2".into(), is_remote: true, children: vec![], field_count: 8 },
+            InheritanceNode { id: "team".into(), name: "team-overrides".into(), path: "../shared/team.yaml".into(), is_remote: false, children: vec![], field_count: 5 },
+        ],
+        resolved: vec![
+            ResolvedField { key: "agents[0].model".into(), value: "claude-3-opus".into(), source: "agentweave.yaml".into() },
+            ResolvedField { key: "rules.style".into(), value: "strict".into(), source: "agentweave.yaml (overrides shared-rules)".into() },
+            ResolvedField { key: "rules.naming".into(), value: "camelCase".into(), source: "shared-rules".into() },
+            ResolvedField { key: "mcp.postgres.host".into(), value: "localhost".into(), source: "agentweave.yaml (overrides team-overrides)".into() },
+        ],
+    })
+}

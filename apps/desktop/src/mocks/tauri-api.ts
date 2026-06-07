@@ -76,6 +76,53 @@ const mockData: Record<string, unknown> = {
   get_app_version: "0.1.0",
   start_watch: "Watching started",
   stop_watch: "Watching stopped",
+  list_experiments: [
+    { id: "exp-001", name: "Verbose vs Concise", status: "completed", config_a: "verbose-agent", config_b: "concise-agent", vendor: "claude-code", runs: 200, winner: "B", created_at: "2025-01-15", metrics: { response_time: [2.4, 1.8], accuracy: [0.91, 0.89], token_usage: [1200, 680], success_rate: [0.94, 0.96] } },
+    { id: "exp-002", name: "GPT-4o vs Claude", status: "running", config_a: "gpt4o-agent", config_b: "claude-agent", vendor: "cursor", runs: 87, winner: null, created_at: "2025-01-20", metrics: { response_time: [3.1, 2.6], accuracy: [0.88, 0.92], token_usage: [1500, 1100], success_rate: [0.90, 0.93] } },
+  ],
+  list_prompt_tests: [
+    { id: "tc-001", name: "Security vulnerability detection", prompt: "Review this code for security vulnerabilities", expected_behavior: "Identifies SQL injection risk", vendors: ["cursor", "claude-code", "codex"], results: [{ vendor: "cursor", status: "pass", response_time: 2.1, output: "Found SQL injection..." }, { vendor: "claude-code", status: "pass", response_time: 1.8, output: "Detected unsafe query..." }, { vendor: "codex", status: "fail", response_time: 3.2, output: "No issues found" }] },
+    { id: "tc-002", name: "Code refactoring", prompt: "Refactor this function", expected_behavior: "Reduces complexity", vendors: ["cursor", "windsurf"], results: [{ vendor: "cursor", status: "pass", response_time: 4.5, output: "Split into 3 functions..." }, { vendor: "windsurf", status: "pending", response_time: 0.0, output: "" }] },
+  ],
+  get_ai_suggestions: [
+    { id: "sug-001", suggestion_type: "optimize", title: "Reduce token usage", description: "Restructure system prompt to save 800 tokens", diff: "- verbose prompt\n+ concise prompt", confidence: 0.87 },
+    { id: "sug-002", suggestion_type: "add", title: "Add error handling rule", description: "No explicit error handling guidance found", diff: "+ - name: error-handling\n+   severity: error", confidence: 0.92 },
+  ],
+  get_config_analytics: {
+    concepts: [
+      { concept: "Agent", count: 3, coverage: 1.0, trend: "stable" },
+      { concept: "Rule", count: 12, coverage: 0.83, trend: "up" },
+      { concept: "MCP Server", count: 5, coverage: 0.75, trend: "up" },
+      { concept: "Skill", count: 4, coverage: 0.58, trend: "stable" },
+      { concept: "Workflow", count: 2, coverage: 0.42, trend: "down" },
+    ],
+    vendors: [
+      { vendor: "codex", supported: 28, total: 46, gaps: [] },
+      { vendor: "claude-code", supported: 35, total: 46, gaps: [] },
+      { vendor: "cursor", supported: 32, total: 46, gaps: [] },
+    ],
+    total_concepts: 46,
+    avg_coverage: 0.74,
+    rule_hit_rate: 0.67,
+    unused_rules: 4,
+  },
+  list_environments: [
+    { id: "dev", name: "development", label: "Development", is_active: true, last_deployed: "2 minutes ago", overrides: [{ concept: "MCP 'postgres'", field: "host", base_value: "prod-db", override_value: "localhost:5432" }] },
+    { id: "staging", name: "staging", label: "Staging", is_active: false, last_deployed: "3 hours ago", overrides: [{ concept: "MCP 'postgres'", field: "host", base_value: "prod-db", override_value: "staging-db" }] },
+    { id: "prod", name: "production", label: "Production", is_active: false, last_deployed: "1 day ago", overrides: [] },
+  ],
+  get_inheritance_tree: {
+    nodes: [
+      { id: "root", name: "agentweave.yaml", path: "agentweave.yaml", is_remote: false, children: ["shared", "team"], field_count: 12 },
+      { id: "shared", name: "shared-rules", path: "https://registry.agentweave.dev/templates/shared-rules@v2", is_remote: true, children: [], field_count: 8 },
+      { id: "team", name: "team-overrides", path: "../shared/team.yaml", is_remote: false, children: [], field_count: 5 },
+    ],
+    resolved: [
+      { key: "agents[0].model", value: "claude-3-opus", source: "agentweave.yaml" },
+      { key: "rules.style", value: "strict", source: "agentweave.yaml (overrides shared-rules)" },
+      { key: "rules.naming", value: "camelCase", source: "shared-rules" },
+    ],
+  },
 };
 
 export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): Promise<T> {

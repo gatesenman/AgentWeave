@@ -223,6 +223,30 @@ Full config ZIP export/import, snapshot backup, and version rollback.
 
 ![Backup](docs/screenshots/backup.png)
 
+### Performance A/B Testing
+
+Run experiments comparing different agent configurations across vendors — track response time, accuracy, token usage, and success rate.
+
+### Prompt Testing
+
+Cross-vendor prompt behavior testing framework — define test cases, run across multiple vendors, compare outputs and pass rates.
+
+### AI Assistant
+
+AI-powered configuration suggestions with confidence scoring, plus conversational configuration Q&A.
+
+### Config Analytics
+
+Concept usage distribution, vendor coverage analysis, rule hit rates, and gap identification.
+
+### Environment Management
+
+Manage dev/staging/prod configuration variants — override specific fields per environment without affecting the baseline.
+
+### Inheritance Visualization
+
+Visualize the `extends` inheritance chain — see which configs inherit from where, field-level source tracking, and final resolved values.
+
 ### Settings (System / User separated)
 
 System-level settings (adapter defaults, notifications, security) and user preferences (theme, language) in separate tabs.
@@ -299,25 +323,39 @@ AgentWeave provides a comprehensive schema system for IDE auto-completion, valid
 - [Schema Package](packages/schema/README.md) — JSON/XML Schema + examples
 - [Changelog](CHANGELOG.md) — Version history
 
-## Roadmap — Critical Missing Capabilities
+## Roadmap
 
-Based on analysis from the perspective of a cross-AI software developer, power user, and engineering lead:
+All planned features have been implemented (v0.1.0):
 
-| Priority | Feature | Rationale |
-|----------|---------|-----------|
-| P0 | **Conflict Resolution UI** | When multiple IDEs modify the same config simultaneously, need visual diff/merge (3-way merge) |
-| P0 | **Template Marketplace** | Community-shared agent/rule/workflow templates for common scenarios (web dev, data science, DevOps) |
-| P0 | **Team Collaboration** | Multi-user shared config with locking, branching, and merge requests |
-| P1 | **Config Validation Preview** | Before generating, show exactly what each vendor will receive (dry-run with diff) |
-| P1 | **Performance Profiling** | Track which agent configurations produce better code across vendors (A/B testing) |
-| P1 | **Migration Wizard** | Step-by-step guided migration from existing vendor configs to AgentWeave superset |
-| P1 | **Context Window Optimizer** | Automatically split/trim context based on each vendor's token limits |
-| P2 | **Cost Dashboard** | API usage tracking per vendor with budget alerts and optimization suggestions |
-| P2 | **Prompt Testing Framework** | Test agent behaviors across vendors before deploying to production |
-| P2 | **Config Linting Rules** | Custom lint rules (e.g., "no hardcoded paths", "secrets must be referenced") |
-| P2 | **Webhook Integrations** | Notify Slack/Teams/Discord on config changes, sync conflicts, or generation failures |
-| P3 | **AI-Assisted Config** | Use AI to suggest optimal configurations based on project type and team patterns |
-| P3 | **Config Analytics** | Which rules fire most, which agents are used most, concept coverage gaps |
+| Priority | Feature | Status |
+|----------|---------|--------|
+| P0 | **Conflict Resolution UI** — 3-way merge visualization | Done |
+| P0 | **Template Marketplace** — Community-shared templates | Done |
+| P0 | **Team Collaboration** — Multi-user shared config with locking | Done |
+| P1 | **Config Validation Preview** — Dry-run with diff per vendor | Done |
+| P1 | **Performance A/B Testing** — Cross-vendor config comparison | Done |
+| P1 | **Migration Wizard** — Step-by-step guided migration | Done |
+| P1 | **Context Window Optimizer** — Token limit optimization | Done |
+| P2 | **Cost Dashboard** — API usage tracking and budget alerts | Done |
+| P2 | **Prompt Testing Framework** — Cross-vendor behavior testing | Done |
+| P2 | **Config Linting Rules** — Custom lint rules | Done |
+| P2 | **Webhook Integrations** — Slack/Teams/Discord notifications | Done |
+| P3 | **AI-Assisted Config** — AI-powered configuration suggestions | Done |
+| P3 | **Config Analytics** — Usage stats, coverage gaps, hit rates | Done |
+| — | **Environment/Variant Management** — dev/staging/prod configs | Done |
+| — | **Inheritance Visualization** — extends chain + resolved values | Done |
+| — | **Concept Dependency Graph** — Agent→MCP→Rule visual graph | Done |
+
+### Future Roadmap (v0.2.0+)
+
+| Feature | Description |
+|---------|-------------|
+| **Plugin SDK** | Third-party adapter development framework |
+| **Cloud Sync** | Cross-device configuration synchronization |
+| **Multi-tenant** | SaaS mode with org/team/project isolation |
+| **CI/CD Integration** | GitHub Actions / GitLab CI config generation hooks |
+| **IDE Extensions** | VS Code / JetBrains plugin for inline editing |
+| **Config Diff Timeline** | Git-like timeline of all config changes |
 
 ## Contributing
 

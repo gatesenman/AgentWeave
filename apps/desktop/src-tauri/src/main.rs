@@ -37,6 +37,12 @@ fn main() {
             commands::list_mcp_servers,
             commands::check_update,
             commands::get_app_version,
+            commands::list_experiments,
+            commands::list_prompt_tests,
+            commands::get_ai_suggestions,
+            commands::get_config_analytics,
+            commands::list_environments,
+            commands::get_inheritance_tree,
         ])
         .run(tauri::generate_context!())
         .expect("error while running AgentWeave desktop app");
