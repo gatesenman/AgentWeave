@@ -1,0 +1,46 @@
+[package]
+name = "agentweave-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI tool for AgentWeave - unified AI agent configuration management"
+
+[[bin]]
+name = "agentweave"
+path = "src/main.rs"
+
+[dependencies]
+agentweave-core = { path = "../agentweave-core" }
+adapter-codex = { path = "../adapters/adapter-codex" }
+adapter-claude = { path = "../adapters/adapter-claude" }
+adapter-cursor = { path = "../adapters/adapter-cursor" }
+adapter-windsurf = { path = "../adapters/adapter-windsurf" }
+adapter-gemini = { path = "../adapters/adapter-gemini" }
+adapter-copilot = { path = "../adapters/adapter-copilot" }
+adapter-devin = { path = "../adapters/adapter-devin" }
+adapter-cline = { path = "../adapters/adapter-cline" }
+adapter-codebuddy = { path = "../adapters/adapter-codebuddy" }
+adapter-qoder = { path = "../adapters/adapter-qoder" }
+adapter-grok = { path = "../adapters/adapter-grok" }
+adapter-openclaw = { path = "../adapters/adapter-openclaw" }
+clap.workspace = true
+clap_complete = "4"
+serde.workspace = true
+serde_yaml.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+agentweave-governance = { path = "../agentweave-governance" }
+agentweave-acp = { path = "../agentweave-acp" }
+axum.workspace = true
+fluent-bundle.workspace = true
+unic-langid.workspace = true
+sys-locale.workspace = true
+walkdir = "2"
+chrono.workspace = true
+notify.workspace = true
+sha2.workspace = true
+hostname = "0.4"
+tempfile = "3"

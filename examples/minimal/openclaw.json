@@ -1,0 +1,15 @@
+{
+  "agents": [
+    {
+      "description": "Main development agent",
+      "model": {
+        "name": "claude-sonnet-4",
+        "provider": "anthropic"
+      },
+      "name": "main",
+      "role": "Senior full-stack developer"
+    }
+  ],
+  "name": "minimal-example",
+  "version": "0.1.0"
+}

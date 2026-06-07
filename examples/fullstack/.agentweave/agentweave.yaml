@@ -1,0 +1,127 @@
+apiVersion: agentweave/v1
+kind: Project
+metadata:
+  name: fullstack-app
+  version: 1.0.0
+  description: "Full-stack web application with multiple agents and MCP servers"
+  authors:
+    - name: "Dev Team"
+      email: "team@example.com"
+
+targets:
+  - codex
+  - claude-code
+  - cursor
+  - windsurf
+  - gemini-cli
+  - github-copilot
+  - devin
+  - cline
+
+agents:
+  - name: main
+    role: full-stack developer
+    system_prompt: |
+      You are an expert full-stack developer working on a React + Node.js application.
+      Frontend: React 18 + TypeScript + Tailwind CSS
+      Backend: Node.js + Express + PostgreSQL + Prisma ORM
+
+  - name: reviewer
+    role: code reviewer
+    system_prompt: |
+      You are a senior code reviewer. Focus on:
+      - Security vulnerabilities
+      - Performance issues
+      - Code quality and maintainability
+      - Test coverage
+
+  - name: planner
+    role: technical architect
+    system_prompt: |
+      You are a technical architect. Help with:
+      - System design decisions
+      - API design
+      - Database schema design
+      - Architecture documentation
+
+rules:
+  - name: general
+    scope: always-apply
+    content: |
+      - Use TypeScript strict mode
+      - All functions must have return types
+      - Use Prettier for formatting (2 spaces, single quotes)
+      - Write unit tests for business logic
+      - Use conventional commits
+
+  - name: frontend
+    scope: "src/frontend/**"
+    content: |
+      - Use functional components with hooks
+      - Use React Query for data fetching
+      - Use Zustand for state management
+      - Components in PascalCase, hooks in camelCase with use* prefix
+
+  - name: backend
+    scope: "src/backend/**"
+    content: |
+      - Use Express middleware pattern
+      - Validate all inputs with Zod
+      - Use repository pattern for database access
+      - Always handle errors with custom error classes
+
+  - name: security
+    scope: always-apply
+    content: |
+      - Never expose secrets in code
+      - Validate all user inputs
+      - Use parameterized queries
+      - Implement rate limiting on API endpoints
+      - Use CORS with explicit origins
+
+skills:
+  - name: deploy
+    description: "Deploy to production"
+    steps:
+      - "Run tests"
+      - "Build frontend"
+      - "Run migrations"
+      - "Deploy to server"
+
+  - name: database-migration
+    description: "Create and run database migrations"
+    steps:
+      - "Generate Prisma migration"
+      - "Review SQL"
+      - "Apply migration"
+
+hooks:
+  - event: session-start
+    action: |
+      Check for pending migrations.
+      Review recent git log for context.
+
+  - event: pre-commit
+    action: |
+      Run linting and type checking.
+      Ensure no secrets in diff.
+
+mcp_servers:
+  - name: filesystem
+    protocol: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem"]
+
+  - name: postgres
+    protocol: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-postgres"]
+    env:
+      DATABASE_URL: "${{ secrets.DATABASE_URL }}"
+
+  - name: github
+    protocol: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
+    env:
+      GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

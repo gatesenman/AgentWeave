@@ -1,0 +1,14 @@
+[package]
+name = "agentweave-trace"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Cross-vendor logging and tracing for AgentWeave"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+anyhow.workspace = true

@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/agentweave-core",
+    "crates/agentweave-cli",
+    "crates/agentweave-acp",
+    "crates/agentweave-trace",
+    "crates/adapters/adapter-codex",
+    "crates/adapters/adapter-claude",
+    "crates/adapters/adapter-cursor",
+    "crates/adapters/adapter-windsurf",
+    "crates/adapters/adapter-gemini",
+    "crates/adapters/adapter-copilot",
+    "crates/adapters/adapter-devin",
+    "crates/adapters/adapter-cline",
+    "crates/adapters/adapter-codebuddy",
+    "crates/adapters/adapter-qoder",
+    "crates/adapters/adapter-grok",
+    "crates/adapters/adapter-openclaw",
+    "crates/agentweave-updater",
+    "crates/agentweave-governance",
+    "crates/agentweave-sync",
+    "apps/desktop/src-tauri",
+    "packages/sdk",
+    "tests/e2e",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/gaosichun888/AgentWeave"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+thiserror = "2"
+clap = { version = "4", features = ["derive"] }
+axum = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+notify = "7"
+jsonschema = "0.27"
+git2 = "0.19"
+rusqlite = { version = "0.32", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+glob = "0.3"
+walkdir = "2"
+handlebars = "6"
+fluent-bundle = "0.15"
+unic-langid = "0.9"
+sys-locale = "0.3"
+sha2 = "0.10"
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+reqwest = { version = "0.12", features = ["json"] }
+tempfile = "3"

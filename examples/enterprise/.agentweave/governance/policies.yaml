@@ -1,0 +1,29 @@
+policies:
+  - name: model-whitelist
+    type: allowlist
+    description: "Only approved models may be used"
+    rules:
+      allowed_models:
+        - gpt-4o
+        - gpt-4o-mini
+        - claude-3.5-sonnet
+        - claude-3.5-haiku
+        - gemini-1.5-pro
+
+  - name: cost-limit
+    type: budget
+    description: "Monthly cost limits per team"
+    rules:
+      monthly_limit_usd: 5000
+      alert_threshold_percent: 80
+      hard_stop_percent: 100
+
+  - name: data-classification
+    type: security
+    description: "Prevent sensitive data in prompts"
+    rules:
+      blocked_patterns:
+        - "\\b\\d{3}-\\d{2}-\\d{4}\\b"  # SSN
+        - "\\b\\d{16}\\b"                # Credit card
+        - "\\bpassword\\s*[:=]\\s*\\S+"  # Passwords
+      action: redact

@@ -1,0 +1,226 @@
+apiVersion: agentweave/v1
+kind: Project
+metadata:
+  name: enterprise-platform
+  version: "2.0.0"
+  description: "Enterprise microservices platform with governance"
+  team: platform-engineering
+  org: acme-corp
+
+targets:
+  - codex
+  - claude-code
+  - cursor
+  - windsurf
+  - gemini-cli
+  - github-copilot
+  - devin
+  - cline
+  - codebuddy
+  - qoder
+  - grok
+  - openclaw
+
+default_model:
+  provider: anthropic
+  model: claude-sonnet-4
+  temperature: 0.2
+  max_tokens: 8192
+
+agents:
+  - name: architect
+    role: "System architect"
+    instructions: |
+      Design system-level decisions. Ensure microservices follow
+      bounded context patterns, use event-driven communication,
+      and maintain backward compatibility.
+    model:
+      provider: anthropic
+      model: claude-sonnet-4
+    permissions:
+      - "config:read"
+      - "config:write"
+      - "architecture:approve"
+
+  - name: backend-dev
+    role: "Backend developer"
+    instructions: |
+      Implement backend services in Go/Rust.
+      Follow clean architecture, use dependency injection,
+      write comprehensive tests (unit + integration).
+    sub_agents:
+      - name: db-specialist
+        role: "Database specialist"
+        instructions: "Design schemas, optimize queries, manage migrations"
+
+  - name: frontend-dev
+    role: "Frontend developer"
+    instructions: |
+      Build React/Next.js frontends with TypeScript.
+      Use design system components, ensure accessibility (WCAG 2.1 AA).
+
+  - name: security-auditor
+    role: "Security analyst"
+    instructions: |
+      Audit code for OWASP Top 10, ensure secrets management,
+      validate auth flows, check dependency vulnerabilities.
+    model:
+      provider: google
+      model: gemini-2.5-pro
+
+  - name: sre
+    role: "Site reliability engineer"
+    instructions: |
+      Manage infrastructure as code, optimize performance,
+      set up monitoring/alerting, handle incident response.
+
+rules:
+  - name: no-secrets-in-code
+    content: "Never hardcode secrets, API keys, or credentials. Use environment variables or vault."
+    scope: "**/*"
+    severity: error
+  - name: api-versioning
+    content: "All APIs must be versioned (v1, v2). Breaking changes require major version bump."
+    scope: "services/*/api/**"
+  - name: docker-security
+    content: "Use non-root users, multi-stage builds, pin base image versions"
+    scope: "**/Dockerfile*"
+  - name: max-function-length
+    content: "Functions should not exceed 50 lines. Extract into smaller functions if needed."
+    scope: "**/*.{go,rs,ts}"
+  - name: error-handling
+    content: "All errors must be wrapped with context. Never swallow errors silently."
+    scope: "**/*"
+
+skills:
+  - name: microservice-scaffold
+    description: "Scaffold a new microservice with standard structure"
+    steps:
+      - "Create service directory under services/"
+      - "Initialize Go module or Rust workspace member"
+      - "Set up health check, metrics, and tracing endpoints"
+      - "Create Dockerfile and Kubernetes manifests"
+      - "Add CI pipeline configuration"
+      - "Register in service mesh"
+
+  - name: incident-response
+    description: "Respond to production incidents"
+    steps:
+      - "Acknowledge incident and assess severity"
+      - "Check dashboards and recent deployments"
+      - "Identify root cause or implement mitigation"
+      - "Write incident report with timeline"
+      - "Create follow-up tickets for permanent fix"
+
+hooks:
+  - name: lint
+    event: pre-commit
+    run: "make lint"
+  - name: security-scan
+    event: pre-push
+    run: "make security-scan"
+  - name: changelog
+    event: post-merge
+    run: "make update-changelog"
+
+mcp_servers:
+  - name: kubernetes
+    command: "kubectl-mcp"
+    args: ["--context", "production"]
+    transport: stdio
+  - name: vault
+    command: "vault-mcp-server"
+    args: ["--addr", "${VAULT_ADDR}"]
+    transport: stdio
+  - name: datadog
+    command: "dd-mcp-server"
+    args: ["--api-key", "${DD_API_KEY}"]
+    transport: stdio
+  - name: github
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-github"]
+    transport: stdio
+    env:
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+
+workflows:
+  - name: service-deployment
+    description: "Deploy a service to production"
+    steps:
+      - agent: backend-dev
+        action: "prepare"
+        prompt: "Prepare release: update version, run tests, build artifacts"
+      - agent: security-auditor
+        action: "scan"
+        prompt: "Run security scan on the release artifacts"
+      - agent: sre
+        action: "deploy"
+        prompt: "Deploy to staging, run smoke tests, promote to production"
+      - agent: sre
+        action: "verify"
+        prompt: "Verify metrics and health checks post-deployment"
+
+  - name: architecture-review
+    description: "Review architecture decisions"
+    steps:
+      - agent: architect
+        action: "review"
+        prompt: "Review proposed changes for architectural implications"
+      - agent: security-auditor
+        action: "assess"
+        prompt: "Assess security implications of the architecture change"
+
+governance:
+  rbac:
+    roles:
+      - name: admin
+        permissions: ["*"]
+      - name: tech-lead
+        permissions: ["config:read", "config:write", "generate:all", "policy:read"]
+      - name: developer
+        permissions: ["config:read", "config:write:own", "generate:assigned"]
+      - name: viewer
+        permissions: ["config:read", "audit:read:own"]
+
+  policies:
+    - name: approved-models
+      type: allowlist
+      description: "Only approved AI models can be used"
+      values:
+        - "anthropic/claude-sonnet-4"
+        - "anthropic/claude-haiku"
+        - "google/gemini-2.5-pro"
+        - "openai/gpt-4o"
+
+    - name: cost-budget
+      type: budget
+      description: "Monthly token budget per team"
+      limit: 5000000
+      period: monthly
+
+    - name: data-residency
+      type: compliance
+      description: "Data must not leave EU region"
+      regions: ["eu-west-1", "eu-central-1"]
+
+  audit:
+    enabled: true
+    retention_days: 365
+    export_format: json
+
+sync:
+  mode: realtime
+  watch_paths:
+    - "agentweave.yaml"
+    - "agents/**"
+    - "rules/**"
+    - "governance/**"
+  debounce_ms: 500
+  conflict_strategy: last-write-wins
+
+updater:
+  enabled: true
+  channel: stable
+  check_interval: 3600
+  auto_download: true
+  auto_install: false

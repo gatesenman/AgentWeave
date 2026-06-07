@@ -1,0 +1,268 @@
+{
+  "$schema": "https://agentweave.dev/schema/v1/agentweave.schema.json",
+  "apiVersion": "agentweave/v1",
+  "kind": "Project",
+  "metadata": {
+    "name": "acme-platform",
+    "version": "2.1.0",
+    "description": "Full-stack SaaS platform with AI-assisted development",
+    "team": "platform-engineering",
+    "org": "acme-corp",
+    "tags": ["saas", "typescript", "rust", "microservices"],
+    "authors": [
+      { "name": "Alice Chen", "email": "alice@acme.dev", "role": "lead" },
+      { "name": "Bob Zhang", "email": "bob@acme.dev", "role": "backend" }
+    ],
+    "license": "MIT",
+    "repository": "https://github.com/acme-corp/platform"
+  },
+  "extends": ["./shared/base-rules.yaml"],
+  "targets": ["codex", "claude-code", "cursor", "windsurf", "gemini-cli", "github-copilot", "devin", "cline"],
+  "default_model": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-20250514",
+    "temperature": 0.3,
+    "max_tokens": 8192
+  },
+  "agents": [
+    {
+      "name": "main-architect",
+      "role": "Senior software architect with deep TypeScript and Rust expertise",
+      "instructions": "You are the lead architect for the ACME Platform.\nFocus on clean architecture, type safety, and performance.\nAlways prefer composition over inheritance.",
+      "model": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-20250514",
+        "max_tokens": 16384
+      },
+      "tools": ["read_file", "write_file", "terminal", "search", "browser"],
+      "permissions": ["filesystem:write", "network:outbound", "terminal:execute"],
+      "temperature": 0.2,
+      "output_style": "structured",
+      "constraints": [
+        "Never modify files in /vendor or /node_modules",
+        "Always run tests before committing"
+      ],
+      "sub_agents": [
+        {
+          "name": "reviewer",
+          "role": "Code reviewer focused on security and performance",
+          "tools": ["read_file", "search"],
+          "temperature": 0.1,
+          "output_style": "concise"
+        }
+      ]
+    },
+    {
+      "name": "docs-writer",
+      "role": "Technical documentation specialist",
+      "instructions": "Write clear, concise documentation with code examples",
+      "tools": ["read_file", "write_file", "search"],
+      "temperature": 0.5,
+      "output_style": "detailed"
+    }
+  ],
+  "rules": [
+    {
+      "name": "typescript-strict",
+      "scope": "**/*.{ts,tsx}",
+      "content": "Use strict TypeScript with no `any` types.\nPrefer interface over type for object shapes.\nUse branded types for domain primitives.",
+      "severity": "error",
+      "priority": 100
+    },
+    {
+      "name": "api-versioning",
+      "scope": "src/api/**",
+      "content": "All API endpoints must include version prefix /api/v{n}/",
+      "severity": "error",
+      "applies_to": ["codex", "claude-code", "cursor"]
+    }
+  ],
+  "skills": [
+    {
+      "name": "database-migration",
+      "description": "Create and run database migrations safely",
+      "steps": [
+        "Generate migration SQL from schema diff",
+        "Create rollback script",
+        "Run migration in transaction",
+        "Verify schema integrity"
+      ],
+      "tools_required": ["terminal", "write_file"],
+      "timeout_ms": 60000
+    }
+  ],
+  "hooks": [
+    {
+      "name": "lint-check",
+      "event": "pre-commit",
+      "run": "npm run lint:check",
+      "timeout_ms": 30000,
+      "fail_action": "abort"
+    },
+    {
+      "name": "auto-generate",
+      "event": "config-change",
+      "run": "agentweave generate",
+      "fail_action": "warn"
+    }
+  ],
+  "mcp_servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./"],
+      "transport": "stdio",
+      "capabilities": ["read", "write", "search"],
+      "auto_start": true
+    },
+    {
+      "name": "postgres",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "transport": "stdio",
+      "env": { "DATABASE_URL": "${DATABASE_URL}" },
+      "capabilities": ["query", "schema"],
+      "health_check": true
+    }
+  ],
+  "plugins": [
+    {
+      "name": "eslint-adapter",
+      "source": "@agentweave/plugin-eslint",
+      "version": "^1.0.0",
+      "config": { "auto_fix": true }
+    }
+  ],
+  "tools": [
+    {
+      "name": "deploy-staging",
+      "description": "Deploy current branch to staging environment",
+      "type": "command",
+      "command": "./scripts/deploy.sh staging",
+      "permissions": ["network:outbound", "terminal:execute"],
+      "requires_approval": true
+    }
+  ],
+  "workflows": [
+    {
+      "name": "feature-development",
+      "description": "End-to-end feature development workflow",
+      "trigger": "manual",
+      "steps": [
+        { "name": "plan", "agent": "main-architect", "action": "Analyze requirements" },
+        { "name": "implement", "agent": "main-architect", "action": "Implement the feature" },
+        { "name": "test", "action": "npm run test", "condition": "step.plan.success" },
+        { "name": "review", "agent": "reviewer", "action": "Review implementation" },
+        { "name": "document", "agent": "docs-writer", "action": "Update documentation", "parallel": true }
+      ],
+      "on_error": "abort",
+      "timeout_ms": 600000
+    }
+  ],
+  "memory": {
+    "enabled": true,
+    "auto_learn": true,
+    "storage": "hybrid",
+    "max_entries": 10000,
+    "retention_days": 365,
+    "index_type": "semantic",
+    "embedding_model": "text-embedding-3-small"
+  },
+  "context": {
+    "files": ["README.md", "docs/architecture.md"],
+    "directories": ["src/types/"],
+    "environment": { "NODE_ENV": "development" },
+    "dynamic": [
+      { "command": "git log --oneline -10", "label": "Recent commits", "cache_ttl_ms": 60000 }
+    ],
+    "max_size_bytes": 1048576
+  },
+  "sessions": {
+    "persistence": "local",
+    "max_history": 200,
+    "auto_save": true,
+    "isolation": "per-workspace"
+  },
+  "permissions": {
+    "allow": ["filesystem:read", "filesystem:write", "terminal:execute"],
+    "deny": ["filesystem:write:/etc/**"],
+    "ask": ["filesystem:delete", "terminal:sudo"],
+    "sandbox": false,
+    "network": {
+      "allow_domains": ["api.github.com", "registry.npmjs.org"],
+      "deny_domains": ["*.malware.test"]
+    },
+    "filesystem": {
+      "read": ["**/*"],
+      "write": ["src/**", "tests/**"],
+      "deny": ["secrets/**"]
+    }
+  },
+  "code_index": {
+    "enabled": true,
+    "include": ["src/**/*.{ts,tsx,rs}"],
+    "exclude": ["**/node_modules/**"],
+    "max_file_size_kb": 256,
+    "languages": ["typescript", "rust"],
+    "index_type": "semantic"
+  },
+  "wiki": {
+    "enabled": true,
+    "path": "docs/",
+    "format": "markdown",
+    "auto_index": true
+  },
+  "sync": {
+    "mode": "realtime",
+    "watch_paths": ["agentweave.yaml"],
+    "ignore_paths": ["node_modules/", "target/"],
+    "debounce_ms": 300,
+    "conflict_strategy": "last-write-wins",
+    "transport": "file-watch"
+  },
+  "governance": {
+    "rbac": {
+      "enabled": true,
+      "roles": [
+        { "name": "admin", "permissions": ["*"] },
+        { "name": "developer", "permissions": ["config:read", "config:write", "generate:*"], "inherits": ["viewer"] },
+        { "name": "viewer", "permissions": ["config:read", "status:read"] }
+      ]
+    },
+    "policies": [
+      { "name": "no-production-secrets", "type": "security", "action": "block", "enabled": true },
+      { "name": "api-budget", "type": "budget", "limit": 100000, "period": "monthly", "action": "warn" }
+    ],
+    "audit": {
+      "enabled": true,
+      "retention_days": 180,
+      "storage": "sqlite"
+    },
+    "quotas": {
+      "api_calls": { "limit": 10000, "period": "daily", "alert_threshold": 0.8 },
+      "tokens": { "limit": 5000000, "period": "monthly" }
+    },
+    "compliance": {
+      "frameworks": ["SOC2", "GDPR"],
+      "pii_detection": true,
+      "secret_scanning": true
+    }
+  },
+  "updater": {
+    "enabled": true,
+    "channel": "stable",
+    "check_interval_sec": 3600,
+    "auto_download": true,
+    "auto_install": false
+  },
+  "telemetry": {
+    "enabled": true,
+    "endpoint": "https://otel.acme.dev/v1/traces",
+    "protocol": "otlp",
+    "sample_rate": 0.5
+  },
+  "x-cursor": {
+    "theme": "dark",
+    "auto_import": true
+  }
+}

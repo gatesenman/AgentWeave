@@ -1,0 +1,21 @@
+{
+  "description": "Main development agent",
+  "model": {
+    "model": "claude-sonnet-4",
+    "provider": "anthropic"
+  },
+  "name": "main",
+  "role": "Senior full-stack developer",
+  "tools": {
+    "allow": [
+      "Bash(*)",
+      "Read(**)",
+      "Write(**)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Read(.env)",
+      "Read(.env.*)"
+    ]
+  }
+}

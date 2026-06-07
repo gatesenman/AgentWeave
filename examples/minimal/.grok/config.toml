@@ -1,0 +1,46 @@
+[project]
+name = "minimal-example"
+version = "0.1.0"
+description = "Minimal AgentWeave configuration example"
+
+[model]
+provider = "openai"
+model = "gpt-4o"
+
+[[agent]]
+name = "main"
+description = "Main development agent"
+role = "Senior full-stack developer"
+skills = ["code-review", "testing"]
+
+[[rule]]
+name = "frontend"
+content = "## Frontend Conventions
+
+- Use Tailwind CSS for styling (no raw CSS)
+- Component names use PascalCase
+- Props interface: ComponentNameProps
+- Use React.memo for expensive renders
+- Prefer server components where possible
+- Use Suspense for async data loading
+- Accessibility: always add aria-labels
+"
+activation = "Glob"
+globs = ["src/components/**/*.tsx", "src/pages/**/*.tsx"]
+
+[[rule]]
+name = "coding-standards"
+content = "## Coding Standards
+
+- Use TypeScript strict mode
+- Prefer functional components with React Hooks
+- Use named exports (never default exports)
+- Follow the existing project structure
+- Add JSDoc comments to public APIs
+- Use Zod for runtime validation
+- Prefer early returns over nested conditionals
+- Write unit tests for business logic
+- Use semantic commit messages (feat:, fix:, docs:, etc.)
+"
+activation = "Always"
+

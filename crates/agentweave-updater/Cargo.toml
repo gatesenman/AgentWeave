@@ -1,0 +1,22 @@
+[package]
+name = "agentweave-updater"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Remote update mechanism for AgentWeave (check, download, verify, apply)"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+
+semver = { version = "1", features = ["serde"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+sha2 = "0.10"
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+rand = "0.8"
+tempfile = "3"

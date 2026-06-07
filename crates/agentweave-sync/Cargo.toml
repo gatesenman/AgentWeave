@@ -1,0 +1,18 @@
+[package]
+name = "agentweave-sync"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Real-time sync engine for AgentWeave: file watching, debounce, conflict resolution, event bus"
+
+[dependencies]
+agentweave-core = { path = "../agentweave-core" }
+notify.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["full", "test-util"] }

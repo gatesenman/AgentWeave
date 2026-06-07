@@ -1,0 +1,121 @@
+apiVersion: agentweave/v1
+kind: Project
+metadata:
+  name: fullstack-app
+  version: "1.0.0"
+  description: "Full-stack web application with AI-assisted development"
+
+targets:
+  - codex
+  - claude-code
+  - cursor
+  - windsurf
+  - gemini-cli
+  - github-copilot
+  - devin
+  - cline
+
+default_model:
+  provider: anthropic
+  model: claude-sonnet-4
+  temperature: 0.3
+
+agents:
+  - name: main
+    role: "Full-stack developer"
+    instructions: |
+      You are a senior full-stack developer working on a React + Node.js application.
+      Follow these principles:
+      - Write clean, typed TypeScript code
+      - Use functional components with hooks
+      - Follow REST API best practices
+      - Write unit tests for all business logic
+    model:
+      provider: anthropic
+      model: claude-sonnet-4
+
+  - name: reviewer
+    role: "Code reviewer"
+    instructions: |
+      Review code for security issues, performance problems, and best practices.
+      Focus on: SQL injection, XSS, CSRF, memory leaks, N+1 queries.
+    model:
+      provider: google
+      model: gemini-2.5-pro
+
+  - name: docs-writer
+    role: "Technical writer"
+    instructions: |
+      Generate and maintain technical documentation.
+      Write clear API docs, README updates, and inline code comments.
+
+rules:
+  - name: typescript-strict
+    content: "Always use strict TypeScript with no `any` types"
+    scope: "**/*.{ts,tsx}"
+  - name: api-response-format
+    content: "All API responses must follow { data, error, meta } format"
+    scope: "src/api/**/*"
+  - name: component-naming
+    content: "React components use PascalCase, hooks use camelCase with 'use' prefix"
+    scope: "src/components/**/*"
+
+skills:
+  - name: database-migration
+    description: "Create and run database migrations"
+    steps:
+      - "Generate migration file with timestamp"
+      - "Write up/down SQL"
+      - "Run migration against dev database"
+      - "Verify schema matches expectations"
+
+  - name: api-endpoint
+    description: "Create a new REST API endpoint"
+    steps:
+      - "Define route in routes/"
+      - "Create controller handler"
+      - "Add request validation schema"
+      - "Write integration test"
+      - "Update API documentation"
+
+hooks:
+  - name: pre-commit
+    event: pre-commit
+    run: "npm run lint && npm run typecheck"
+  - name: pre-push
+    event: pre-push
+    run: "npm test"
+
+mcp_servers:
+  - name: filesystem
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "./"]
+    transport: stdio
+  - name: postgres
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-postgres"]
+    transport: stdio
+    env:
+      DATABASE_URL: "${DATABASE_URL}"
+
+workflows:
+  - name: feature-development
+    description: "Standard feature development flow"
+    steps:
+      - agent: main
+        action: "implement"
+        prompt: "Implement the feature as described"
+      - agent: reviewer
+        action: "review"
+        prompt: "Review the implementation for issues"
+      - agent: docs-writer
+        action: "document"
+        prompt: "Update documentation for the changes"
+
+sync:
+  mode: realtime
+  watch_paths:
+    - "agentweave.yaml"
+    - "agents/**"
+    - "rules/**"
+  debounce_ms: 300

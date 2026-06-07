@@ -1,0 +1,36 @@
+{
+  "name": "agentweave",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unified Cross-Vendor AI Agent Configuration Management",
+  "workspaces": [
+    "apps/desktop",
+    "packages/design-system"
+  ],
+  "scripts": {
+    "dev": "cd apps/desktop && npm run dev",
+    "build": "cd apps/desktop && npm run build",
+    "desktop": "cd apps/desktop && npm run tauri dev",
+    "desktop:build": "cd apps/desktop && npm run tauri build",
+    "lint": "cargo clippy --workspace && cd apps/desktop && npx tsc --noEmit",
+    "test": "cargo test --workspace",
+    "clean": "cargo clean && rm -rf apps/desktop/dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gaosichun888/AgentWeave.git"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "configuration",
+    "cross-vendor",
+    "mcp",
+    "codex",
+    "claude",
+    "cursor",
+    "windsurf"
+  ],
+  "author": "gaosichun888",
+  "license": "MIT"
+}

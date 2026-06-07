@@ -1,0 +1,10 @@
+{
+  "name": "@agentweave/design-system",
+  "version": "0.1.0",
+  "description": "Design system tokens, components, and utilities for AgentWeave UI",
+  "type": "module",
+  "main": "src/index.ts",
+  "files": ["src"],
+  "keywords": ["agentweave", "design-system", "tokens", "ui"],
+  "license": "MIT"
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "AgentWeave",
+  "version": "0.1.0",
+  "identifier": "dev.agentweave.desktop",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "AgentWeave",
+        "width": 1280,
+        "height": 860,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "tooltip": "AgentWeave - Cross-Vendor AI Config"
+    }
+  },
+  "plugins": {
+    "fs": {
+      "scope": {
+        "allow": ["**"],
+        "deny": []
+      }
+    },
+    "notification": {
+      "all": true
+    }
+  }
+}

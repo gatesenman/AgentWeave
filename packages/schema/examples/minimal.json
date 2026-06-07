@@ -1,0 +1,24 @@
+{
+  "$schema": "https://agentweave.dev/schema/v1/agentweave.schema.json",
+  "apiVersion": "agentweave/v1",
+  "kind": "Project",
+  "metadata": {
+    "name": "hello-world",
+    "version": "0.1.0"
+  },
+  "targets": ["cursor", "claude-code"],
+  "agents": [
+    {
+      "name": "assistant",
+      "role": "General development assistant",
+      "tools": ["read_file", "write_file", "terminal"]
+    }
+  ],
+  "rules": [
+    {
+      "name": "be-helpful",
+      "scope": "always",
+      "content": "Be helpful, concise, and follow project conventions."
+    }
+  ]
+}

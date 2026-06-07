@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AgentWeave Complete Configuration Example (XML format)
+  Validates against: packages/schema/xml/agentweave.xsd
+-->
+<aw:agentweave xmlns:aw="https://agentweave.dev/schema/v1"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="https://agentweave.dev/schema/v1 agentweave.xsd"
+               apiVersion="agentweave/v1"
+               kind="Project">
+
+  <aw:metadata>
+    <aw:name>acme-platform</aw:name>
+    <aw:version>2.1.0</aw:version>
+    <aw:description>Full-stack SaaS platform with AI-assisted development</aw:description>
+    <aw:team>platform-engineering</aw:team>
+    <aw:org>acme-corp</aw:org>
+    <aw:tags>
+      <aw:tag>saas</aw:tag>
+      <aw:tag>typescript</aw:tag>
+      <aw:tag>rust</aw:tag>
+      <aw:tag>microservices</aw:tag>
+    </aw:tags>
+    <aw:authors>
+      <aw:author name="Alice Chen" email="alice@acme.dev" role="lead"/>
+      <aw:author name="Bob Zhang" email="bob@acme.dev" role="backend"/>
+    </aw:authors>
+    <aw:license>MIT</aw:license>
+    <aw:repository>https://github.com/acme-corp/platform</aw:repository>
+  </aw:metadata>
+
+  <aw:targets>
+    <aw:target>codex</aw:target>
+    <aw:target>claude-code</aw:target>
+    <aw:target>cursor</aw:target>
+    <aw:target>windsurf</aw:target>
+    <aw:target>gemini-cli</aw:target>
+    <aw:target>github-copilot</aw:target>
+    <aw:target>devin</aw:target>
+    <aw:target>cline</aw:target>
+  </aw:targets>
+
+  <aw:default-model provider="anthropic" model="claude-sonnet-4-20250514"
+                    temperature="0.3" max-tokens="8192"/>
+
+  <aw:agents>
+    <aw:agent name="main-architect" temperature="0.2" output-style="structured">
+      <aw:role>Senior software architect with deep TypeScript and Rust expertise</aw:role>
+      <aw:instructions>You are the lead architect for the ACME Platform.
+Focus on clean architecture, type safety, and performance.
+Always prefer composition over inheritance.</aw:instructions>
+      <aw:model provider="anthropic" model="claude-sonnet-4-20250514" max-tokens="16384"/>
+      <aw:tools>
+        <aw:tool>read_file</aw:tool>
+        <aw:tool>write_file</aw:tool>
+        <aw:tool>terminal</aw:tool>
+        <aw:tool>search</aw:tool>
+        <aw:tool>browser</aw:tool>
+      </aw:tools>
+      <aw:permissions>
+        <aw:item>filesystem:write</aw:item>
+        <aw:item>network:outbound</aw:item>
+        <aw:item>terminal:execute</aw:item>
+      </aw:permissions>
+      <aw:sub-agents>
+        <aw:agent name="reviewer" temperature="0.1" output-style="concise">
+          <aw:role>Code reviewer focused on security and performance</aw:role>
+          <aw:tools>
+            <aw:tool>read_file</aw:tool>
+            <aw:tool>search</aw:tool>
+          </aw:tools>
+        </aw:agent>
+      </aw:sub-agents>
+      <aw:constraints>
+        <aw:item>Never modify files in /vendor or /node_modules</aw:item>
+        <aw:item>Always run tests before committing</aw:item>
+      </aw:constraints>
+    </aw:agent>
+
+    <aw:agent name="docs-writer" temperature="0.5" output-style="detailed">
+      <aw:role>Technical documentation specialist</aw:role>
+      <aw:instructions>Write clear, concise documentation with code examples</aw:instructions>
+      <aw:tools>
+        <aw:tool>read_file</aw:tool>
+        <aw:tool>write_file</aw:tool>
+        <aw:tool>search</aw:tool>
+      </aw:tools>
+    </aw:agent>
+  </aw:agents>
+
+  <aw:rules>
+    <aw:rule name="typescript-strict" scope="**/*.{ts,tsx}" severity="error" priority="100">
+      <aw:content>Use strict TypeScript with no `any` types.
+Prefer interface over type for object shapes.
+Use branded types for domain primitives.</aw:content>
+    </aw:rule>
+    <aw:rule name="api-versioning" scope="src/api/**" severity="error">
+      <aw:content>All API endpoints must include version prefix /api/v{n}/</aw:content>
+      <aw:applies-to>
+        <aw:target>codex</aw:target>
+        <aw:target>claude-code</aw:target>
+        <aw:target>cursor</aw:target>
+      </aw:applies-to>
+    </aw:rule>
+  </aw:rules>
+
+  <aw:skills>
+    <aw:skill name="database-migration" timeout-ms="60000">
+      <aw:description>Create and run database migrations safely</aw:description>
+      <aw:steps>
+        <aw:item>Generate migration SQL from schema diff</aw:item>
+        <aw:item>Create rollback script</aw:item>
+        <aw:item>Run migration in transaction</aw:item>
+        <aw:item>Verify schema integrity</aw:item>
+      </aw:steps>
+      <aw:tools-required>
+        <aw:item>terminal</aw:item>
+        <aw:item>write_file</aw:item>
+      </aw:tools-required>
+    </aw:skill>
+  </aw:skills>
+
+  <aw:hooks>
+    <aw:hook name="lint-check" event="pre-commit" timeout-ms="30000" fail-action="abort">
+      <aw:run>npm run lint:check</aw:run>
+    </aw:hook>
+    <aw:hook name="auto-generate" event="config-change" fail-action="warn">
+      <aw:run>agentweave generate</aw:run>
+    </aw:hook>
+  </aw:hooks>
+
+  <aw:mcp-servers>
+    <aw:mcp-server name="filesystem" command="npx" transport="stdio" auto-start="true">
+      <aw:args>
+        <aw:item>-y</aw:item>
+        <aw:item>@modelcontextprotocol/server-filesystem</aw:item>
+        <aw:item>./</aw:item>
+      </aw:args>
+      <aw:capabilities>
+        <aw:item>read</aw:item>
+        <aw:item>write</aw:item>
+        <aw:item>search</aw:item>
+      </aw:capabilities>
+    </aw:mcp-server>
+    <aw:mcp-server name="postgres" command="npx" transport="stdio">
+      <aw:args>
+        <aw:item>-y</aw:item>
+        <aw:item>@modelcontextprotocol/server-postgres</aw:item>
+      </aw:args>
+      <aw:env>
+        <aw:entry key="DATABASE_URL" value="${DATABASE_URL}"/>
+      </aw:env>
+      <aw:capabilities>
+        <aw:item>query</aw:item>
+        <aw:item>schema</aw:item>
+      </aw:capabilities>
+    </aw:mcp-server>
+  </aw:mcp-servers>
+
+  <aw:plugins>
+    <aw:plugin name="eslint-adapter" source="@agentweave/plugin-eslint" version="^1.0.0"/>
+  </aw:plugins>
+
+  <aw:tools>
+    <aw:tool name="deploy-staging" type="command" command="./scripts/deploy.sh staging" requires-approval="true">
+      <aw:description>Deploy current branch to staging environment</aw:description>
+      <aw:permissions>
+        <aw:item>network:outbound</aw:item>
+        <aw:item>terminal:execute</aw:item>
+      </aw:permissions>
+    </aw:tool>
+  </aw:tools>
+
+  <aw:workflows>
+    <aw:workflow name="feature-development" trigger="manual" on-error="abort" timeout-ms="600000">
+      <aw:description>End-to-end feature development workflow</aw:description>
+      <aw:steps>
+        <aw:step name="plan" agent="main-architect" action="Analyze requirements"/>
+        <aw:step name="implement" agent="main-architect" action="Implement the feature"/>
+        <aw:step name="test" action="npm run test" condition="step.plan.success"/>
+        <aw:step name="review" agent="reviewer" action="Review implementation"/>
+        <aw:step name="document" agent="docs-writer" action="Update documentation" parallel="true"/>
+      </aw:steps>
+    </aw:workflow>
+  </aw:workflows>
+
+  <aw:memory enabled="true" auto-learn="true" storage="hybrid"
+             max-entries="10000" retention-days="365" index-type="semantic"/>
+
+  <aw:context max-size-bytes="1048576">
+    <aw:files>
+      <aw:item>README.md</aw:item>
+      <aw:item>docs/architecture.md</aw:item>
+    </aw:files>
+    <aw:directories>
+      <aw:item>src/types/</aw:item>
+    </aw:directories>
+    <aw:environment>
+      <aw:entry key="NODE_ENV" value="development"/>
+    </aw:environment>
+    <aw:dynamic>
+      <aw:source command="git log --oneline -10" label="Recent commits" cache-ttl-ms="60000"/>
+    </aw:dynamic>
+  </aw:context>
+
+  <aw:sessions persistence="local" max-history="200" auto-save="true" isolation="per-workspace"/>
+
+  <aw:permissions sandbox="false">
+    <aw:allow>
+      <aw:item>filesystem:read</aw:item>
+      <aw:item>filesystem:write</aw:item>
+      <aw:item>terminal:execute</aw:item>
+    </aw:allow>
+    <aw:deny>
+      <aw:item>filesystem:write:/etc/**</aw:item>
+    </aw:deny>
+    <aw:ask>
+      <aw:item>filesystem:delete</aw:item>
+      <aw:item>terminal:sudo</aw:item>
+    </aw:ask>
+    <aw:network>
+      <aw:allow-domains>
+        <aw:item>api.github.com</aw:item>
+        <aw:item>registry.npmjs.org</aw:item>
+      </aw:allow-domains>
+    </aw:network>
+    <aw:filesystem>
+      <aw:read><aw:item>**/*</aw:item></aw:read>
+      <aw:write><aw:item>src/**</aw:item></aw:write>
+      <aw:deny><aw:item>secrets/**</aw:item></aw:deny>
+    </aw:filesystem>
+  </aw:permissions>
+
+  <aw:code-index enabled="true" max-file-size-kb="256" index-type="semantic">
+    <aw:include>
+      <aw:item>src/**/*.{ts,tsx,rs}</aw:item>
+    </aw:include>
+    <aw:exclude>
+      <aw:item>**/node_modules/**</aw:item>
+    </aw:exclude>
+    <aw:languages>
+      <aw:item>typescript</aw:item>
+      <aw:item>rust</aw:item>
+    </aw:languages>
+  </aw:code-index>
+
+  <aw:wiki enabled="true" path="docs/" format="markdown" auto-index="true"/>
+
+  <aw:sync mode="realtime" debounce-ms="300" conflict-strategy="last-write-wins" transport="file-watch">
+    <aw:watch-paths>
+      <aw:item>agentweave.yaml</aw:item>
+    </aw:watch-paths>
+    <aw:ignore-paths>
+      <aw:item>node_modules/</aw:item>
+      <aw:item>target/</aw:item>
+    </aw:ignore-paths>
+  </aw:sync>
+
+  <aw:governance>
+    <aw:rbac enabled="true">
+      <aw:role name="admin" description="Full access to all operations">
+        <aw:permissions><aw:item>*</aw:item></aw:permissions>
+      </aw:role>
+      <aw:role name="developer" description="Standard development operations">
+        <aw:permissions>
+          <aw:item>config:read</aw:item>
+          <aw:item>config:write</aw:item>
+          <aw:item>generate:*</aw:item>
+        </aw:permissions>
+      </aw:role>
+      <aw:role name="viewer" description="Read-only access">
+        <aw:permissions><aw:item>config:read</aw:item></aw:permissions>
+      </aw:role>
+    </aw:rbac>
+    <aw:policies>
+      <aw:policy name="no-production-secrets" type="security" action="block"/>
+      <aw:policy name="api-budget" type="budget" action="warn"/>
+    </aw:policies>
+    <aw:audit enabled="true" retention-days="180" storage="sqlite"/>
+    <aw:compliance pii-detection="true" secret-scanning="true">
+      <aw:frameworks>
+        <aw:item>SOC2</aw:item>
+        <aw:item>GDPR</aw:item>
+      </aw:frameworks>
+    </aw:compliance>
+  </aw:governance>
+
+  <aw:updater enabled="true" channel="stable" check-interval-sec="3600"
+              auto-download="true" auto-install="false"
+              source="https://github.com/gaosichun888/AgentWeave/releases"/>
+
+  <aw:telemetry enabled="true" endpoint="https://otel.acme.dev/v1/traces"
+                protocol="otlp" sample-rate="0.5"/>
+
+  <aw:notifications enabled="true">
+    <aw:channel type="desktop"/>
+    <aw:channel type="slack"/>
+  </aw:notifications>
+
+  <aw:api-endpoints>
+    <aw:endpoint name="github-api" url="https://api.github.com" method="GET" timeout-ms="10000"/>
+  </aw:api-endpoints>
+
+  <aw:webhooks>
+    <aw:webhook name="deployment-notify" url="https://hooks.acme.dev/deploy" secret-ref="WEBHOOK_SECRET">
+      <aw:events>
+        <aw:item>generate:complete</aw:item>
+        <aw:item>config:change</aw:item>
+      </aw:events>
+    </aw:webhook>
+  </aw:webhooks>
+
+  <aw:event-bus enabled="true" transport="in-memory">
+    <aw:channel name="config-changes">
+      <aw:subscribers>
+        <aw:item>sync-engine</aw:item>
+        <aw:item>generator</aw:item>
+        <aw:item>auditor</aw:item>
+      </aw:subscribers>
+    </aw:channel>
+  </aw:event-bus>
+
+</aw:agentweave>

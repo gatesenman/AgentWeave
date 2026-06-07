@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AgentWeave Minimal Configuration (XML format) -->
+<aw:agentweave xmlns:aw="https://agentweave.dev/schema/v1"
+               apiVersion="agentweave/v1"
+               kind="Project">
+
+  <aw:metadata>
+    <aw:name>hello-world</aw:name>
+    <aw:version>0.1.0</aw:version>
+  </aw:metadata>
+
+  <aw:targets>
+    <aw:target>cursor</aw:target>
+    <aw:target>claude-code</aw:target>
+  </aw:targets>
+
+  <aw:agents>
+    <aw:agent name="assistant">
+      <aw:role>General development assistant</aw:role>
+      <aw:tools>
+        <aw:tool>read_file</aw:tool>
+        <aw:tool>write_file</aw:tool>
+        <aw:tool>terminal</aw:tool>
+      </aw:tools>
+    </aw:agent>
+  </aw:agents>
+
+  <aw:rules>
+    <aw:rule name="be-helpful" scope="always">
+      <aw:content>Be helpful, concise, and follow project conventions.</aw:content>
+    </aw:rule>
+  </aw:rules>
+
+</aw:agentweave>

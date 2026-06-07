@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentweave.dev/schema/v1/agentweave.schema.json",
+  "title": "AgentWeave Configuration",
+  "description": "Schema for AgentWeave unified agent configuration",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["agentweave/v1"],
+      "description": "API version of the configuration"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Project", "Agent", "Rule", "Skill", "Workflow"],
+      "description": "Kind of configuration resource"
+    },
+    "metadata": {
+      "$ref": "#/definitions/Metadata"
+    },
+    "spec": {
+      "$ref": "#/definitions/ProjectSpec"
+    }
+  },
+  "definitions": {
+    "Metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "description": { "type": "string" },
+        "authors": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Author" }
+        }
+      }
+    },
+    "Author": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      }
+    },
+    "ProjectSpec": {
+      "type": "object",
+      "properties": {
+        "defaultModel": { "$ref": "#/definitions/ModelConfig" },
+        "targets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/TargetVendor" }
+        },
+        "sync": { "$ref": "#/definitions/SyncConfig" }
+      }
+    },
+    "ModelConfig": {
+      "type": "object",
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "fallback": { "$ref": "#/definitions/ModelConfig" }
+      }
+    },
+    "TargetVendor": {
+      "type": "string",
+      "enum": [
+        "codex", "claude-code", "cursor", "windsurf",
+        "gemini-cli", "github-copilot", "devin", "cline",
+        "codebuddy", "qoder", "grok-build", "openclaw"
+      ]
+    },
+    "SyncConfig": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["realtime", "on-save", "manual"],
+          "default": "realtime"
+        },
+        "transport": {
+          "type": "string",
+          "enum": ["file-watch", "websocket", "git-hook"],
+          "default": "file-watch"
+        },
+        "lockStrategy": {
+          "type": "string",
+          "enum": ["last-write-wins", "merge", "lock"],
+          "default": "last-write-wins"
+        }
+      }
+    },
+    "AgentDef": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "role": { "type": "string" },
+        "systemPrompt": { "type": "string" },
+        "model": { "$ref": "#/definitions/ModelConfig" },
+        "tools": { "$ref": "#/definitions/PermissionPolicy" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "subAgents": { "type": "array", "items": { "type": "string" } },
+        "memory": { "$ref": "#/definitions/MemoryConfig" },
+        "maxTurns": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "RuleDef": {
+      "type": "object",
+      "required": ["name", "activation", "content"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "activation": { "$ref": "#/definitions/RuleActivation" },
+        "content": { "type": "string" }
+      }
+    },
+    "RuleActivation": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["always", "glob", "description", "manual"]
+        },
+        "globs": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" }
+      }
+    },
+    "PermissionPolicy": {
+      "type": "object",
+      "properties": {
+        "allow": { "type": "array", "items": { "type": "string" } },
+        "ask": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "MemoryConfig": {
+      "type": "object",
+      "properties": {
+        "autoLearn": { "type": "boolean", "default": true },
+        "maxEntries": { "type": "integer" },
+        "manualInstructions": { "type": "string" }
+      }
+    },
+    "McpServerConfig": {
+      "type": "object",
+      "required": ["name", "command"],
+      "properties": {
+        "name": { "type": "string" },
+        "command": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "env": { "type": "object", "additionalProperties": { "type": "string" } },
+        "transport": { "type": "string" }
+      }
+    },
+    "HookDef": {
+      "type": "object",
+      "required": ["name", "event", "command"],
+      "properties": {
+        "name": { "type": "string" },
+        "event": {
+          "type": "string",
+          "enum": ["pre-tool-call", "post-tool-call", "session-start", "session-end", "pre-commit", "post-commit", "on-error", "config-change"]
+        },
+        "filter": { "type": "string" },
+        "command": { "type": "string" },
+        "timeoutMs": { "type": "integer" }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "defaultModel": {
+    "model": "gpt-4o",
+    "provider": "openai"
+  },
+  "projectName": "minimal-example",
+  "rules": [
+    {
+      "activation": "glob",
+      "content": "## Frontend Conventions\n\n- Use Tailwind CSS for styling (no raw CSS)\n- Component names use PascalCase\n- Props interface: ComponentNameProps\n- Use React.memo for expensive renders\n- Prefer server components where possible\n- Use Suspense for async data loading\n- Accessibility: always add aria-labels\n",
+      "name": "frontend"
+    },
+    {
+      "activation": "always",
+      "content": "## Coding Standards\n\n- Use TypeScript strict mode\n- Prefer functional components with React Hooks\n- Use named exports (never default exports)\n- Follow the existing project structure\n- Add JSDoc comments to public APIs\n- Use Zod for runtime validation\n- Prefer early returns over nested conditionals\n- Write unit tests for business logic\n- Use semantic commit messages (feat:, fix:, docs:, etc.)\n",
+      "name": "coding-standards"
+    }
+  ],
+  "version": "0.1.0"
+}

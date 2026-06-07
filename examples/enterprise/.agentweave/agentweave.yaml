@@ -1,0 +1,139 @@
+apiVersion: agentweave/v1
+kind: Project
+metadata:
+  name: enterprise-platform
+  version: 2.0.0
+  description: "Enterprise-grade configuration with governance, observability, and multi-team support"
+  authors:
+    - name: "Platform Team"
+      email: "platform@corp.com"
+
+targets:
+  - codex
+  - claude-code
+  - cursor
+  - windsurf
+  - gemini-cli
+  - github-copilot
+  - devin
+  - cline
+  - codebuddy
+  - qoder
+  - grok-build
+  - openclaw
+
+agents:
+  - name: main
+    role: senior engineer
+    model: gpt-4o
+    system_prompt: |
+      You are a senior platform engineer at a large enterprise.
+      Follow all corporate coding standards and security policies.
+      Always consider backward compatibility and scalability.
+
+  - name: security-auditor
+    role: security specialist
+    model: claude-3.5-sonnet
+    system_prompt: |
+      You are a security specialist. Audit code for:
+      - OWASP Top 10 vulnerabilities
+      - Data privacy compliance (GDPR/CCPA)
+      - Authentication/Authorization issues
+      - Secret exposure risks
+
+  - name: sre
+    role: site reliability engineer
+    system_prompt: |
+      You are an SRE. Focus on:
+      - Infrastructure as Code (Terraform/Pulumi)
+      - Kubernetes manifests
+      - CI/CD pipelines
+      - Monitoring and alerting
+
+  - name: data-engineer
+    role: data pipeline specialist
+    system_prompt: |
+      You are a data engineer. Manage:
+      - ETL pipelines
+      - Data warehouse schemas
+      - Data quality checks
+      - Stream processing
+
+rules:
+  - name: corporate-standards
+    scope: always-apply
+    content: |
+      - All code must pass SonarQube quality gate
+      - Minimum 80% test coverage for new code
+      - All APIs must have OpenAPI specs
+      - Database changes require migration scripts
+      - No direct production access - use GitOps
+
+  - name: compliance
+    scope: always-apply
+    content: |
+      - PII must be encrypted at rest and in transit
+      - All data access must be logged
+      - Retention policies must be enforced
+      - GDPR right-to-erasure support required
+
+  - name: infrastructure
+    scope: "infra/**"
+    content: |
+      - Use Terraform modules from internal registry
+      - Tag all resources with team/cost-center/environment
+      - Use private subnets for databases
+      - Enable encryption for all storage
+
+skills:
+  - name: incident-response
+    description: "Handle production incidents"
+    steps:
+      - "Assess severity"
+      - "Identify affected services"
+      - "Implement mitigation"
+      - "Root cause analysis"
+      - "Write postmortem"
+
+  - name: onboarding
+    description: "Onboard new service"
+    steps:
+      - "Create repository from template"
+      - "Set up CI/CD"
+      - "Configure monitoring"
+      - "Register in service catalog"
+
+hooks:
+  - event: session-start
+    action: "Load team context and active incidents"
+  - event: tool-call-pre
+    action: "Verify tool permissions against RBAC policy"
+  - event: session-end
+    action: "Generate session audit log"
+
+mcp_servers:
+  - name: kubernetes
+    protocol: stdio
+    command: npx
+    args: ["-y", "@mcp/server-kubernetes"]
+    env:
+      KUBECONFIG: "${{ secrets.KUBECONFIG }}"
+
+  - name: terraform
+    protocol: stdio
+    command: npx
+    args: ["-y", "@mcp/server-terraform"]
+
+  - name: datadog
+    protocol: http
+    command: npx
+    args: ["-y", "@mcp/server-datadog"]
+    env:
+      DD_API_KEY: "${{ secrets.DD_API_KEY }}"
+
+  - name: jira
+    protocol: stdio
+    command: npx
+    args: ["-y", "@mcp/server-jira"]
+    env:
+      JIRA_TOKEN: "${{ secrets.JIRA_TOKEN }}"

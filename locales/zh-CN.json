@@ -1,0 +1,38 @@
+{
+  "app": {
+    "name": "AgentWeave",
+    "description": "统一 AI 智能体配置管理系统"
+  },
+  "cli": {
+    "init_success": "AgentWeave 配置初始化成功！",
+    "init_exists": "AgentWeave 配置已存在。",
+    "generate_start": "正在为 {count} 个目标生成配置...",
+    "generate_success": "完成：{success} 成功，{failed} 失败",
+    "generate_file": "[{vendor}] 已生成：{path}",
+    "generate_error": "[{vendor}] 错误：{error}",
+    "validate_valid": "配置验证通过！",
+    "validate_invalid": "配置验证失败：{error}",
+    "watch_start": "正在监听 {path} 中的变更",
+    "watch_stop": "按 Ctrl+C 停止。",
+    "watch_change": "检测到变更：{path}",
+    "watch_regen": "已重新生成 {count} 个文件",
+    "vendors_title": "支持的厂商：",
+    "status_title": "AgentWeave 状态",
+    "status_no_config": "未找到 AgentWeave 配置。",
+    "status_hint": "运行 'agentweave init' 开始使用。",
+    "import_start": "正在从 {vendor} 导入",
+    "import_wip": "功能开发中"
+  },
+  "errors": {
+    "config_not_found": "未找到配置文件：{path}",
+    "parse_error": "配置解析失败：{error}",
+    "adapter_error": "{vendor} 适配器错误：{error}",
+    "permission_denied": "权限不足：{action}"
+  },
+  "governance": {
+    "policy_violation": "策略违规：{policy} - {message}",
+    "quota_exceeded": "配额超限：{name}（{current}/{limit}）",
+    "role_assigned": "角色 {role} 已分配给 {user}",
+    "audit_logged": "操作已记录：{action} 对象：{resource}"
+  }
+}

@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:aw="https://agentweave.dev/schema/v1"
+           targetNamespace="https://agentweave.dev/schema/v1"
+           elementFormDefault="qualified"
+           version="1.0.0">
+
+  <xs:annotation>
+    <xs:documentation>
+      AgentWeave Configuration XML Schema v1
+      Unified AI agent configuration superset — supports 46+ concepts across 12+ vendor platforms.
+      Extensibility: Any element may contain additional attributes prefixed with "x-".
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- Root Element -->
+  <xs:element name="agentweave" type="aw:ProjectType"/>
+
+  <!-- Project (Root) Type -->
+  <xs:complexType name="ProjectType">
+    <xs:all>
+      <xs:element name="metadata" type="aw:MetadataType"/>
+      <xs:element name="targets" type="aw:TargetsType" minOccurs="0"/>
+      <xs:element name="default-model" type="aw:ModelConfigType" minOccurs="0"/>
+      <xs:element name="agents" type="aw:AgentsType" minOccurs="0"/>
+      <xs:element name="rules" type="aw:RulesType" minOccurs="0"/>
+      <xs:element name="skills" type="aw:SkillsType" minOccurs="0"/>
+      <xs:element name="hooks" type="aw:HooksType" minOccurs="0"/>
+      <xs:element name="mcp-servers" type="aw:McpServersType" minOccurs="0"/>
+      <xs:element name="plugins" type="aw:PluginsType" minOccurs="0"/>
+      <xs:element name="tools" type="aw:ToolsType" minOccurs="0"/>
+      <xs:element name="workflows" type="aw:WorkflowsType" minOccurs="0"/>
+      <xs:element name="memory" type="aw:MemoryType" minOccurs="0"/>
+      <xs:element name="context" type="aw:ContextType" minOccurs="0"/>
+      <xs:element name="sessions" type="aw:SessionsType" minOccurs="0"/>
+      <xs:element name="permissions" type="aw:PermissionsType" minOccurs="0"/>
+      <xs:element name="models" type="aw:ModelsType" minOccurs="0"/>
+      <xs:element name="code-index" type="aw:CodeIndexType" minOccurs="0"/>
+      <xs:element name="wiki" type="aw:WikiType" minOccurs="0"/>
+      <xs:element name="templates" type="aw:TemplatesType" minOccurs="0"/>
+      <xs:element name="snippets" type="aw:SnippetsType" minOccurs="0"/>
+      <xs:element name="prompts" type="aw:PromptsType" minOccurs="0"/>
+      <xs:element name="sync" type="aw:SyncType" minOccurs="0"/>
+      <xs:element name="governance" type="aw:GovernanceType" minOccurs="0"/>
+      <xs:element name="updater" type="aw:UpdaterType" minOccurs="0"/>
+      <xs:element name="telemetry" type="aw:TelemetryType" minOccurs="0"/>
+      <xs:element name="notifications" type="aw:NotificationsType" minOccurs="0"/>
+      <xs:element name="api-endpoints" type="aw:ApiEndpointsType" minOccurs="0"/>
+      <xs:element name="webhooks" type="aw:WebhooksType" minOccurs="0"/>
+      <xs:element name="event-bus" type="aw:EventBusType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="apiVersion" type="xs:string" use="required" fixed="agentweave/v1"/>
+    <xs:attribute name="kind" type="aw:KindEnum" use="required"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Enumerations -->
+  <xs:simpleType name="KindEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Project"/>
+      <xs:enumeration value="Fragment"/>
+      <xs:enumeration value="Template"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TargetVendorEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="codex"/>
+      <xs:enumeration value="claude-code"/>
+      <xs:enumeration value="cursor"/>
+      <xs:enumeration value="windsurf"/>
+      <xs:enumeration value="gemini-cli"/>
+      <xs:enumeration value="github-copilot"/>
+      <xs:enumeration value="devin"/>
+      <xs:enumeration value="cline"/>
+      <xs:enumeration value="codebuddy"/>
+      <xs:enumeration value="qoder"/>
+      <xs:enumeration value="grok-build"/>
+      <xs:enumeration value="openclaw"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TargetVendorType">
+    <xs:union memberTypes="aw:TargetVendorEnum xs:string"/>
+  </xs:simpleType>
+
+  <!-- Metadata -->
+  <xs:complexType name="MetadataType">
+    <xs:all>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="version" type="xs:string" minOccurs="0"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="team" type="xs:string" minOccurs="0"/>
+      <xs:element name="org" type="xs:string" minOccurs="0"/>
+      <xs:element name="tags" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="tag" type="xs:string" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="authors" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="author" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="name" type="xs:string" use="required"/>
+                <xs:attribute name="email" type="xs:string"/>
+                <xs:attribute name="role" type="xs:string"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="license" type="xs:string" minOccurs="0"/>
+      <xs:element name="repository" type="xs:anyURI" minOccurs="0"/>
+    </xs:all>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Targets -->
+  <xs:complexType name="TargetsType">
+    <xs:sequence>
+      <xs:element name="target" type="aw:TargetVendorType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Agent -->
+  <xs:complexType name="AgentType">
+    <xs:all>
+      <xs:element name="role" type="xs:string" minOccurs="0"/>
+      <xs:element name="instructions" type="xs:string" minOccurs="0"/>
+      <xs:element name="model" type="aw:ModelConfigType" minOccurs="0"/>
+      <xs:element name="tools" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence><xs:element name="tool" type="xs:string" maxOccurs="unbounded"/></xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="permissions" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="sub-agents" type="aw:AgentsType" minOccurs="0"/>
+      <xs:element name="memory" type="aw:MemoryType" minOccurs="0"/>
+      <xs:element name="constraints" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="triggers" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="temperature" type="xs:decimal"/>
+    <xs:attribute name="max-tokens" type="xs:positiveInteger"/>
+    <xs:attribute name="top-p" type="xs:decimal"/>
+    <xs:attribute name="output-style" type="xs:string"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="AgentsType">
+    <xs:sequence>
+      <xs:element name="agent" type="aw:AgentType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Rule -->
+  <xs:complexType name="RuleType">
+    <xs:all>
+      <xs:element name="content" type="xs:string"/>
+      <xs:element name="applies-to" type="aw:TargetsType" minOccurs="0"/>
+      <xs:element name="tags" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="scope" type="xs:string"/>
+    <xs:attribute name="severity" type="xs:string"/>
+    <xs:attribute name="priority" type="xs:integer" default="0"/>
+    <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="RulesType">
+    <xs:sequence>
+      <xs:element name="rule" type="aw:RuleType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Skill -->
+  <xs:complexType name="SkillType">
+    <xs:all>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="steps" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="tools-required" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="tags" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="timeout-ms" type="xs:nonNegativeInteger"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="SkillsType">
+    <xs:sequence>
+      <xs:element name="skill" type="aw:SkillType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Hook -->
+  <xs:complexType name="HookType">
+    <xs:all>
+      <xs:element name="run" type="xs:string" minOccurs="0"/>
+      <xs:element name="condition" type="xs:string" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="event" type="xs:string" use="required"/>
+    <xs:attribute name="timeout-ms" type="xs:positiveInteger" default="30000"/>
+    <xs:attribute name="fail-action" type="xs:string" default="warn"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="HooksType">
+    <xs:sequence>
+      <xs:element name="hook" type="aw:HookType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- MCP Server -->
+  <xs:complexType name="McpServerType">
+    <xs:all>
+      <xs:element name="args" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="env" type="aw:KeyValueListType" minOccurs="0"/>
+      <xs:element name="capabilities" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="command" type="xs:string" use="required"/>
+    <xs:attribute name="transport" type="xs:string" default="stdio"/>
+    <xs:attribute name="timeout-ms" type="xs:positiveInteger" default="60000"/>
+    <xs:attribute name="auto-start" type="xs:boolean" default="true"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="McpServersType">
+    <xs:sequence>
+      <xs:element name="mcp-server" type="aw:McpServerType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Plugin -->
+  <xs:complexType name="PluginType">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="source" type="xs:string"/>
+    <xs:attribute name="version" type="xs:string"/>
+    <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="PluginsType">
+    <xs:sequence>
+      <xs:element name="plugin" type="aw:PluginType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Tool -->
+  <xs:complexType name="ToolDefType">
+    <xs:all>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="permissions" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="type" type="xs:string" default="function"/>
+    <xs:attribute name="command" type="xs:string"/>
+    <xs:attribute name="endpoint" type="xs:string"/>
+    <xs:attribute name="requires-approval" type="xs:boolean" default="false"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="ToolsType">
+    <xs:sequence>
+      <xs:element name="tool" type="aw:ToolDefType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Workflow -->
+  <xs:complexType name="WorkflowStepType">
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="agent" type="xs:string"/>
+    <xs:attribute name="action" type="xs:string"/>
+    <xs:attribute name="condition" type="xs:string"/>
+    <xs:attribute name="parallel" type="xs:boolean" default="false"/>
+    <xs:attribute name="timeout-ms" type="xs:positiveInteger"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="WorkflowType">
+    <xs:all>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="steps">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="step" type="aw:WorkflowStepType" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="trigger" type="xs:string"/>
+    <xs:attribute name="on-error" type="xs:string" default="abort"/>
+    <xs:attribute name="timeout-ms" type="xs:positiveInteger"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="WorkflowsType">
+    <xs:sequence>
+      <xs:element name="workflow" type="aw:WorkflowType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Memory -->
+  <xs:complexType name="MemoryType">
+    <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    <xs:attribute name="auto-learn" type="xs:boolean" default="true"/>
+    <xs:attribute name="storage" type="xs:string" default="local"/>
+    <xs:attribute name="max-entries" type="xs:positiveInteger"/>
+    <xs:attribute name="retention-days" type="xs:positiveInteger"/>
+    <xs:attribute name="index-type" type="xs:string" default="semantic"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Context -->
+  <xs:complexType name="ContextType">
+    <xs:all>
+      <xs:element name="files" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="directories" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="environment" type="aw:KeyValueListType" minOccurs="0"/>
+      <xs:element name="dynamic" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="source" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="command" type="xs:string" use="required"/>
+                <xs:attribute name="label" type="xs:string"/>
+                <xs:attribute name="cache-ttl-ms" type="xs:positiveInteger"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute name="max-size-bytes" type="xs:positiveInteger"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Sessions -->
+  <xs:complexType name="SessionsType">
+    <xs:attribute name="persistence" type="xs:string" default="local"/>
+    <xs:attribute name="max-history" type="xs:positiveInteger" default="100"/>
+    <xs:attribute name="auto-save" type="xs:boolean" default="true"/>
+    <xs:attribute name="isolation" type="xs:string" default="shared"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Permissions -->
+  <xs:complexType name="PermissionsType">
+    <xs:all>
+      <xs:element name="allow" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="deny" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="ask" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="network" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element name="allow-domains" type="aw:StringListType" minOccurs="0"/>
+            <xs:element name="deny-domains" type="aw:StringListType" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="filesystem" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element name="read" type="aw:StringListType" minOccurs="0"/>
+            <xs:element name="write" type="aw:StringListType" minOccurs="0"/>
+            <xs:element name="deny" type="aw:StringListType" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute name="sandbox" type="xs:boolean" default="false"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ModelConfig -->
+  <xs:complexType name="ModelConfigType">
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="provider" type="xs:string"/>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="api-key-ref" type="xs:string"/>
+    <xs:attribute name="endpoint" type="xs:anyURI"/>
+    <xs:attribute name="temperature" type="xs:decimal"/>
+    <xs:attribute name="max-tokens" type="xs:positiveInteger"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="ModelsType">
+    <xs:sequence>
+      <xs:element name="model" type="aw:ModelConfigType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Code Index -->
+  <xs:complexType name="CodeIndexType">
+    <xs:all>
+      <xs:element name="include" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="exclude" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="languages" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    <xs:attribute name="max-file-size-kb" type="xs:positiveInteger" default="512"/>
+    <xs:attribute name="index-type" type="xs:string" default="symbols"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Wiki -->
+  <xs:complexType name="WikiType">
+    <xs:attribute name="enabled" type="xs:boolean" default="false"/>
+    <xs:attribute name="path" type="xs:string" default="docs/"/>
+    <xs:attribute name="format" type="xs:string" default="markdown"/>
+    <xs:attribute name="auto-index" type="xs:boolean" default="true"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Templates -->
+  <xs:complexType name="TemplateType">
+    <xs:all>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="content" type="xs:string"/>
+      <xs:element name="variables" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="var" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="name" type="xs:string" use="required"/>
+                <xs:attribute name="type" type="xs:string"/>
+                <xs:attribute name="default" type="xs:string"/>
+                <xs:attribute name="description" type="xs:string"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="TemplatesType">
+    <xs:sequence>
+      <xs:element name="template" type="aw:TemplateType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Snippets -->
+  <xs:complexType name="SnippetType">
+    <xs:all>
+      <xs:element name="code" type="xs:string"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="tags" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="language" type="xs:string"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="SnippetsType">
+    <xs:sequence>
+      <xs:element name="snippet" type="aw:SnippetType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Prompts -->
+  <xs:complexType name="PromptType">
+    <xs:all>
+      <xs:element name="template" type="xs:string"/>
+      <xs:element name="variables" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="tags" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="max-tokens" type="xs:positiveInteger"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="PromptsType">
+    <xs:sequence>
+      <xs:element name="prompt" type="aw:PromptType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Sync -->
+  <xs:complexType name="SyncType">
+    <xs:all>
+      <xs:element name="watch-paths" type="aw:StringListType" minOccurs="0"/>
+      <xs:element name="ignore-paths" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="mode" type="xs:string" default="realtime"/>
+    <xs:attribute name="debounce-ms" type="xs:positiveInteger" default="300"/>
+    <xs:attribute name="conflict-strategy" type="xs:string" default="last-write-wins"/>
+    <xs:attribute name="transport" type="xs:string" default="file-watch"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Governance -->
+  <xs:complexType name="GovernanceType">
+    <xs:all>
+      <xs:element name="rbac" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="role" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="permissions" type="aw:StringListType"/>
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:string" use="required"/>
+                <xs:attribute name="description" type="xs:string"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="enabled" type="xs:boolean" default="false"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="policies" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="policy" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="name" type="xs:string" use="required"/>
+                <xs:attribute name="type" type="xs:string" use="required"/>
+                <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+                <xs:attribute name="action" type="xs:string" default="block"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="audit" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+          <xs:attribute name="retention-days" type="xs:positiveInteger" default="90"/>
+          <xs:attribute name="storage" type="xs:string" default="sqlite"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="compliance" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="frameworks" type="aw:StringListType" minOccurs="0"/>
+          </xs:sequence>
+          <xs:attribute name="pii-detection" type="xs:boolean" default="false"/>
+          <xs:attribute name="secret-scanning" type="xs:boolean" default="true"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Updater -->
+  <xs:complexType name="UpdaterType">
+    <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    <xs:attribute name="channel" type="xs:string" default="stable"/>
+    <xs:attribute name="check-interval-sec" type="xs:positiveInteger" default="3600"/>
+    <xs:attribute name="auto-download" type="xs:boolean" default="true"/>
+    <xs:attribute name="auto-install" type="xs:boolean" default="false"/>
+    <xs:attribute name="source" type="xs:anyURI"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Telemetry -->
+  <xs:complexType name="TelemetryType">
+    <xs:attribute name="enabled" type="xs:boolean" default="false"/>
+    <xs:attribute name="endpoint" type="xs:anyURI"/>
+    <xs:attribute name="protocol" type="xs:string" default="otlp"/>
+    <xs:attribute name="sample-rate" type="xs:decimal" default="1"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Notifications -->
+  <xs:complexType name="NotificationsType">
+    <xs:sequence>
+      <xs:element name="channel" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="type" type="xs:string" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="enabled" type="xs:boolean" default="true"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- API Endpoints -->
+  <xs:complexType name="ApiEndpointType">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="url" type="xs:anyURI" use="required"/>
+    <xs:attribute name="method" type="xs:string" default="GET"/>
+    <xs:attribute name="timeout-ms" type="xs:positiveInteger" default="30000"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="ApiEndpointsType">
+    <xs:sequence>
+      <xs:element name="endpoint" type="aw:ApiEndpointType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Webhooks -->
+  <xs:complexType name="WebhookType">
+    <xs:all>
+      <xs:element name="events" type="aw:StringListType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="url" type="xs:anyURI" use="required"/>
+    <xs:attribute name="secret-ref" type="xs:string"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="WebhooksType">
+    <xs:sequence>
+      <xs:element name="webhook" type="aw:WebhookType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Event Bus -->
+  <xs:complexType name="EventBusType">
+    <xs:sequence>
+      <xs:element name="channel" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="subscribers" type="aw:StringListType" minOccurs="0"/>
+          </xs:sequence>
+          <xs:attribute name="name" type="xs:string" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="enabled" type="xs:boolean" default="false"/>
+    <xs:attribute name="transport" type="xs:string" default="in-memory"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- Shared Utility Types -->
+  <xs:complexType name="StringListType">
+    <xs:sequence>
+      <xs:element name="item" type="xs:string" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="KeyValueListType">
+    <xs:sequence>
+      <xs:element name="entry" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="key" type="xs:string" use="required"/>
+          <xs:attribute name="value" type="xs:string" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

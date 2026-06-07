@@ -1,0 +1,583 @@
+# AgentWeave Complete Configuration Example
+# Demonstrates all 46+ concepts with extensibility
+# YAML is the recommended authoring format
+
+apiVersion: agentweave/v1
+kind: Project
+
+metadata:
+  name: acme-platform
+  version: "2.1.0"
+  description: "Full-stack SaaS platform with AI-assisted development"
+  team: platform-engineering
+  org: acme-corp
+  tags: [saas, typescript, rust, microservices]
+  authors:
+    - name: Alice Chen
+      email: alice@acme.dev
+      role: lead
+    - name: Bob Zhang
+      email: bob@acme.dev
+      role: backend
+  license: MIT
+  repository: https://github.com/acme-corp/platform
+
+# Inherit from shared base configs
+extends:
+  - ./shared/base-rules.yaml
+  - https://registry.agentweave.dev/templates/typescript-strict
+
+# Target vendor platforms for config generation
+targets:
+  - codex
+  - claude-code
+  - cursor
+  - windsurf
+  - gemini-cli
+  - github-copilot
+  - devin
+  - cline
+
+# Default model for all agents
+default_model:
+  provider: anthropic
+  model: claude-sonnet-4-20250514
+  temperature: 0.3
+  max_tokens: 8192
+
+# Agent definitions
+agents:
+  - name: main-architect
+    role: Senior software architect with deep TypeScript and Rust expertise
+    instructions: |
+      You are the lead architect for the ACME Platform.
+      Focus on clean architecture, type safety, and performance.
+      Always prefer composition over inheritance.
+    model:
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      max_tokens: 16384
+    tools: [read_file, write_file, terminal, search, browser]
+    permissions: [filesystem:write, network:outbound, terminal:execute]
+    temperature: 0.2
+    output_style: structured
+    constraints:
+      - Never modify files in /vendor or /node_modules
+      - Always run tests before committing
+    sub_agents:
+      - name: reviewer
+        role: Code reviewer focused on security and performance
+        tools: [read_file, search]
+        temperature: 0.1
+        output_style: concise
+
+  - name: docs-writer
+    role: Technical documentation specialist
+    instructions: Write clear, concise documentation with code examples
+    tools: [read_file, write_file, search]
+    temperature: 0.5
+    output_style: detailed
+
+  - name: security-auditor
+    role: Application security specialist
+    tools: [read_file, terminal, search]
+    constraints:
+      - Report all findings with severity rating
+      - Never modify production configuration
+    triggers:
+      - pre-commit
+      - file-change:src/auth/**
+
+# Behavioral rules
+rules:
+  - name: typescript-strict
+    scope: "**/*.{ts,tsx}"
+    content: |
+      Use strict TypeScript with no `any` types.
+      Prefer interface over type for object shapes.
+      Use branded types for domain primitives.
+    severity: error
+    priority: 100
+
+  - name: api-versioning
+    scope: "src/api/**"
+    content: All API endpoints must include version prefix /api/v{n}/
+    severity: error
+    applies_to: [codex, claude-code, cursor]
+
+  - name: commit-format
+    scope: always
+    content: |
+      Follow conventional commits: type(scope): description
+      Types: feat, fix, refactor, docs, test, chore
+    severity: warning
+    tags: [git, workflow]
+
+# Skills
+skills:
+  - name: database-migration
+    description: Create and run database migrations safely
+    steps:
+      - Generate migration SQL from schema diff
+      - Create rollback script
+      - Run migration in transaction
+      - Verify schema integrity
+    tools_required: [terminal, write_file]
+    timeout_ms: 60000
+
+  - name: api-endpoint
+    description: Create a new REST API endpoint with full test coverage
+    steps:
+      - Define OpenAPI schema
+      - Generate route handler
+      - Add input validation
+      - Write integration test
+      - Update API docs
+    tools_required: [write_file, terminal, read_file]
+    tags: [backend, api]
+
+# Lifecycle hooks
+hooks:
+  - name: lint-check
+    event: pre-commit
+    run: npm run lint:check
+    timeout_ms: 30000
+    fail_action: abort
+
+  - name: type-check
+    event: pre-commit
+    run: npx tsc --noEmit
+    fail_action: abort
+
+  - name: notify-deploy
+    event: post-commit
+    run: curl -X POST $WEBHOOK_URL -d '{"event":"commit","ref":"$GIT_REF"}'
+    condition: branch == 'main'
+    fail_action: ignore
+
+  - name: auto-generate
+    event: config-change
+    run: agentweave generate
+    fail_action: warn
+
+# MCP Servers
+mcp_servers:
+  - name: filesystem
+    command: npx
+    args: [-y, "@modelcontextprotocol/server-filesystem", ./]
+    transport: stdio
+    capabilities: [read, write, search]
+    auto_start: true
+
+  - name: postgres
+    command: npx
+    args: [-y, "@modelcontextprotocol/server-postgres"]
+    transport: stdio
+    env:
+      DATABASE_URL: "${DATABASE_URL}"
+    capabilities: [query, schema]
+    health_check: true
+
+  - name: github
+    command: npx
+    args: [-y, "@modelcontextprotocol/server-github"]
+    transport: stdio
+    env:
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+    capabilities: [repos, issues, pulls]
+
+# Plugins
+plugins:
+  - name: eslint-adapter
+    source: "@agentweave/plugin-eslint"
+    version: "^1.0.0"
+    config:
+      auto_fix: true
+
+  - name: docker-helper
+    source: "./plugins/docker-helper"
+    enabled: true
+
+# Custom Tools
+tools:
+  - name: deploy-staging
+    description: Deploy current branch to staging environment
+    type: command
+    command: "./scripts/deploy.sh staging"
+    permissions: [network:outbound, terminal:execute]
+    requires_approval: true
+
+  - name: run-benchmark
+    description: Run performance benchmarks
+    type: command
+    command: "cargo bench --output-format json"
+    permissions: [terminal:execute]
+
+# Workflows
+workflows:
+  - name: feature-development
+    description: End-to-end feature development workflow
+    trigger: manual
+    steps:
+      - name: plan
+        agent: main-architect
+        action: "Analyze requirements and create implementation plan"
+      - name: implement
+        agent: main-architect
+        action: "Implement the feature following the plan"
+      - name: test
+        action: "npm run test"
+        condition: "step.plan.success"
+      - name: review
+        agent: reviewer
+        action: "Review implementation for security and performance"
+        parallel: false
+      - name: document
+        agent: docs-writer
+        action: "Update documentation for new feature"
+        parallel: true
+    on_error: abort
+    timeout_ms: 600000
+
+  - name: incident-response
+    description: Automated incident investigation
+    trigger: "webhook:pagerduty"
+    steps:
+      - name: gather-context
+        agent: main-architect
+        action: "Gather logs and recent changes"
+      - name: identify-root-cause
+        agent: main-architect
+        action: "Analyze gathered data for root cause"
+      - name: propose-fix
+        agent: main-architect
+        action: "Propose and implement fix"
+    on_error: skip
+
+# Memory configuration
+memory:
+  enabled: true
+  auto_learn: true
+  storage: hybrid
+  max_entries: 10000
+  retention_days: 365
+  index_type: semantic
+  embedding_model: text-embedding-3-small
+
+# Context injection
+context:
+  files:
+    - README.md
+    - docs/architecture.md
+    - .env.example
+  directories:
+    - src/types/
+  environment:
+    NODE_ENV: development
+    LOG_LEVEL: debug
+  dynamic:
+    - command: "git log --oneline -10"
+      label: "Recent commits"
+      cache_ttl_ms: 60000
+    - command: "cat package.json | jq '.dependencies | keys'"
+      label: "Project dependencies"
+  max_size_bytes: 1048576
+
+# Session configuration
+sessions:
+  persistence: local
+  max_history: 200
+  auto_save: true
+  isolation: per-workspace
+
+# Permissions
+permissions:
+  allow:
+    - filesystem:read
+    - filesystem:write
+    - terminal:execute
+    - network:outbound
+    - browser:navigate
+  deny:
+    - filesystem:write:/etc/**
+    - filesystem:write:/usr/**
+    - network:outbound:*.internal.corp
+  ask:
+    - filesystem:delete
+    - terminal:sudo
+  sandbox: false
+  network:
+    allow_domains:
+      - api.github.com
+      - registry.npmjs.org
+      - "*.amazonaws.com"
+    deny_domains:
+      - "*.malware.test"
+  filesystem:
+    read: ["**/*"]
+    write: ["src/**", "tests/**", "docs/**"]
+    deny: ["secrets/**", ".env.production"]
+
+# Model configurations
+models:
+  - name: fast
+    provider: anthropic
+    model: claude-3-5-haiku-20241022
+    max_tokens: 4096
+    temperature: 0.1
+  - name: powerful
+    provider: openai
+    model: gpt-4o
+    api_key_ref: OPENAI_API_KEY
+    max_tokens: 16384
+  - name: local
+    provider: local
+    model: codellama:34b
+    endpoint: http://localhost:11434/v1
+
+# Code indexing
+code_index:
+  enabled: true
+  include:
+    - "src/**/*.{ts,tsx,rs}"
+    - "tests/**/*.ts"
+  exclude:
+    - "**/node_modules/**"
+    - "**/target/**"
+    - "**/*.generated.*"
+  max_file_size_kb: 256
+  languages: [typescript, rust, python]
+  index_type: semantic
+
+# Wiki / Documentation
+wiki:
+  enabled: true
+  path: docs/
+  format: markdown
+  auto_index: true
+
+# Reusable templates
+templates:
+  - name: api-handler
+    description: REST API route handler template
+    content: |
+      import { Router } from 'express';
+      import { z } from 'zod';
+
+      const {{name}}Schema = z.object({
+        {{#each fields}}
+        {{this.name}}: z.{{this.type}}(),
+        {{/each}}
+      });
+
+      export const {{name}}Router = Router();
+
+      {{name}}Router.{{method}}('/', async (req, res) => {
+        const data = {{name}}Schema.parse(req.body);
+        // TODO: implement
+        res.json({ success: true });
+      });
+    variables:
+      - name: name
+        type: string
+        description: Handler name in camelCase
+      - name: method
+        type: string
+        default: post
+      - name: fields
+        type: array
+
+# Code snippets
+snippets:
+  - name: error-handler
+    language: typescript
+    code: |
+      export class AppError extends Error {
+        constructor(
+          public readonly code: string,
+          public readonly statusCode: number,
+          message: string,
+        ) {
+          super(message);
+          this.name = 'AppError';
+        }
+      }
+    description: Base application error class
+    tags: [error, typescript, pattern]
+
+# Prompt templates
+prompts:
+  - name: code-review
+    template: |
+      Review the following code for:
+      1. Security vulnerabilities
+      2. Performance issues
+      3. Code style violations
+      4. Missing error handling
+
+      Code:
+      ```{{language}}
+      {{code}}
+      ```
+    variables: [language, code]
+    model: powerful
+    max_tokens: 4096
+    tags: [review, quality]
+
+# Real-time sync
+sync:
+  mode: realtime
+  watch_paths:
+    - agentweave.yaml
+    - .agentweave/
+  ignore_paths:
+    - node_modules/
+    - target/
+    - .git/
+  debounce_ms: 300
+  conflict_strategy: last-write-wins
+  transport: file-watch
+
+# Governance
+governance:
+  rbac:
+    enabled: true
+    roles:
+      - name: admin
+        description: Full access to all operations
+        permissions: ["*"]
+      - name: developer
+        description: Standard development operations
+        permissions:
+          - config:read
+          - config:write
+          - generate:*
+          - validate:*
+          - watch:*
+        inherits: [viewer]
+      - name: viewer
+        description: Read-only access
+        permissions:
+          - config:read
+          - status:read
+          - logs:read
+  policies:
+    - name: no-production-secrets
+      type: security
+      description: Prevent committing production secrets
+      enabled: true
+      action: block
+    - name: api-budget
+      type: budget
+      description: Monthly API call budget
+      limit: 100000
+      period: monthly
+      action: warn
+    - name: vendor-allowlist
+      type: allowlist
+      description: Allowed vendor targets
+      values: [codex, claude-code, cursor, devin]
+      action: block
+  audit:
+    enabled: true
+    retention_days: 180
+    storage: sqlite
+    export_format: json
+    events:
+      - config:change
+      - generate:run
+      - policy:violation
+  quotas:
+    api_calls:
+      limit: 10000
+      period: daily
+      alert_threshold: 0.8
+      action_on_exceed: throttle
+    tokens:
+      limit: 5000000
+      period: monthly
+      action_on_exceed: warn
+  compliance:
+    frameworks: [SOC2, GDPR]
+    data_residency: [us-east-1, eu-west-1]
+    pii_detection: true
+    secret_scanning: true
+
+# Auto-updater
+updater:
+  enabled: true
+  channel: stable
+  check_interval_sec: 3600
+  auto_download: true
+  auto_install: false
+  source: https://github.com/gaosichun888/AgentWeave/releases
+
+# Telemetry / Observability
+telemetry:
+  enabled: true
+  endpoint: https://otel.acme.dev/v1/traces
+  protocol: otlp
+  sample_rate: 0.5
+  include_spans: true
+  include_metrics: true
+  include_logs: false
+
+# Notifications
+notifications:
+  enabled: true
+  channels:
+    - type: desktop
+    - type: slack
+      config:
+        webhook_url_ref: SLACK_WEBHOOK_URL
+        channel: "#ai-ops"
+  events:
+    - generate:complete
+    - policy:violation
+    - update:available
+
+# External API integrations
+api_endpoints:
+  - name: github-api
+    url: https://api.github.com
+    method: GET
+    auth:
+      type: bearer
+      token_ref: GITHUB_TOKEN
+    timeout_ms: 10000
+
+  - name: metrics-api
+    url: https://metrics.acme.dev/api/v1/push
+    method: POST
+    auth:
+      type: api-key
+      token_ref: METRICS_API_KEY
+
+# Webhooks
+webhooks:
+  - name: deployment-notify
+    url: https://hooks.acme.dev/deploy
+    events: [generate:complete, config:change]
+    secret_ref: WEBHOOK_SECRET
+
+# Event bus
+event_bus:
+  enabled: true
+  transport: in-memory
+  channels:
+    - name: config-changes
+      subscribers: [sync-engine, generator, auditor]
+    - name: alerts
+      subscribers: [notification-service, audit-log]
+
+# Extension fields (vendor-specific customization)
+x-cursor:
+  theme: dark
+  auto_import: true
+
+x-claude:
+  thinking_mode: extended
+  artifacts: true
+
+x-custom-vendor:
+  proprietary_setting: value123

@@ -1,0 +1,32 @@
+tracing:
+  enabled: true
+  exporter: otlp
+  endpoint: "https://otel-collector.internal.corp.com:4317"
+  service_name: agentweave-enterprise
+  sampling_rate: 1.0
+  attributes:
+    environment: production
+    team: platform
+    region: us-east-1
+
+logging:
+  level: info
+  format: json
+  output:
+    - type: file
+      path: /var/log/agentweave/agent.log
+      rotation: daily
+      retention: 30d
+    - type: stdout
+      format: json
+
+metrics:
+  enabled: true
+  endpoint: "https://metrics.internal.corp.com/v1/metrics"
+  interval_seconds: 60
+  collectors:
+    - token_usage
+    - request_latency
+    - error_rate
+    - cost_per_vendor
+    - active_sessions

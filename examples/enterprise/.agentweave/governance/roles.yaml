@@ -1,0 +1,39 @@
+roles:
+  - name: admin
+    permissions:
+      - config:read
+      - config:write
+      - config:delete
+      - policy:manage
+      - audit:read
+      - team:manage
+      - secret:manage
+
+  - name: developer
+    permissions:
+      - config:read
+      - config:write
+      - audit:read:own
+      - secret:read:own
+
+  - name: viewer
+    permissions:
+      - config:read
+      - audit:read:own
+
+teams:
+  - name: platform
+    role: admin
+    members:
+      - platform-lead@corp.com
+      - sre-team@corp.com
+
+  - name: backend
+    role: developer
+    members:
+      - backend-team@corp.com
+
+  - name: stakeholders
+    role: viewer
+    members:
+      - pm-team@corp.com

@@ -1,0 +1,31 @@
+name: main
+description: "Main development agent"
+role: "Senior full-stack developer"
+systemPrompt: |
+  You are a senior full-stack developer working on this project.
+  Follow the project conventions, write clean and maintainable code.
+  Always add proper error handling and type annotations.
+
+model:
+  provider: anthropic
+  model: claude-sonnet-4
+  params:
+    temperature: 0.3
+
+tools:
+  allow:
+    - "Bash(*)"
+    - "Read(**)"
+    - "Write(**)"
+  deny:
+    - "Bash(rm -rf /)"
+    - "Read(.env)"
+    - "Read(.env.*)"
+
+skills:
+  - code-review
+  - testing
+
+memory:
+  autoLearn: true
+  maxEntries: 200

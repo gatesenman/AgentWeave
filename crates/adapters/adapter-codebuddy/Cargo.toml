@@ -1,0 +1,13 @@
+[package]
+name = "adapter-codebuddy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "AgentWeave adapter for codebuddy"
+
+[dependencies]
+agentweave-core = { path = "../../agentweave-core" }
+serde.workspace = true
+serde_yaml.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true

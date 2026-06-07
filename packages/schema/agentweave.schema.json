@@ -1,0 +1,864 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentweave.dev/schema/v1/agentweave.schema.json",
+  "title": "AgentWeave Configuration Schema",
+  "description": "Unified AI agent configuration superset schema — supports 46+ concepts across 12+ vendor platforms with built-in extensibility, governance, and multi-IDE sync.",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata"],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^x-": {
+      "description": "Extension fields (vendor-specific or custom). Any key starting with 'x-' is reserved for extensions and will not be validated."
+    }
+  },
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IDE support"
+    },
+    "apiVersion": {
+      "type": "string",
+      "enum": ["agentweave/v1"],
+      "description": "Schema version identifier. Future versions (v2, v3) maintain backward compatibility."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Project", "Fragment", "Template"],
+      "description": "Configuration kind. 'Project' for full configs, 'Fragment' for partial/shared configs, 'Template' for reusable templates."
+    },
+    "metadata": { "$ref": "#/definitions/Metadata" },
+    "extends": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Inherit from other configurations (file paths or URIs). Properties are deep-merged in order."
+    },
+    "targets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/TargetVendor" },
+      "description": "Target vendor platforms for config generation"
+    },
+    "default_model": { "$ref": "#/definitions/ModelConfig" },
+    "agents": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Agent" },
+      "description": "Agent definitions — primary AI assistants"
+    },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Rule" },
+      "description": "Behavioral directives for AI assistants"
+    },
+    "skills": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Skill" },
+      "description": "Reusable capability/procedure definitions"
+    },
+    "hooks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Hook" },
+      "description": "Event-triggered automations"
+    },
+    "mcp_servers": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/McpServer" },
+      "description": "Model Context Protocol server configurations"
+    },
+    "plugins": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Plugin" },
+      "description": "Loadable extension modules"
+    },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Tool" },
+      "description": "Custom tool/function definitions"
+    },
+    "workflows": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Workflow" },
+      "description": "Multi-step orchestrated processes"
+    },
+    "memory": { "$ref": "#/definitions/Memory" },
+    "context": { "$ref": "#/definitions/Context" },
+    "sessions": { "$ref": "#/definitions/Sessions" },
+    "permissions": { "$ref": "#/definitions/Permissions" },
+    "models": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/ModelConfig" },
+      "description": "Named model provider configurations"
+    },
+    "code_index": { "$ref": "#/definitions/CodeIndex" },
+    "wiki": { "$ref": "#/definitions/Wiki" },
+    "templates": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Template" },
+      "description": "Reusable content templates"
+    },
+    "snippets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Snippet" },
+      "description": "Code fragment library"
+    },
+    "prompts": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Prompt" },
+      "description": "Prompt template management"
+    },
+    "sync": { "$ref": "#/definitions/Sync" },
+    "governance": { "$ref": "#/definitions/Governance" },
+    "updater": { "$ref": "#/definitions/Updater" },
+    "telemetry": { "$ref": "#/definitions/Telemetry" },
+    "notifications": { "$ref": "#/definitions/Notifications" },
+    "api_endpoints": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/ApiEndpoint" },
+      "description": "External service integrations"
+    },
+    "webhooks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Webhook" },
+      "description": "HTTP callback registrations"
+    },
+    "event_bus": { "$ref": "#/definitions/EventBus" }
+  },
+  "definitions": {
+    "Metadata": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "description": "Project name (alphanumeric, hyphens, underscores)",
+          "examples": ["my-project", "acme-platform"]
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+",
+          "description": "Semantic version (MAJOR.MINOR.PATCH)",
+          "examples": ["1.0.0", "2.3.1"]
+        },
+        "description": { "type": "string" },
+        "team": { "type": "string", "description": "Owning team name" },
+        "org": { "type": "string", "description": "Organization identifier" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Freeform tags for categorization"
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "email": { "type": "string", "format": "email" },
+              "role": { "type": "string" }
+            },
+            "required": ["name"]
+          }
+        },
+        "license": { "type": "string" },
+        "repository": { "type": "string", "format": "uri" }
+      }
+    },
+    "TargetVendor": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "codex", "claude-code", "cursor", "windsurf", "gemini-cli",
+            "github-copilot", "devin", "cline", "codebuddy", "qoder",
+            "grok-build", "openclaw"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^custom:",
+          "description": "Custom vendor identifier (e.g., 'custom:my-vendor')"
+        }
+      ]
+    },
+    "Agent": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string", "description": "Unique agent identifier" },
+        "role": { "type": "string", "description": "Agent role/persona description" },
+        "instructions": { "type": "string", "description": "Detailed instructions (supports markdown)" },
+        "model": { "$ref": "#/definitions/ModelConfig" },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Allowed tools for this agent"
+        },
+        "permissions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Permission scopes granted to this agent"
+        },
+        "sub_agents": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Agent" },
+          "description": "Delegatable sub-agents"
+        },
+        "memory": { "$ref": "#/definitions/Memory" },
+        "context_window": { "type": "integer", "minimum": 1 },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2, "default": 0.3 },
+        "max_tokens": { "type": "integer", "minimum": 1 },
+        "top_p": { "type": "number", "minimum": 0, "maximum": 1 },
+        "stop_sequences": { "type": "array", "items": { "type": "string" } },
+        "output_style": {
+          "type": "string",
+          "enum": ["concise", "detailed", "structured", "conversational"],
+          "default": "detailed"
+        },
+        "schedule": { "$ref": "#/definitions/Schedule" },
+        "triggers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Events that activate this agent"
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Hard constraints the agent must follow"
+        }
+      }
+    },
+    "Rule": {
+      "type": "object",
+      "required": ["name", "content"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "content": { "type": "string", "description": "Rule content (markdown supported)" },
+        "scope": {
+          "type": "string",
+          "description": "Glob pattern or 'always' or 'manual'",
+          "examples": ["**/*.ts", "src/api/**", "always"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warning", "info", "hint"],
+          "default": "warning"
+        },
+        "applies_to": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/TargetVendor" },
+          "description": "Only apply to specific vendors"
+        },
+        "priority": { "type": "integer", "default": 0 },
+        "enabled": { "type": "boolean", "default": true },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Skill": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "steps": { "type": "array", "items": { "type": "string" } },
+        "tools_required": { "type": "array", "items": { "type": "string" } },
+        "input_schema": { "type": "object", "description": "JSON Schema for skill inputs" },
+        "output_schema": { "type": "object", "description": "JSON Schema for skill outputs" },
+        "timeout_ms": { "type": "integer", "minimum": 0 },
+        "retry": { "$ref": "#/definitions/RetryPolicy" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Hook": {
+      "type": "object",
+      "required": ["name", "event"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "event": {
+          "type": "string",
+          "enum": [
+            "session-start", "session-end",
+            "tool-call-pre", "tool-call-post",
+            "pre-commit", "post-commit", "pre-push", "post-merge",
+            "file-change", "error", "timeout",
+            "agent-start", "agent-end",
+            "config-change", "generate-pre", "generate-post"
+          ]
+        },
+        "run": { "type": "string", "description": "Shell command to execute" },
+        "condition": { "type": "string", "description": "Condition expression (when to trigger)" },
+        "timeout_ms": { "type": "integer", "default": 30000 },
+        "fail_action": {
+          "type": "string",
+          "enum": ["abort", "warn", "ignore"],
+          "default": "warn"
+        }
+      }
+    },
+    "McpServer": {
+      "type": "object",
+      "required": ["name", "command"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "command": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "transport": {
+          "type": "string",
+          "enum": ["stdio", "sse", "websocket", "http"],
+          "default": "stdio"
+        },
+        "env": { "type": "object", "additionalProperties": { "type": "string" } },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "timeout_ms": { "type": "integer", "default": 60000 },
+        "auto_start": { "type": "boolean", "default": true },
+        "health_check": { "type": "boolean", "default": false }
+      }
+    },
+    "Plugin": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "source": { "type": "string", "description": "Registry name or file path or git URL" },
+        "version": { "type": "string" },
+        "config": { "type": "object", "additionalProperties": true },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "Tool": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["function", "command", "api", "mcp"],
+          "default": "function"
+        },
+        "input_schema": { "type": "object" },
+        "command": { "type": "string" },
+        "endpoint": { "type": "string" },
+        "permissions": { "type": "array", "items": { "type": "string" } },
+        "requires_approval": { "type": "boolean", "default": false }
+      }
+    },
+    "Workflow": {
+      "type": "object",
+      "required": ["name", "steps"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "trigger": { "type": "string" },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/WorkflowStep" }
+        },
+        "on_error": {
+          "type": "string",
+          "enum": ["abort", "skip", "retry"],
+          "default": "abort"
+        },
+        "timeout_ms": { "type": "integer" },
+        "max_retries": { "type": "integer", "default": 0 }
+      }
+    },
+    "WorkflowStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "agent": { "type": "string", "description": "Agent to execute this step" },
+        "action": { "type": "string" },
+        "prompt": { "type": "string" },
+        "condition": { "type": "string" },
+        "parallel": { "type": "boolean", "default": false },
+        "timeout_ms": { "type": "integer" },
+        "retry": { "$ref": "#/definitions/RetryPolicy" }
+      }
+    },
+    "Memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "auto_learn": { "type": "boolean", "default": true },
+        "storage": {
+          "type": "string",
+          "enum": ["local", "remote", "hybrid"],
+          "default": "local"
+        },
+        "max_entries": { "type": "integer" },
+        "retention_days": { "type": "integer" },
+        "index_type": {
+          "type": "string",
+          "enum": ["semantic", "keyword", "hybrid"],
+          "default": "semantic"
+        },
+        "embedding_model": { "type": "string" }
+      }
+    },
+    "Context": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Files to include as context (glob patterns supported)"
+        },
+        "directories": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "dynamic": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "command": { "type": "string" },
+              "label": { "type": "string" },
+              "cache_ttl_ms": { "type": "integer" }
+            },
+            "required": ["command"]
+          }
+        },
+        "max_size_bytes": { "type": "integer" }
+      }
+    },
+    "Sessions": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "persistence": {
+          "type": "string",
+          "enum": ["none", "local", "remote"],
+          "default": "local"
+        },
+        "max_history": { "type": "integer", "default": 100 },
+        "auto_save": { "type": "boolean", "default": true },
+        "isolation": {
+          "type": "string",
+          "enum": ["shared", "per-agent", "per-workspace"],
+          "default": "shared"
+        }
+      }
+    },
+    "Permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "allow": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } },
+        "ask": { "type": "array", "items": { "type": "string" } },
+        "sandbox": { "type": "boolean", "default": false },
+        "network": {
+          "type": "object",
+          "properties": {
+            "allow_domains": { "type": "array", "items": { "type": "string" } },
+            "deny_domains": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "filesystem": {
+          "type": "object",
+          "properties": {
+            "read": { "type": "array", "items": { "type": "string" } },
+            "write": { "type": "array", "items": { "type": "string" } },
+            "deny": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "ModelConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "provider": {
+          "type": "string",
+          "enum": ["anthropic", "openai", "google", "mistral", "cohere", "local", "custom"],
+          "description": "Model provider"
+        },
+        "model": { "type": "string", "description": "Model identifier (e.g., claude-sonnet-4, gpt-4o)" },
+        "api_key_ref": { "type": "string", "description": "Environment variable name for API key" },
+        "endpoint": { "type": "string", "format": "uri" },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "max_tokens": { "type": "integer", "minimum": 1 },
+        "top_p": { "type": "number", "minimum": 0, "maximum": 1 },
+        "parameters": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "CodeIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "include": { "type": "array", "items": { "type": "string" }, "description": "Glob patterns to index" },
+        "exclude": { "type": "array", "items": { "type": "string" } },
+        "max_file_size_kb": { "type": "integer", "default": 512 },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "index_type": {
+          "type": "string",
+          "enum": ["full", "symbols", "semantic"],
+          "default": "symbols"
+        }
+      }
+    },
+    "Wiki": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "path": { "type": "string", "default": "docs/", "description": "Path to wiki/docs directory" },
+        "format": {
+          "type": "string",
+          "enum": ["markdown", "rst", "asciidoc"],
+          "default": "markdown"
+        },
+        "auto_index": { "type": "boolean", "default": true }
+      }
+    },
+    "Template": {
+      "type": "object",
+      "required": ["name", "content"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "content": { "type": "string" },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": "string" },
+              "default": {},
+              "description": { "type": "string" }
+            },
+            "required": ["name"]
+          }
+        }
+      }
+    },
+    "Snippet": {
+      "type": "object",
+      "required": ["name", "code"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "language": { "type": "string" },
+        "code": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Prompt": {
+      "type": "object",
+      "required": ["name", "template"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "template": { "type": "string" },
+        "variables": { "type": "array", "items": { "type": "string" } },
+        "model": { "type": "string" },
+        "max_tokens": { "type": "integer" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Sync": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["manual", "realtime", "on-save"],
+          "default": "realtime"
+        },
+        "watch_paths": { "type": "array", "items": { "type": "string" } },
+        "ignore_paths": { "type": "array", "items": { "type": "string" } },
+        "debounce_ms": { "type": "integer", "default": 300, "minimum": 50 },
+        "conflict_strategy": {
+          "type": "string",
+          "enum": ["last-write-wins", "merge", "prompt"],
+          "default": "last-write-wins"
+        },
+        "transport": {
+          "type": "string",
+          "enum": ["file-watch", "ipc", "websocket"],
+          "default": "file-watch"
+        }
+      }
+    },
+    "Governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "rbac": { "$ref": "#/definitions/RBAC" },
+        "policies": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Policy" }
+        },
+        "audit": { "$ref": "#/definitions/Audit" },
+        "quotas": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/Quota" }
+        },
+        "compliance": { "$ref": "#/definitions/Compliance" }
+      }
+    },
+    "RBAC": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "permissions"],
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "permissions": { "type": "array", "items": { "type": "string" } },
+              "inherits": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["allowlist", "denylist", "budget", "rate-limit", "security", "compliance"]
+        },
+        "description": { "type": "string" },
+        "enabled": { "type": "boolean", "default": true },
+        "values": { "type": "array", "items": {} },
+        "limit": { "type": "number" },
+        "period": { "type": "string", "enum": ["hourly", "daily", "weekly", "monthly"] },
+        "action": {
+          "type": "string",
+          "enum": ["block", "warn", "log"],
+          "default": "block"
+        }
+      }
+    },
+    "Audit": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "retention_days": { "type": "integer", "default": 90 },
+        "storage": {
+          "type": "string",
+          "enum": ["sqlite", "postgres", "file"],
+          "default": "sqlite"
+        },
+        "export_format": {
+          "type": "string",
+          "enum": ["json", "csv", "parquet"],
+          "default": "json"
+        },
+        "events": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Event types to audit (empty = all)"
+        }
+      }
+    },
+    "Quota": {
+      "type": "object",
+      "properties": {
+        "limit": { "type": "number" },
+        "period": { "type": "string", "enum": ["hourly", "daily", "weekly", "monthly"] },
+        "alert_threshold": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.8 },
+        "action_on_exceed": {
+          "type": "string",
+          "enum": ["block", "throttle", "warn"],
+          "default": "block"
+        }
+      }
+    },
+    "Compliance": {
+      "type": "object",
+      "properties": {
+        "frameworks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Compliance frameworks (e.g., SOC2, GDPR, HIPAA)"
+        },
+        "data_residency": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Allowed data regions"
+        },
+        "pii_detection": { "type": "boolean", "default": false },
+        "secret_scanning": { "type": "boolean", "default": true }
+      }
+    },
+    "Updater": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "channel": {
+          "type": "string",
+          "enum": ["stable", "beta", "nightly"],
+          "default": "stable"
+        },
+        "check_interval_sec": { "type": "integer", "default": 3600 },
+        "auto_download": { "type": "boolean", "default": true },
+        "auto_install": { "type": "boolean", "default": false },
+        "source": { "type": "string", "format": "uri" }
+      }
+    },
+    "Telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "endpoint": { "type": "string", "format": "uri" },
+        "protocol": {
+          "type": "string",
+          "enum": ["otlp", "custom"],
+          "default": "otlp"
+        },
+        "sample_rate": { "type": "number", "minimum": 0, "maximum": 1, "default": 1 },
+        "include_spans": { "type": "boolean", "default": true },
+        "include_metrics": { "type": "boolean", "default": true },
+        "include_logs": { "type": "boolean", "default": false }
+      }
+    },
+    "Notifications": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": { "type": "string", "enum": ["desktop", "email", "webhook", "slack"] },
+              "config": { "type": "object", "additionalProperties": true }
+            }
+          }
+        },
+        "events": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ApiEndpoint": {
+      "type": "object",
+      "required": ["name", "url"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"] },
+        "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["bearer", "basic", "api-key", "oauth2"] },
+            "token_ref": { "type": "string" }
+          }
+        },
+        "timeout_ms": { "type": "integer", "default": 30000 }
+      }
+    },
+    "Webhook": {
+      "type": "object",
+      "required": ["name", "url"],
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "events": { "type": "array", "items": { "type": "string" } },
+        "secret_ref": { "type": "string" },
+        "retry": { "$ref": "#/definitions/RetryPolicy" }
+      }
+    },
+    "EventBus": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "transport": {
+          "type": "string",
+          "enum": ["in-memory", "redis", "nats"],
+          "default": "in-memory"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "subscribers": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "Schedule": {
+      "type": "object",
+      "properties": {
+        "cron": { "type": "string", "description": "Cron expression" },
+        "timezone": { "type": "string", "default": "UTC" },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "RetryPolicy": {
+      "type": "object",
+      "properties": {
+        "max_attempts": { "type": "integer", "default": 3, "minimum": 0 },
+        "backoff_ms": { "type": "integer", "default": 1000 },
+        "backoff_multiplier": { "type": "number", "default": 2 },
+        "max_backoff_ms": { "type": "integer", "default": 30000 }
+      }
+    }
+  }
+}

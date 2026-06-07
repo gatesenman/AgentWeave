@@ -1,0 +1,9 @@
+{
+  "defaultModel": {
+    "model": "gpt-4o",
+    "provider": "openai"
+  },
+  "description": "Minimal AgentWeave configuration example",
+  "name": "minimal-example",
+  "version": "0.1.0"
+}

@@ -1,0 +1,43 @@
+[package]
+name = "agentweave-desktop"
+version = "0.1.0"
+edition = "2021"
+description = "AgentWeave Desktop Application - Cross-platform unified AI agent configuration"
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+anyhow = "1"
+tokio = { version = "1", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+agentweave-core = { path = "../../../crates/agentweave-core" }
+agentweave-trace = { path = "../../../crates/agentweave-trace" }
+agentweave-governance = { path = "../../../crates/agentweave-governance" }
+agentweave-sync = { path = "../../../crates/agentweave-sync" }
+adapter-codex = { path = "../../../crates/adapters/adapter-codex" }
+adapter-claude = { path = "../../../crates/adapters/adapter-claude" }
+adapter-cursor = { path = "../../../crates/adapters/adapter-cursor" }
+adapter-windsurf = { path = "../../../crates/adapters/adapter-windsurf" }
+adapter-gemini = { path = "../../../crates/adapters/adapter-gemini" }
+adapter-copilot = { path = "../../../crates/adapters/adapter-copilot" }
+adapter-devin = { path = "../../../crates/adapters/adapter-devin" }
+adapter-cline = { path = "../../../crates/adapters/adapter-cline" }
+adapter-codebuddy = { path = "../../../crates/adapters/adapter-codebuddy" }
+adapter-qoder = { path = "../../../crates/adapters/adapter-qoder" }
+adapter-grok = { path = "../../../crates/adapters/adapter-grok" }
+adapter-openclaw = { path = "../../../crates/adapters/adapter-openclaw" }
+notify = "7"
+reqwest = { version = "0.12", features = ["json"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

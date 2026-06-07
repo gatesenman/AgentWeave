@@ -1,0 +1,38 @@
+{
+  "app": {
+    "name": "AgentWeave",
+    "description": "Unified AI Agent Configuration Management"
+  },
+  "cli": {
+    "init_success": "AgentWeave configuration initialized successfully!",
+    "init_exists": "AgentWeave configuration already exists.",
+    "generate_start": "Generating configs for {count} target(s)...",
+    "generate_success": "Done: {success} succeeded, {failed} failed",
+    "generate_file": "[{vendor}] Generated: {path}",
+    "generate_error": "[{vendor}] Error: {error}",
+    "validate_valid": "Configuration valid!",
+    "validate_invalid": "Configuration invalid: {error}",
+    "watch_start": "Watching for changes in {path}",
+    "watch_stop": "Press Ctrl+C to stop.",
+    "watch_change": "Change detected: {path}",
+    "watch_regen": "Regenerated {count} files",
+    "vendors_title": "Supported vendors:",
+    "status_title": "AgentWeave Status",
+    "status_no_config": "No AgentWeave configuration found.",
+    "status_hint": "Run 'agentweave init' to get started.",
+    "import_start": "Importing from: {vendor}",
+    "import_wip": "Feature in development"
+  },
+  "errors": {
+    "config_not_found": "Configuration file not found: {path}",
+    "parse_error": "Failed to parse configuration: {error}",
+    "adapter_error": "Adapter error for {vendor}: {error}",
+    "permission_denied": "Permission denied: {action}"
+  },
+  "governance": {
+    "policy_violation": "Policy violation: {policy} - {message}",
+    "quota_exceeded": "Quota exceeded: {name} ({current}/{limit})",
+    "role_assigned": "Role {role} assigned to {user}",
+    "audit_logged": "Action logged: {action} on {resource}"
+  }
+}

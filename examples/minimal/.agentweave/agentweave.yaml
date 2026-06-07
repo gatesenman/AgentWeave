@@ -1,0 +1,26 @@
+apiVersion: agentweave/v1
+kind: Project
+metadata:
+  name: minimal-example
+  version: 0.1.0
+  description: "Minimal AgentWeave configuration - single agent, basic rules"
+
+targets:
+  - codex
+  - claude-code
+  - cursor
+
+agents:
+  - name: default
+    role: assistant
+    system_prompt: |
+      You are a helpful coding assistant for this project.
+      Follow the project's coding standards and conventions.
+
+rules:
+  - name: general
+    scope: always-apply
+    content: |
+      - Write clean, readable code
+      - Include meaningful comments for complex logic
+      - Follow existing patterns in the codebase
