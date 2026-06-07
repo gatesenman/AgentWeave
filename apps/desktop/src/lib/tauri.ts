@@ -331,3 +331,64 @@ export interface InheritanceData {
 export async function getInheritanceTree(projectDir: string): Promise<InheritanceData> {
   return invoke<InheritanceData>("get_inheritance_tree", { projectDir });
 }
+
+// --- Persistence ---
+
+export interface RecentProject {
+  path: string;
+  name: string;
+  last_opened: string;
+}
+
+export async function addRecentProject(path: string, name: string): Promise<void> {
+  return invoke<void>("add_recent_project", { path, name });
+}
+
+export async function listRecentProjects(): Promise<RecentProject[]> {
+  return invoke<RecentProject[]>("list_recent_projects");
+}
+
+export interface AuditEntry {
+  timestamp: string;
+  action: string;
+  detail: string;
+}
+
+export async function getAuditLog(): Promise<AuditEntry[]> {
+  return invoke<AuditEntry[]>("get_audit_log");
+}
+
+export async function logAuditEvent(action: string, detail: string): Promise<void> {
+  return invoke<void>("log_audit_event", { action, detail });
+}
+
+export async function setPreference(key: string, value: string): Promise<void> {
+  return invoke<void>("set_preference", { key, value });
+}
+
+export async function getPreference(key: string): Promise<string | null> {
+  return invoke<string | null>("get_preference", { key });
+}
+
+// --- Config Hub real data ---
+
+export interface ConceptItem {
+  concept_type: string;
+  name: string;
+  description: string;
+  fields: string[];
+}
+
+export async function getConfigConcepts(projectDir: string): Promise<ConceptItem[]> {
+  return invoke<ConceptItem[]>("get_config_concepts", { projectDir });
+}
+
+// --- Events ---
+
+export async function emitConfigChanged(projectDir: string): Promise<void> {
+  return invoke<void>("emit_config_changed", { projectDir });
+}
+
+export async function emitWatchEvent(eventType: string, detail: string): Promise<void> {
+  return invoke<void>("emit_watch_event", { eventType, detail });
+}

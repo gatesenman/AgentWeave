@@ -1,13 +1,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod database;
 mod tray;
 
 fn main() {
+    let db = database::Database::new().expect("Failed to initialize database");
+
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
+        .manage(std::sync::Arc::new(db))
         .setup(|app| {
             tray::create_tray(app)?;
             Ok(())
@@ -43,6 +47,15 @@ fn main() {
             commands::get_config_analytics,
             commands::list_environments,
             commands::get_inheritance_tree,
+            commands::add_recent_project,
+            commands::list_recent_projects,
+            commands::get_audit_log,
+            commands::log_audit_event,
+            commands::set_preference,
+            commands::get_preference,
+            commands::get_config_concepts,
+            commands::emit_config_changed,
+            commands::emit_watch_event,
         ])
         .run(tauri::generate_context!())
         .expect("error while running AgentWeave desktop app");

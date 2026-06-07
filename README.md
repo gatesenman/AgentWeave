@@ -177,82 +177,63 @@ The cross-platform desktop application provides a visual interface for managing 
 
 ### Dashboard
 
-Project overview with health checks, quick actions, and real-time status.
+Project overview with health checks, vendor status, quick actions, migration wizard, and configuration detection.
 
-![Dashboard](docs/screenshots/dashboard.png)
+![Dashboard](docs/screenshots/01-dashboard.png)
 
-### Config Editor
+### Config Hub
 
-YAML configuration editor with syntax highlighting, validation, and multi-file tabs.
+Concept tree navigation (Agents, Rules, MCP, Skills, Workflows, Hooks, Tools, Models) with card-based detail view.
 
-![Config Editor](docs/screenshots/config-editor.png)
+![Config Hub](docs/screenshots/02-config-hub.png)
 
-### Adapters (12 Vendors)
+### Vendor Generate
 
-Manage all 12 vendor adapters — view supported concepts and generate configs individually or in batch.
+12 vendor selection with concept compatibility matrix — generate configs for all vendors in batch.
 
-![Adapters](docs/screenshots/adapters.png)
+![Generate](docs/screenshots/03-generate.png)
+
+### Compare
+
+Side-by-side diff view — compare generated output across any two vendors with syntax highlighting.
+
+![Compare](docs/screenshots/04-compare.png)
 
 ### ACP Gateway
 
-Unified Agent Communication Protocol dispatch — registered vendors, routing, and monitoring.
+Unified Agent Communication Protocol — vendor registry, routing strategies, concept coverage, and health monitoring.
 
-![ACP Gateway](docs/screenshots/acp-gateway.png)
+![ACP Gateway](docs/screenshots/05-acp-gateway.png)
 
 ### Trace & Observability
 
-Full-chain OTLP-compatible tracing with span visualization and performance metrics.
+Full-chain OTLP-compatible tracing with span list, latency tracking, logs, and alerts.
 
-![Trace](docs/screenshots/trace.png)
+![Trace](docs/screenshots/06-trace.png)
 
 ### Governance
 
-Enterprise governance — policies, RBAC roles, audit trail, quotas, and compliance (SOC2/GDPR).
+Enterprise governance — policies, RBAC roles, audit trail, and quotas management.
 
-![Governance](docs/screenshots/governance.png)
+![Governance](docs/screenshots/07-governance.png)
 
-### Plugins & MCP
+### Template Marketplace
 
-MCP server management — install, configure, and monitor MCP protocol servers.
+Community-shared Agent/Rule/Workflow templates with categories, search, downloads, and stars.
 
-![Plugins](docs/screenshots/plugins.png)
-
-### Backup & Restore
-
-Full config ZIP export/import, snapshot backup, and version rollback.
-
-![Backup](docs/screenshots/backup.png)
-
-### Performance A/B Testing
-
-Run experiments comparing different agent configurations across vendors — track response time, accuracy, token usage, and success rate.
-
-### Prompt Testing
-
-Cross-vendor prompt behavior testing framework — define test cases, run across multiple vendors, compare outputs and pass rates.
+![Templates](docs/screenshots/08-templates.png)
 
 ### AI Assistant
 
-AI-powered configuration suggestions with confidence scoring, plus conversational configuration Q&A.
+AI-powered configuration suggestions with confidence scoring, code diffs, and conversational Q&A.
 
-### Config Analytics
+![AI Assist](docs/screenshots/09-ai-assist.png)
 
-Concept usage distribution, vendor coverage analysis, rule hit rates, and gap identification.
+### Settings
 
-### Environment Management
+System settings (adapter defaults, notifications, security) and user preferences (theme, language) in separate tabs.
 
-Manage dev/staging/prod configuration variants — override specific fields per environment without affecting the baseline.
-
-### Inheritance Visualization
-
-Visualize the `extends` inheritance chain — see which configs inherit from where, field-level source tracking, and final resolved values.
-
-### Settings (System / User separated)
-
-System-level settings (adapter defaults, notifications, security) and user preferences (theme, language) in separate tabs.
-
-![Settings - System](docs/screenshots/settings-system.png)
-![Settings - User](docs/screenshots/settings-user.png)
+![Settings](docs/screenshots/10-settings.png)
 
 ### Development
 

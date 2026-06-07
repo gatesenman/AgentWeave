@@ -3,6 +3,12 @@ use agentweave_core::config::AgentWeaveConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use tauri::State;
+
+use tauri::Emitter;
+
+use crate::database::Database;
 
 static WATCH_ACTIVE: AtomicBool = AtomicBool::new(false);
 
@@ -854,4 +860,151 @@ pub async fn get_inheritance_tree(project_dir: String) -> Result<InheritanceData
             ResolvedField { key: "mcp.postgres.host".into(), value: "localhost".into(), source: "agentweave.yaml (overrides team-overrides)".into() },
         ],
     })
+}
+
+// --- Persistence-backed commands ---
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RecentProject {
+    pub path: String,
+    pub name: String,
+    pub last_opened: String,
+}
+
+#[tauri::command]
+pub async fn add_recent_project(db: State<'_, Arc<Database>>, path: String, name: String) -> Result<(), String> {
+    db.add_recent_project(&path, &name)?;
+    db.log_audit("project.open", &format!("Opened project: {}", name))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_recent_projects(db: State<'_, Arc<Database>>) -> Result<Vec<RecentProject>, String> {
+    let rows = db.list_recent_projects()?;
+    Ok(rows.into_iter().map(|(path, name, last_opened)| RecentProject { path, name, last_opened }).collect())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuditEntry {
+    pub timestamp: String,
+    pub action: String,
+    pub detail: String,
+}
+
+#[tauri::command]
+pub async fn get_audit_log(db: State<'_, Arc<Database>>) -> Result<Vec<AuditEntry>, String> {
+    let rows = db.get_audit_log(100)?;
+    Ok(rows.into_iter().map(|(timestamp, action, detail)| AuditEntry { timestamp, action, detail }).collect())
+}
+
+#[tauri::command]
+pub async fn log_audit_event(db: State<'_, Arc<Database>>, action: String, detail: String) -> Result<(), String> {
+    db.log_audit(&action, &detail)
+}
+
+#[tauri::command]
+pub async fn set_preference(db: State<'_, Arc<Database>>, key: String, value: String) -> Result<(), String> {
+    db.set_preference(&key, &value)
+}
+
+#[tauri::command]
+pub async fn get_preference(db: State<'_, Arc<Database>>, key: String) -> Result<Option<String>, String> {
+    db.get_preference(&key)
+}
+
+// --- Real Config Hub: parse agentweave.yaml and return concepts ---
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ConceptItem {
+    pub concept_type: String,
+    pub name: String,
+    pub description: String,
+    pub fields: Vec<String>,
+}
+
+#[tauri::command]
+pub async fn get_config_concepts(project_dir: String) -> Result<Vec<ConceptItem>, String> {
+    let path = PathBuf::from(&project_dir);
+    let config = AgentWeaveConfig::load(&path).map_err(|e| e.to_string())?;
+
+    let mut items = Vec::new();
+
+    for agent in &config.agents {
+        items.push(ConceptItem {
+            concept_type: "Agent".into(),
+            name: agent.name.clone(),
+            description: agent.description.clone().unwrap_or_default(),
+            fields: vec![
+                format!("role: {}", agent.role.as_deref().unwrap_or("-")),
+                format!("model: {}", agent.model.as_ref().map(|m| m.model.as_str()).unwrap_or("-")),
+                format!("skills: {}", agent.skills.len()),
+            ],
+        });
+    }
+
+    for rule in &config.rules {
+        items.push(ConceptItem {
+            concept_type: "Rule".into(),
+            name: rule.name.clone(),
+            description: rule.description.clone().unwrap_or_default(),
+            fields: vec![
+                format!("activation: {:?}", rule.activation.activation_type),
+                format!("globs: {}", rule.activation.globs.join(", ")),
+            ],
+        });
+    }
+
+    for mcp in &config.mcp_servers {
+        items.push(ConceptItem {
+            concept_type: "MCP Server".into(),
+            name: mcp.name.clone(),
+            description: String::new(),
+            fields: vec![
+                format!("command: {}", mcp.command),
+                format!("transport: {}", mcp.transport.as_deref().unwrap_or("stdio")),
+            ],
+        });
+    }
+
+    for skill in &config.skills {
+        items.push(ConceptItem {
+            concept_type: "Skill".into(),
+            name: skill.name.clone(),
+            description: skill.description.clone().unwrap_or_default(),
+            fields: vec![],
+        });
+    }
+
+    for wf in &config.workflows {
+        items.push(ConceptItem {
+            concept_type: "Workflow".into(),
+            name: wf.name.clone(),
+            description: wf.description.clone().unwrap_or_default(),
+            fields: vec![format!("steps: {}", wf.steps.len())],
+        });
+    }
+
+    for hook in &config.hooks {
+        items.push(ConceptItem {
+            concept_type: "Hook".into(),
+            name: hook.name.clone(),
+            description: String::new(),
+            fields: vec![format!("event: {:?}", hook.event)],
+        });
+    }
+
+    Ok(items)
+}
+
+// --- Event emission for frontend notification ---
+
+#[tauri::command]
+pub async fn emit_config_changed(app: tauri::AppHandle, project_dir: String) -> Result<(), String> {
+    app.emit("config-changed", &project_dir).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn emit_watch_event(app: tauri::AppHandle, event_type: String, detail: String) -> Result<(), String> {
+    let payload = serde_json::json!({ "type": event_type, "detail": detail });
+    app.emit("watch-event", payload).map_err(|e| e.to_string())
 }
