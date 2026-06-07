@@ -5,7 +5,7 @@ import { yaml } from "@codemirror/lang-yaml";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useThemeStore } from "../store/theme";
 import { useConfigStore } from "../store/config";
-import { exportConfig } from "../lib/tauri";
+import { getVendorPreview } from "../lib/tauri";
 
 export default function Compare() {
   const { t } = useTranslation();
@@ -30,10 +30,9 @@ export default function Compare() {
   const loadPreview = async (vendor: string, side: "left" | "right") => {
     if (!projectDir) return;
     try {
-      const content = await exportConfig(projectDir, "yaml");
-      const display = `# ${vendor} output preview\n# Generated from: ${projectDir}\n\n${content}`;
-      if (side === "left") setLeft(display);
-      else setRight(display);
+      const content = await getVendorPreview(projectDir, vendor);
+      if (side === "left") setLeft(content);
+      else setRight(content);
     } catch (e) {
       const errorMsg = `# Error loading ${vendor} preview\n# ${String(e)}`;
       if (side === "left") setLeft(errorMsg);

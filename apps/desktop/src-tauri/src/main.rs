@@ -122,6 +122,9 @@ fn main() {
             commands::start_migration,
             commands::get_migration_status,
             commands::get_config_analytics_ex,
+            commands::detect_vendor_configs,
+            commands::get_vendor_preview,
+            commands::get_vendor_support_matrix,
         ])
         .run(tauri::generate_context!())
         .expect("error while running AgentWeave desktop app");

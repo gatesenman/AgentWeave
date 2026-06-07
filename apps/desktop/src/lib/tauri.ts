@@ -729,3 +729,39 @@ export async function getMigrationStatus(projectDir: string): Promise<MigrationS
 export async function getConfigAnalyticsEx(projectDir: string): Promise<ConfigAnalyticsData> {
   return invoke<ConfigAnalyticsData>("get_config_analytics_ex", { projectDir });
 }
+
+// ============================================================
+// Detect vendor config files
+// ============================================================
+
+export interface DetectedVendorConfig {
+  vendor: string;
+  file_path: string;
+  exists: boolean;
+}
+
+export async function detectVendorConfigs(projectDir: string): Promise<DetectedVendorConfig[]> {
+  return invoke<DetectedVendorConfig[]>("detect_vendor_configs", { projectDir });
+}
+
+// ============================================================
+// Vendor preview (single vendor, no disk write)
+// ============================================================
+
+export async function getVendorPreview(projectDir: string, vendor: string): Promise<string> {
+  return invoke<string>("get_vendor_preview", { projectDir, vendor });
+}
+
+// ============================================================
+// Vendor concept support matrix
+// ============================================================
+
+export interface VendorConceptSupport {
+  vendor: string;
+  display_name: string;
+  supported: string[];
+}
+
+export async function getVendorSupportMatrix(): Promise<VendorConceptSupport[]> {
+  return invoke<VendorConceptSupport[]>("get_vendor_support_matrix");
+}

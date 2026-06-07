@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useConfigStore } from "../store/config";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   FolderOpen,
@@ -16,6 +16,7 @@ import {
   Download,
   ArrowRight,
 } from "lucide-react";
+import { detectVendorConfigs, startMigration, type DetectedVendorConfig } from "../lib/tauri";
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -36,21 +37,47 @@ export default function Dashboard() {
     toggleWatch,
   } = useConfigStore();
   const [showMigrate, setShowMigrate] = useState(false);
-  const [detectedVendors, setDetectedVendors] = useState<string[]>([]);
+  const [detectedVendors, setDetectedVendors] = useState<DetectedVendorConfig[]>([]);
   const [dismissedDetection, setDismissedDetection] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     loadVendors();
   }, [loadVendors]);
 
+  const detectConfigs = useCallback(async () => {
+    if (!projectDir) return;
+    try {
+      const configs = await detectVendorConfigs(projectDir);
+      setDetectedVendors(configs.filter((c) => c.exists));
+    } catch (e) {
+      console.error("detectVendorConfigs", e);
+    }
+  }, [projectDir]);
+
   useEffect(() => {
     if (projectDir) {
       loadProject();
       loadHealth();
-      // Simulate detection of existing vendor configs
-      setDetectedVendors(["cursor", "claude-code"]);
+      detectConfigs();
     }
-  }, [projectDir, loadProject, loadHealth]);
+  }, [projectDir, loadProject, loadHealth, detectConfigs]);
+
+  const handleImportDetected = async () => {
+    if (!projectDir || detectedVendors.length === 0) return;
+    setImporting(true);
+    try {
+      for (const v of detectedVendors) {
+        await startMigration(v.vendor, projectDir);
+      }
+      setDismissedDetection(true);
+      loadProject();
+    } catch (e) {
+      console.error("import", e);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const handleSelectProject = async () => {
     const selected = await open({ directory: true, multiple: false });
@@ -151,12 +178,16 @@ export default function Dashboard() {
                   {t("dashboard.detectedConfig")}
                 </p>
                 <p className="text-[12px] text-blue-600 dark:text-blue-300 mt-0.5">
-                  {t("dashboard.detectedConfigDesc")} {detectedVendors.join(", ")}
+                  {t("dashboard.detectedConfigDesc")} {detectedVendors.map((v) => v.vendor).join(", ")}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <button className="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                  <button
+                    onClick={handleImportDetected}
+                    disabled={importing}
+                    className="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
                     <Download size={11} />
-                    {t("dashboard.importNow")}
+                    {importing ? t("common.loading", "导入中...") : t("dashboard.importNow")}
                   </button>
                   <button
                     onClick={() => setDismissedDetection(true)}
@@ -249,9 +280,26 @@ export default function Dashboard() {
             <div className="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
               <p className="text-[12px] text-zinc-500 mb-2">{t("dashboard.migrateFrom")}</p>
               <div className="flex flex-wrap gap-2">
-                {["Cursor", "Claude Code", "Windsurf", "Cline", "Copilot", "Codex"].map(v => (
-                  <button key={v} className="px-3 py-1.5 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-md hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors">
-                    {v}
+                {[
+                  { key: "cursor", label: "Cursor" },
+                  { key: "claude-code", label: "Claude Code" },
+                  { key: "windsurf", label: "Windsurf" },
+                  { key: "cline", label: "Cline" },
+                  { key: "copilot", label: "Copilot" },
+                  { key: "codex", label: "Codex" },
+                ].map(v => (
+                  <button
+                    key={v.key}
+                    onClick={async () => {
+                      if (!projectDir) return;
+                      try {
+                        await startMigration(v.key, projectDir);
+                        loadProject();
+                      } catch (e) { console.error("migrate", e); }
+                    }}
+                    className="px-3 py-1.5 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-md hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors"
+                  >
+                    {v.label}
                   </button>
                 ))}
               </div>

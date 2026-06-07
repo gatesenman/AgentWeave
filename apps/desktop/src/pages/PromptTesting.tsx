@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   TestTube2,
   Play,
@@ -7,70 +7,56 @@ import {
   XCircle,
   Clock,
   Plus,
+  Trash2,
   FileCode2,
-  ChevronRight,
   AlertTriangle,
 } from "lucide-react";
-
-interface TestCase {
-  id: string;
-  name: string;
-  prompt: string;
-  expectedBehavior: string;
-  vendors: string[];
-  results: VendorResult[];
-}
-
-interface VendorResult {
-  vendor: string;
-  status: "pass" | "fail" | "pending" | "skip";
-  responseTime: number;
-  output: string;
-}
-
-const mockTestCases: TestCase[] = [
-  {
-    id: "1",
-    name: "Code review — detects security issues",
-    prompt: "Review this code for security vulnerabilities: `eval(user_input)`",
-    expectedBehavior: "Should identify eval() as dangerous and suggest alternatives",
-    vendors: ["Claude Code", "Cursor", "Codex"],
-    results: [
-      { vendor: "Claude Code", status: "pass", responseTime: 2100, output: "Detected: eval() injection vulnerability. Suggest using JSON.parse() or a safe parser." },
-      { vendor: "Cursor", status: "pass", responseTime: 1800, output: "Security issue: eval(user_input) allows code injection. Use a sandboxed evaluator." },
-      { vendor: "Codex", status: "fail", responseTime: 3200, output: "The code uses eval which processes user input." },
-    ],
-  },
-  {
-    id: "2",
-    name: "Refactor — extract function correctly",
-    prompt: "Extract the loop body into a separate function named `processItem`",
-    expectedBehavior: "Should create processItem function and replace loop body with call",
-    vendors: ["Claude Code", "Cursor", "Windsurf", "Copilot"],
-    results: [
-      { vendor: "Claude Code", status: "pass", responseTime: 2800, output: "Created processItem(item) and replaced loop body." },
-      { vendor: "Cursor", status: "pass", responseTime: 2200, output: "Extracted processItem function with correct signature." },
-      { vendor: "Windsurf", status: "pass", responseTime: 3100, output: "Function extracted with proper parameter passing." },
-      { vendor: "Copilot", status: "pending", responseTime: 0, output: "" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Docs — generates JSDoc correctly",
-    prompt: "Add JSDoc comments to all exported functions",
-    expectedBehavior: "Should add @param, @returns, and @description for each export",
-    vendors: ["Claude Code", "Gemini CLI"],
-    results: [
-      { vendor: "Claude Code", status: "pass", responseTime: 1500, output: "Added JSDoc with @param/@returns to 5 functions." },
-      { vendor: "Gemini CLI", status: "fail", responseTime: 4200, output: "Added comments but missing @returns annotations." },
-    ],
-  },
-];
+import {
+  listPromptTests,
+  createPromptTest,
+  deletePromptTest,
+  type PromptTestCase,
+} from "../lib/tauri";
 
 export default function PromptTesting() {
   const { t } = useTranslation();
-  const [testCases] = useState<TestCase[]>(mockTestCases);
-  const [selectedTest, setSelectedTest] = useState<string>("1");
+  const [testCases, setTestCases] = useState<PromptTestCase[]>([]);
+  const [selectedTest, setSelectedTest] = useState<string | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPrompt, setNewPrompt] = useState("");
+  const [newExpected, setNewExpected] = useState("");
+  const [newVendors, setNewVendors] = useState("cursor,claude-code,codex");
+
+  const load = useCallback(async () => {
+    try {
+      const data = await listPromptTests();
+      setTestCases(data);
+      if (data.length > 0 && !selectedTest) setSelectedTest(data[0].id);
+    } catch (e) { console.error("listPromptTests", e); }
+  }, [selectedTest]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    try {
+      const vendors = newVendors.split(",").map((v) => v.trim()).filter(Boolean);
+      const id = await createPromptTest(newName, newPrompt, newExpected, vendors);
+      setShowNew(false);
+      setNewName(""); setNewPrompt(""); setNewExpected("");
+      await load();
+      setSelectedTest(id);
+    } catch (e) { console.error("createPromptTest", e); }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePromptTest(id);
+      if (selectedTest === id) setSelectedTest(null);
+      await load();
+    } catch (e) { console.error("deletePromptTest", e); }
+  };
 
   const currentTest = testCases.find((tc) => tc.id === selectedTest);
 
@@ -83,7 +69,7 @@ export default function PromptTesting() {
     }
   };
 
-  const getPassRate = (tc: TestCase) => {
+  const getPassRate = (tc: PromptTestCase) => {
     const completed = tc.results.filter((r) => r.status === "pass" || r.status === "fail");
     const passed = tc.results.filter((r) => r.status === "pass");
     if (completed.length === 0) return "—";
@@ -92,7 +78,6 @@ export default function PromptTesting() {
 
   return (
     <div className="h-full flex">
-      {/* Left: test case list */}
       <div className="w-[300px] border-r border-zinc-100 dark:border-zinc-800 flex flex-col">
         <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
           <TestTube2 size={14} className="text-violet-500" />
@@ -100,11 +85,28 @@ export default function PromptTesting() {
             {t("promptTest.title", "Prompt 测试")}
           </span>
           <div className="flex-1" />
-          <button className="p-1 text-zinc-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded">
+          <button onClick={() => setShowNew(true)} className="p-1 text-zinc-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded">
             <Plus size={14} />
           </button>
         </div>
+
+        {showNew && (
+          <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 space-y-2 bg-zinc-50/50 dark:bg-zinc-900/50">
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="测试名称" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <textarea value={newPrompt} onChange={(e) => setNewPrompt(e.target.value)} placeholder="Prompt 内容" rows={2} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 resize-none" />
+            <input value={newExpected} onChange={(e) => setNewExpected(e.target.value)} placeholder="期望行为" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newVendors} onChange={(e) => setNewVendors(e.target.value)} placeholder="厂商 (逗号分隔)" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <div className="flex gap-2">
+              <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-violet-600 rounded hover:bg-violet-700">创建</button>
+              <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">取消</button>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-auto">
+          {testCases.length === 0 && !showNew && (
+            <div className="p-4 text-center text-[12px] text-zinc-400">暂无测试，点击 + 创建</div>
+          )}
           {testCases.map((tc) => (
             <button
               key={tc.id}
@@ -126,21 +128,24 @@ export default function PromptTesting() {
         </div>
       </div>
 
-      {/* Right: test detail */}
       <div className="flex-1 flex flex-col">
         {currentTest ? (
           <>
             <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{currentTest.name}</h2>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700">
-                  <Play size={12} /> 运行全部
-                </button>
+                <div className="flex items-center gap-2">
+                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700">
+                    <Play size={12} /> 运行全部
+                  </button>
+                  <button onClick={() => handleDelete(currentTest.id)} className="p-1.5 text-zinc-400 hover:text-red-500 rounded">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
             </div>
 
             <div className="flex-1 overflow-auto px-5 py-4 space-y-4">
-              {/* Prompt & expected */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
                   <div className="flex items-center gap-1.5 mb-2">
@@ -154,20 +159,22 @@ export default function PromptTesting() {
                     <CheckCircle2 size={11} className="text-zinc-400" />
                     <span className="text-[10px] font-semibold text-zinc-500 uppercase">期望行为</span>
                   </div>
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300">{currentTest.expectedBehavior}</p>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300">{currentTest.expected_behavior}</p>
                 </div>
               </div>
 
-              {/* Vendor results */}
               <div className="space-y-2">
                 <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300">厂商结果</h3>
+                {currentTest.results.length === 0 && (
+                  <p className="text-[11px] text-zinc-400">尚无运行结果，点击"运行全部"开始测试</p>
+                )}
                 {currentTest.results.map((result) => (
                   <div key={result.vendor} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-2">
                       {statusIcon(result.status)}
                       <span className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{result.vendor}</span>
-                      {result.responseTime > 0 && (
-                        <span className="text-[10px] text-zinc-400 ml-auto">{result.responseTime}ms</span>
+                      {result.response_time > 0 && (
+                        <span className="text-[10px] text-zinc-400 ml-auto">{result.response_time}ms</span>
                       )}
                     </div>
                     {result.output && (
@@ -182,7 +189,7 @@ export default function PromptTesting() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">
-            选择一个测试用例
+            选择或创建一个测试用例
           </div>
         )}
       </div>

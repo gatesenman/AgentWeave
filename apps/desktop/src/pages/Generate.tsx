@@ -1,17 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfigStore } from "../store/config";
 import {
   Play, Check, AlertTriangle, FileOutput, Layers, Eye
 } from "lucide-react";
+import { getVendorSupportMatrix, type VendorConceptSupport } from "../lib/tauri";
 
 export default function Generate() {
   const { t } = useTranslation();
   const { projectDir, vendors, generateResults, isLoading, loadVendors, runGenerate } = useConfigStore();
   const [selectedVendors, setSelectedVendors] = useState<Set<string>>(new Set());
   const [showPreview, setShowPreview] = useState(false);
+  const [supportMatrix, setSupportMatrix] = useState<VendorConceptSupport[]>([]);
 
-  useEffect(() => { loadVendors(); }, [loadVendors]);
+  const loadMatrix = useCallback(async () => {
+    try {
+      const data = await getVendorSupportMatrix();
+      setSupportMatrix(data);
+    } catch (e) { console.error("getVendorSupportMatrix", e); }
+  }, []);
+
+  useEffect(() => { loadVendors(); loadMatrix(); }, [loadVendors, loadMatrix]);
 
   if (!projectDir) {
     return (
@@ -48,23 +57,30 @@ export default function Generate() {
     }
   };
 
-  // Compatibility matrix data
-  const conceptSupport: Record<string, Record<string, boolean>> = {
-    "codex": { agents: true, rules: true, mcp: true, skills: true, workflows: false, hooks: false, sub_agents: true },
-    "claude-code": { agents: true, rules: true, mcp: true, skills: true, workflows: false, hooks: false, sub_agents: false },
-    "cursor": { agents: true, rules: true, mcp: true, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "windsurf": { agents: true, rules: true, mcp: true, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "gemini-cli": { agents: true, rules: true, mcp: false, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "github-copilot": { agents: true, rules: true, mcp: false, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "devin": { agents: true, rules: true, mcp: true, skills: true, workflows: true, hooks: true, sub_agents: true },
-    "cline": { agents: true, rules: true, mcp: true, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "codebuddy": { agents: true, rules: true, mcp: true, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "qoder": { agents: true, rules: true, mcp: false, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "grok-build": { agents: true, rules: true, mcp: false, skills: false, workflows: false, hooks: false, sub_agents: false },
-    "openclaw": { agents: true, rules: true, mcp: true, skills: true, workflows: true, hooks: false, sub_agents: true },
-  };
+  // Build concept keys from real adapter data
+  const conceptKeysSet = new Set<string>();
+  for (const v of supportMatrix) {
+    for (const c of v.supported) {
+      conceptKeysSet.add(c);
+    }
+  }
+  const conceptKeys = ["agents", "rules", "mcp", "skills", "workflows", "hooks", "sub_agents"].filter(
+    (k) => conceptKeysSet.has(k)
+  );
+  // Add any extra concepts from real data not in the default list
+  for (const c of conceptKeysSet) {
+    if (!conceptKeys.includes(c)) conceptKeys.push(c);
+  }
 
-  const conceptKeys = ["agents", "rules", "mcp", "skills", "workflows", "hooks", "sub_agents"];
+  // Build lookup from real matrix
+  const conceptSupport: Record<string, Record<string, boolean>> = {};
+  for (const v of supportMatrix) {
+    const map: Record<string, boolean> = {};
+    for (const k of conceptKeys) {
+      map[k] = v.supported.includes(k);
+    }
+    conceptSupport[v.vendor] = map;
+  }
 
   return (
     <div className="h-full flex flex-col">

@@ -1,175 +1,107 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import {
-  Webhook,
-  Plus,
-  Play,
-  Pause,
-  Trash2,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  ExternalLink,
-} from "lucide-react";
-
-interface WebhookEntry {
-  id: string;
-  name: string;
-  url: string;
-  events: string[];
-  channel: "slack" | "discord" | "teams" | "custom";
-  enabled: boolean;
-  lastTriggered: string;
-  lastStatus: "success" | "failed" | "pending";
-}
-
-const mockWebhooks: WebhookEntry[] = [
-  {
-    id: "1",
-    name: "Slack: Config Changes",
-    url: "https://hooks.slack.com/services/T00.../B00.../xxx",
-    events: ["config.generated", "config.validated"],
-    channel: "slack",
-    enabled: true,
-    lastTriggered: "5 分钟前",
-    lastStatus: "success",
-  },
-  {
-    id: "2",
-    name: "Discord: Conflict Alerts",
-    url: "https://discord.com/api/webhooks/123.../abc...",
-    events: ["sync.conflict"],
-    channel: "discord",
-    enabled: true,
-    lastTriggered: "2 小时前",
-    lastStatus: "success",
-  },
-  {
-    id: "3",
-    name: "Teams: Deploy Notifications",
-    url: "https://outlook.office.com/webhook/...",
-    events: ["config.generated", "sync.conflict", "lint.error"],
-    channel: "teams",
-    enabled: false,
-    lastTriggered: "3 天前",
-    lastStatus: "failed",
-  },
-];
-
-const eventOptions = [
-  { value: "config.generated", label: "配置生成完成" },
-  { value: "config.validated", label: "配置验证通过" },
-  { value: "sync.conflict", label: "同步冲突" },
-  { value: "lint.error", label: "Lint 检查错误" },
-  { value: "health.degraded", label: "健康检查降级" },
-  { value: "team.lock", label: "概念被锁定" },
-];
+import { useState, useEffect, useCallback } from "react";
+import { Webhook, Plus, Trash2, ToggleLeft, ToggleRight, Bell } from "lucide-react";
+import { listWebhooks, createWebhook, toggleWebhook, deleteWebhook, type WebhookInfo } from "../lib/tauri";
 
 export default function Webhooks() {
   const { t } = useTranslation();
-  const [webhooks, setWebhooks] = useState<WebhookEntry[]>(mockWebhooks);
-  const [showAdd, setShowAdd] = useState(false);
+  const [webhooks, setWebhooks] = useState<WebhookInfo[]>([]);
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newUrl, setNewUrl] = useState("");
+  const [newPlatform, setNewPlatform] = useState("slack");
+  const [newEvents, setNewEvents] = useState("config_changed,generate_completed");
 
-  const toggleWebhook = (id: string) => {
-    setWebhooks((prev) => prev.map((w) => (w.id === id ? { ...w, enabled: !w.enabled } : w)));
+  const load = useCallback(async () => {
+    try { setWebhooks(await listWebhooks()); } catch (e) { console.error("listWebhooks", e); }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreate = async () => {
+    if (!newName.trim() || !newUrl.trim()) return;
+    try {
+      const events = newEvents.split(",").map((e) => e.trim()).filter(Boolean);
+      await createWebhook(newName, newUrl, newPlatform, events);
+      setShowNew(false); setNewName(""); setNewUrl("");
+      await load();
+    } catch (e) { console.error("createWebhook", e); }
   };
 
-  const channelColors: Record<string, string> = {
-    slack: "text-purple-600 bg-purple-50 dark:bg-purple-500/10 dark:text-purple-400",
-    discord: "text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400",
-    teams: "text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400",
-    custom: "text-zinc-600 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300",
+  const handleToggle = async (id: string, enabled: boolean) => {
+    try { await toggleWebhook(id, !enabled); await load(); } catch (e) { console.error(e); }
+  };
+
+  const handleDelete = async (id: string) => {
+    try { await deleteWebhook(id); await load(); } catch (e) { console.error(e); }
+  };
+
+  const platformColors: Record<string, string> = {
+    slack: "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400",
+    discord: "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400",
+    teams: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+    dingtalk: "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-400",
   };
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center">
-          <Webhook size={16} className="text-purple-600 dark:text-purple-400" />
+      <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
+          <Webhook size={16} className="text-amber-600 dark:text-amber-400" />
         </div>
-        <div>
-          <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">
-            {t("webhooks.title", "Webhook 集成")}
-          </h2>
-          <p className="text-[11px] text-zinc-400">
-            {t("webhooks.subtitle", "配置事件通知到 Slack/Discord/Teams")}
-          </p>
+        <div className="flex-1">
+          <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("webhooks.title", "Webhook 集成")}</h2>
+          <p className="text-[11px] text-zinc-400">配置变更时自动通知 Slack / Discord / 钉钉</p>
         </div>
-        <div className="flex-1" />
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors shadow-sm"
-        >
-          <Plus size={12} />
-          {t("webhooks.add", "添加 Webhook")}
+        <button onClick={() => setShowNew(true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700">
+          <Plus size={12} /> 新建
         </button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto px-5 py-4 space-y-3">
-        {/* Event legend */}
-        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-3 mb-4">
-          <p className="text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-2">可用事件:</p>
-          <div className="flex flex-wrap gap-1.5">
-            {eventOptions.map((evt) => (
-              <span key={evt.value} className="text-[10px] text-zinc-500 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 rounded">
-                {evt.value} — {evt.label}
-              </span>
-            ))}
+      {showNew && (
+        <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="名称" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <select value={newPlatform} onChange={(e) => setNewPlatform(e.target.value)} className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200">
+              <option value="slack">Slack</option>
+              <option value="discord">Discord</option>
+              <option value="teams">Teams</option>
+              <option value="dingtalk">钉钉</option>
+            </select>
+          </div>
+          <input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="Webhook URL" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          <input value={newEvents} onChange={(e) => setNewEvents(e.target.value)} placeholder="事件 (逗号分隔)" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          <div className="flex gap-2">
+            <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-amber-600 rounded hover:bg-amber-700">创建</button>
+            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">取消</button>
           </div>
         </div>
+      )}
 
-        {/* Webhook list */}
-        {webhooks.map((webhook) => (
-          <div
-            key={webhook.id}
-            className={`bg-white dark:bg-zinc-900 border rounded-lg p-4 ${
-              webhook.enabled
-                ? "border-zinc-200 dark:border-zinc-800"
-                : "border-zinc-100 dark:border-zinc-800/50 opacity-60"
-            }`}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${channelColors[webhook.channel]}`}>
-                  {webhook.channel}
-                </span>
-                <h4 className="text-[13px] font-medium text-zinc-700 dark:text-zinc-200">{webhook.name}</h4>
+      <div className="flex-1 overflow-auto px-5 py-4 space-y-2">
+        {webhooks.length === 0 && !showNew && (
+          <div className="text-center py-8 text-[12px] text-zinc-400">暂无 Webhook，点击新建</div>
+        )}
+        {webhooks.map((wh) => (
+          <div key={wh.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-3 group">
+            <div className="flex items-center gap-3">
+              <button onClick={() => handleToggle(wh.id, wh.enabled)} className="shrink-0">
+                {wh.enabled ? <ToggleRight size={20} className="text-emerald-500" /> : <ToggleLeft size={20} className="text-zinc-300" />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">{wh.name}</span>
+                  <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${platformColors[wh.platform] || "bg-zinc-100 text-zinc-500"}`}>{wh.platform}</span>
+                </div>
+                <p className="text-[10px] text-zinc-400 font-mono truncate">{wh.url}</p>
+                <div className="flex items-center gap-1 mt-1">
+                  {wh.events.map((ev) => (
+                    <span key={ev} className="text-[9px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">{ev}</span>
+                  ))}
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => toggleWebhook(webhook.id)}
-                  className={`p-1 rounded-md ${webhook.enabled ? "text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10" : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
-                >
-                  {webhook.enabled ? <Play size={13} /> : <Pause size={13} />}
-                </button>
-                <button className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md">
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            </div>
-
-            <p className="text-[11px] font-mono text-zinc-400 truncate mb-2">{webhook.url}</p>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                {webhook.events.map((evt) => (
-                  <span key={evt} className="text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
-                    {evt}
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-zinc-400">
-                {webhook.lastStatus === "success" ? (
-                  <CheckCircle2 size={10} className="text-emerald-500" />
-                ) : webhook.lastStatus === "failed" ? (
-                  <XCircle size={10} className="text-red-500" />
-                ) : (
-                  <Clock size={10} />
-                )}
-                <span>{webhook.lastTriggered}</span>
-              </div>
+              <button onClick={() => handleDelete(wh.id)} className="p-1 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100">
+                <Trash2 size={12} />
+              </button>
             </div>
           </div>
         ))}

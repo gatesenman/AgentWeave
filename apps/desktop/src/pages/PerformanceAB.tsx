@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   FlaskConical,
   Play,
@@ -7,95 +7,70 @@ import {
   TrendingUp,
   Clock,
   CheckCircle2,
-  XCircle,
   Plus,
   Trash2,
   ArrowUpDown,
 } from "lucide-react";
-
-interface Experiment {
-  id: string;
-  name: string;
-  status: "running" | "completed" | "draft";
-  configA: string;
-  configB: string;
-  vendor: string;
-  metrics: {
-    responseTime: [number, number];
-    accuracy: [number, number];
-    tokenUsage: [number, number];
-    successRate: [number, number];
-  };
-  runs: number;
-  winner: "A" | "B" | null;
-  createdAt: string;
-}
-
-const mockExperiments: Experiment[] = [
-  {
-    id: "1",
-    name: "Code review agent — verbose vs concise",
-    status: "completed",
-    configA: "agents/code-review-verbose.yaml",
-    configB: "agents/code-review-concise.yaml",
-    vendor: "Claude Code",
-    metrics: {
-      responseTime: [3200, 1800],
-      accuracy: [92, 88],
-      tokenUsage: [4500, 2100],
-      successRate: [96, 94],
-    },
-    runs: 50,
-    winner: "B",
-    createdAt: "2 天前",
-  },
-  {
-    id: "2",
-    name: "Security audit — GPT-4o vs Claude 3.5",
-    status: "running",
-    configA: "agents/security-gpt4o.yaml",
-    configB: "agents/security-claude35.yaml",
-    vendor: "Cursor",
-    metrics: {
-      responseTime: [5400, 4200],
-      accuracy: [85, 91],
-      tokenUsage: [8200, 6800],
-      successRate: [88, 93],
-    },
-    runs: 23,
-    winner: null,
-    createdAt: "5 小时前",
-  },
-  {
-    id: "3",
-    name: "Docs generator — template style comparison",
-    status: "draft",
-    configA: "agents/docs-formal.yaml",
-    configB: "agents/docs-casual.yaml",
-    vendor: "Codex",
-    metrics: {
-      responseTime: [0, 0],
-      accuracy: [0, 0],
-      tokenUsage: [0, 0],
-      successRate: [0, 0],
-    },
-    runs: 0,
-    winner: null,
-    createdAt: "刚刚",
-  },
-];
+import {
+  listExperiments,
+  createExperiment,
+  updateExperimentStatus,
+  deleteExperiment,
+  type Experiment,
+} from "../lib/tauri";
 
 export default function PerformanceAB() {
   const { t } = useTranslation();
-  const [experiments] = useState<Experiment[]>(mockExperiments);
-  const [selected, setSelected] = useState<string | null>("1");
+  const [experiments, setExperiments] = useState<Experiment[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newA, setNewA] = useState("");
+  const [newB, setNewB] = useState("");
+  const [newVendor, setNewVendor] = useState("claude-code");
+
+  const load = useCallback(async () => {
+    try {
+      const data = await listExperiments();
+      setExperiments(data);
+      if (data.length > 0 && !selected) setSelected(data[0].id);
+    } catch (e) { console.error("listExperiments", e); }
+  }, [selected]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    try {
+      const id = await createExperiment(newName, newA, newB, newVendor);
+      setShowNew(false);
+      setNewName(""); setNewA(""); setNewB("");
+      await load();
+      setSelected(id);
+    } catch (e) { console.error("createExperiment", e); }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteExperiment(id);
+      if (selected === id) setSelected(null);
+      await load();
+    } catch (e) { console.error("deleteExperiment", e); }
+  };
+
+  const handleStart = async (id: string) => {
+    try {
+      await updateExperimentStatus(id, "running");
+      await load();
+    } catch (e) { console.error("updateExperimentStatus", e); }
+  };
 
   const selectedExp = experiments.find((e) => e.id === selected);
 
   const statusColors: Record<string, string> = {
     running: "text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400",
     completed: "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400",
-    draft: "text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400",
+    pending: "text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400",
   };
 
   const metricBar = (valA: number, valB: number, lowerBetter: boolean) => {
@@ -137,11 +112,28 @@ export default function PerformanceAB() {
             {t("perf.title", "A/B 实验")}
           </span>
           <div className="flex-1" />
-          <button className="p-1 text-zinc-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded">
+          <button onClick={() => setShowNew(true)} className="p-1 text-zinc-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded">
             <Plus size={14} />
           </button>
         </div>
+
+        {showNew && (
+          <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 space-y-2 bg-zinc-50/50 dark:bg-zinc-900/50">
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="实验名称" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newA} onChange={(e) => setNewA(e.target.value)} placeholder="Config A" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newB} onChange={(e) => setNewB(e.target.value)} placeholder="Config B" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newVendor} onChange={(e) => setNewVendor(e.target.value)} placeholder="Vendor" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <div className="flex gap-2">
+              <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">创建</button>
+              <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">取消</button>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-auto">
+          {experiments.length === 0 && !showNew && (
+            <div className="p-4 text-center text-[12px] text-zinc-400">暂无实验，点击 + 创建</div>
+          )}
           {experiments.map((exp) => (
             <button
               key={exp.id}
@@ -151,13 +143,13 @@ export default function PerformanceAB() {
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${statusColors[exp.status]}`}>
-                  {exp.status === "running" ? "运行中" : exp.status === "completed" ? "已完成" : "草稿"}
+                <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${statusColors[exp.status] || statusColors.pending}`}>
+                  {exp.status === "running" ? "运行中" : exp.status === "completed" ? "已完成" : "待启动"}
                 </span>
                 <span className="text-[10px] text-zinc-400">{exp.vendor}</span>
               </div>
               <p className="text-[12px] text-zinc-700 dark:text-zinc-200 font-medium line-clamp-2">{exp.name}</p>
-              <p className="text-[10px] text-zinc-400 mt-1">{exp.runs} 次运行 · {exp.createdAt}</p>
+              <p className="text-[10px] text-zinc-400 mt-1">{exp.runs} 次运行 · {exp.created_at}</p>
             </button>
           ))}
         </div>
@@ -176,11 +168,16 @@ export default function PerformanceAB() {
                     {selectedExp.winner && ` · 胜者: Config ${selectedExp.winner}`}
                   </p>
                 </div>
-                {selectedExp.status === "draft" && (
-                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
-                    <Play size={12} /> 开始实验
+                <div className="flex items-center gap-2">
+                  {selectedExp.status === "pending" && (
+                    <button onClick={() => handleStart(selectedExp.id)} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                      <Play size={12} /> 开始实验
+                    </button>
+                  )}
+                  <button onClick={() => handleDelete(selectedExp.id)} className="p-1.5 text-zinc-400 hover:text-red-500 rounded">
+                    <Trash2 size={13} />
                   </button>
-                )}
+                </div>
               </div>
             </div>
 
@@ -192,19 +189,19 @@ export default function PerformanceAB() {
                     <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">A</span>
                     {selectedExp.winner === "A" && <CheckCircle2 size={11} className="text-indigo-500" />}
                   </div>
-                  <p className="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 truncate">{selectedExp.configA}</p>
+                  <p className="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 truncate">{selectedExp.config_a}</p>
                 </div>
                 <div className={`p-3 rounded-lg border ${selectedExp.winner === "B" ? "border-indigo-300 dark:border-indigo-500/50 bg-indigo-50/50 dark:bg-indigo-500/5" : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"}`}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">B</span>
                     {selectedExp.winner === "B" && <CheckCircle2 size={11} className="text-indigo-500" />}
                   </div>
-                  <p className="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 truncate">{selectedExp.configB}</p>
+                  <p className="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 truncate">{selectedExp.config_b}</p>
                 </div>
               </div>
 
               {/* Metrics */}
-              {selectedExp.status !== "draft" && (
+              {selectedExp.status !== "pending" && (
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-4">
                   <h3 className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
                     <BarChart3 size={13} /> 指标对比
@@ -215,7 +212,7 @@ export default function PerformanceAB() {
                         <span className="text-[11px] text-zinc-500 flex items-center gap-1"><Clock size={10} /> 响应时间 (ms)</span>
                         <span className="text-[9px] text-zinc-400">越低越好</span>
                       </div>
-                      {metricBar(selectedExp.metrics.responseTime[0], selectedExp.metrics.responseTime[1], true)}
+                      {metricBar(selectedExp.metrics.response_time[0], selectedExp.metrics.response_time[1], true)}
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
@@ -229,14 +226,14 @@ export default function PerformanceAB() {
                         <span className="text-[11px] text-zinc-500 flex items-center gap-1"><ArrowUpDown size={10} /> Token 用量</span>
                         <span className="text-[9px] text-zinc-400">越低越好</span>
                       </div>
-                      {metricBar(selectedExp.metrics.tokenUsage[0], selectedExp.metrics.tokenUsage[1], true)}
+                      {metricBar(selectedExp.metrics.token_usage[0], selectedExp.metrics.token_usage[1], true)}
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[11px] text-zinc-500 flex items-center gap-1"><TrendingUp size={10} /> 成功率 (%)</span>
                         <span className="text-[9px] text-zinc-400">越高越好</span>
                       </div>
-                      {metricBar(selectedExp.metrics.successRate[0], selectedExp.metrics.successRate[1], false)}
+                      {metricBar(selectedExp.metrics.success_rate[0], selectedExp.metrics.success_rate[1], false)}
                     </div>
                   </div>
                 </div>

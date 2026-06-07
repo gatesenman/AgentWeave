@@ -1,16 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useThemeStore } from "../store/theme";
 import { Monitor, Moon, Sun, Globe, Server, FolderCog, Bell, Shield } from "lucide-react";
 import type { Theme } from "../store/theme";
+import { setPreference, getPreference } from "../lib/tauri";
+
+type SettingKey =
+  | "output_dir"
+  | "watch_debounce"
+  | "auto_generate"
+  | "notify_gen_fail"
+  | "notify_update"
+  | "notify_conflict"
+  | "encrypt_secrets"
+  | "telemetry";
+
+const DEFAULTS: Record<SettingKey, string> = {
+  output_dir: ".agentweave/output",
+  watch_debounce: "300",
+  auto_generate: "true",
+  notify_gen_fail: "true",
+  notify_update: "true",
+  notify_conflict: "false",
+  encrypt_secrets: "true",
+  telemetry: "false",
+};
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useThemeStore();
   const [activeTab, setActiveTab] = useState<"system" | "user">("system");
+  const [settings, setSettings] = useState<Record<SettingKey, string>>({ ...DEFAULTS });
+
+  const loadSettings = useCallback(async () => {
+    const loaded: Record<string, string> = {};
+    for (const key of Object.keys(DEFAULTS) as SettingKey[]) {
+      try {
+        const val = await getPreference(key);
+        if (val !== null) loaded[key] = val;
+      } catch { /* use default */ }
+    }
+    setSettings((prev) => ({ ...prev, ...loaded }));
+  }, []);
+
+  useEffect(() => { loadSettings(); }, [loadSettings]);
+
+  const updateSetting = async (key: SettingKey, value: string) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+    try {
+      await setPreference(key, value);
+    } catch (e) { console.error("setPreference", e); }
+  };
+
+  const toggleSetting = (key: SettingKey) => {
+    const next = settings[key] === "true" ? "false" : "true";
+    updateSetting(key, next);
+  };
 
   const changeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
+    setPreference("ui_language", lang).catch(() => {});
   };
 
   return (
@@ -49,7 +98,8 @@ export default function Settings() {
               <SettingRow label={t("settings.outputDir")}>
                 <input
                   type="text"
-                  defaultValue=".agentweave/output"
+                  value={settings.output_dir}
+                  onChange={(e) => updateSetting("output_dir", e.target.value)}
                   className="w-[200px] px-2.5 py-1.5 text-[12px] bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
                 />
               </SettingRow>
@@ -57,35 +107,36 @@ export default function Settings() {
                 <div className="flex items-center gap-1.5">
                   <input
                     type="number"
-                    defaultValue={300}
+                    value={settings.watch_debounce}
+                    onChange={(e) => updateSetting("watch_debounce", e.target.value)}
                     className="w-[70px] px-2.5 py-1.5 text-[12px] bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md focus:border-indigo-500 focus:outline-none"
                   />
                   <span className="text-[11px] text-zinc-400">ms</span>
                 </div>
               </SettingRow>
               <SettingRow label={t("settings.autoGenerate")}>
-                <Toggle defaultChecked />
+                <Toggle checked={settings.auto_generate === "true"} onToggle={() => toggleSetting("auto_generate")} />
               </SettingRow>
             </Section>
 
             <Section icon={<Bell size={14} className="text-amber-500" />} title={t("settings.notifications")}>
               <SettingRow label={t("settings.notifyGenFail")}>
-                <Toggle defaultChecked />
+                <Toggle checked={settings.notify_gen_fail === "true"} onToggle={() => toggleSetting("notify_gen_fail")} />
               </SettingRow>
               <SettingRow label={t("settings.notifyUpdate")}>
-                <Toggle defaultChecked />
+                <Toggle checked={settings.notify_update === "true"} onToggle={() => toggleSetting("notify_update")} />
               </SettingRow>
               <SettingRow label={t("settings.notifyConflict")}>
-                <Toggle />
+                <Toggle checked={settings.notify_conflict === "true"} onToggle={() => toggleSetting("notify_conflict")} />
               </SettingRow>
             </Section>
 
             <Section icon={<Shield size={14} className="text-red-400" />} title={t("settings.security")}>
               <SettingRow label={t("settings.encryptSecrets")}>
-                <Toggle defaultChecked />
+                <Toggle checked={settings.encrypt_secrets === "true"} onToggle={() => toggleSetting("encrypt_secrets")} />
               </SettingRow>
               <SettingRow label={t("settings.telemetry")}>
-                <Toggle />
+                <Toggle checked={settings.telemetry === "true"} onToggle={() => toggleSetting("telemetry")} />
               </SettingRow>
             </Section>
           </div>
@@ -178,17 +229,16 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-function Toggle({ defaultChecked }: { defaultChecked?: boolean }) {
-  const [on, setOn] = useState(defaultChecked ?? false);
+function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
   return (
     <button
-      onClick={() => setOn(!on)}
+      onClick={onToggle}
       className={`w-9 h-5 rounded-full transition-colors relative ${
-        on ? "bg-indigo-600" : "bg-zinc-300 dark:bg-zinc-600"
+        checked ? "bg-indigo-600" : "bg-zinc-300 dark:bg-zinc-600"
       }`}
     >
       <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-        on ? "translate-x-[18px]" : "translate-x-0.5"
+        checked ? "translate-x-[18px]" : "translate-x-0.5"
       }`} />
     </button>
   );

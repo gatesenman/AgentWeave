@@ -1,5 +1,6 @@
 use agentweave_core::adapter::AdapterRegistry;
 use agentweave_core::config::AgentWeaveConfig;
+use agentweave_core::schema::TargetVendor;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -1891,4 +1892,103 @@ pub async fn get_config_analytics_ex(project_dir: String) -> Result<ConfigAnalyt
         vendor_coverage: vc,
         gaps,
     })
+}
+
+// --- Detect vendor config files in project directory ---
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DetectedVendorConfig {
+    pub vendor: String,
+    pub file_path: String,
+    pub exists: bool,
+}
+
+#[tauri::command]
+pub async fn detect_vendor_configs(project_dir: String) -> Result<Vec<DetectedVendorConfig>, String> {
+    let path = PathBuf::from(&project_dir);
+    let known_files: Vec<(&str, &str)> = vec![
+        ("cursor", ".cursorrules"),
+        ("windsurf", ".windsurfrules"),
+        ("copilot", ".github/copilot-instructions.md"),
+        ("claude-code", "CLAUDE.md"),
+        ("codex", "AGENTS.md"),
+        ("devin", ".devin/SKILL.md"),
+        ("cline", ".clinerules"),
+        ("gemini", ".gemini/settings.json"),
+    ];
+    let mut results = Vec::new();
+    for (vendor, file) in known_files {
+        let full = path.join(file);
+        results.push(DetectedVendorConfig {
+            vendor: vendor.to_string(),
+            file_path: file.to_string(),
+            exists: full.exists(),
+        });
+    }
+    Ok(results)
+}
+
+// --- Generate preview for a single vendor (without writing to disk) ---
+#[tauri::command]
+pub async fn get_vendor_preview(project_dir: String, vendor: String) -> Result<String, String> {
+    let path = PathBuf::from(&project_dir);
+    let config = AgentWeaveConfig::load(&path).map_err(|e| e.to_string())?;
+    let registry = build_registry();
+    // Parse vendor string to TargetVendor (kebab-case, e.g. "claude-code")
+    let target: TargetVendor = serde_json::from_str(&format!("\"{}\"", vendor))
+        .map_err(|_| format!("Unknown vendor: {}", vendor))?;
+    if let Some(adapter) = registry.get(&target) {
+        match adapter.generate(&config, &path) {
+            Ok(output) => {
+                let mut preview = String::new();
+                for (file, content) in &output.files {
+                    if !preview.is_empty() {
+                        preview.push_str("\n\n");
+                    }
+                    preview.push_str(&format!("# --- {} ---\n{}", file, content));
+                }
+                Ok(preview)
+            }
+            Err(e) => Err(format!("Generate error for {}: {}", vendor, e)),
+        }
+    } else {
+        Err(format!("Unknown vendor: {}", vendor))
+    }
+}
+
+// --- Get concept support matrix from real adapter registry ---
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VendorConceptSupport {
+    pub vendor: String,
+    pub display_name: String,
+    pub supported: Vec<String>,
+}
+
+#[tauri::command]
+pub async fn get_vendor_support_matrix() -> Result<Vec<VendorConceptSupport>, String> {
+    let registry = build_registry();
+    let mut results = Vec::new();
+    for vid in registry.list() {
+        if let Some(adapter) = registry.get(vid) {
+            let supported: Vec<String> = adapter.supported_concepts().iter()
+                .map(|c| {
+                    let raw = format!("{:?}", c);
+                    // Convert CamelCase to snake_case for consistent frontend keys
+                    let mut result = String::new();
+                    for (i, ch) in raw.chars().enumerate() {
+                        if ch.is_uppercase() && i > 0 {
+                            result.push('_');
+                        }
+                        result.push(ch.to_lowercase().next().unwrap_or(ch));
+                    }
+                    result
+                })
+                .collect();
+            results.push(VendorConceptSupport {
+                vendor: vid.to_string(),
+                display_name: adapter.display_name().to_string(),
+                supported,
+            });
+        }
+    }
+    Ok(results)
 }
