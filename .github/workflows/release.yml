@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - develop
+    paths:
+      - '.github/workflows/release.yml'
   workflow_dispatch:
     inputs:
       tag:
