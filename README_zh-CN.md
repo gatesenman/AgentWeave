@@ -37,7 +37,7 @@ AgentWeave 定义了一套 **AI 智能体配置超集规范**，并提供完整�
 | **全链路追踪** | OpenTelemetry 兼容，Span 可视化 |
 | **版本管理** | 基于 Git 的配置版本控制 (diff/rollback/tag) |
 | **远程更新** | 签名增量更新 + 金丝雀发布 |
-| **多语言** | 中文 / English / 日本語 |
+| **多语言** | 中文 / English |
 | **跨平台** | macOS / Windows / Linux (Tauri 桌面端 + CLI) |
 
 ## 快速开始
@@ -184,51 +184,63 @@ governance:
 
 ### 仪表盘
 
-项目概览、健康检查、快捷操作、实时状态。
+项目概览、健康检查、快捷操作、迁移向导、配置检测。
 
-![仪表盘](docs/screenshots/dashboard.png)
+![仪表盘](docs/screenshots/01-dashboard.png)
 
-### 配置编辑器
+### 配置中心
 
-YAML 编辑器，语法高亮、校验、多文件标签。
+概念树导航（Agents、Rules、MCP、Skills、Workflows、Hooks、Tools、Models）+ 卡片式详情。
 
-![配置编辑器](docs/screenshots/config-editor.png)
+![配置中心](docs/screenshots/02-config-hub.png)
 
-### 适配器管理 (12 厂商)
+### 厂商生成
 
-管理全部 12 个厂商适配器 — 查看支持概念、单独/批量生成配置。
+12 厂商多选 + 概念兼容性矩阵 + 批量生成。
 
-![适配器](docs/screenshots/adapters.png)
+![厂商生成](docs/screenshots/03-generate.png)
 
 ### 跨厂商对比
 
-厂商输出并排对比，查看差异。
+厂商输出并排对比，文件差异可视化。
 
-![对比](docs/screenshots/compare.png)
+![对比](docs/screenshots/04-compare.png)
 
 ### ACP 网关
 
 统一智能体通信协议调度 — 注册厂商、路由策略、监控。
 
-![ACP 网关](docs/screenshots/acp-gateway.png)
+![ACP 网关](docs/screenshots/05-acp-gateway.png)
 
 ### 全链路追踪
 
-OTLP 兼容全链路追踪，Span 可视化、性能指标。
+OTLP 兼容全链路追踪，Span 列表、延迟分析。
 
-![追踪](docs/screenshots/trace.png)
+![追踪](docs/screenshots/06-trace.png)
 
 ### 企业治理
 
-策略管理、RBAC 角色、审计日志、配额控制、合规 (SOC2/GDPR)。
+策略管理、RBAC 角色、审计日志、配额控制。
 
-![治理](docs/screenshots/governance.png)
+![治理](docs/screenshots/07-governance.png)
 
-### 插件与 MCP
+### 模板市场
 
-MCP Server 管理 — 安装、配置、监控。
+社区模板浏览、搜索、分类、一键下载。
 
-![插件](docs/screenshots/plugins.png)
+![模板市场](docs/screenshots/08-templates.png)
+
+### AI 助手
+
+AI 智能配置建议 + 对话式优化 + 代码 diff 预览。
+
+![AI 助手](docs/screenshots/09-ai-assist.png)
+
+### 设置
+
+系统设置（适配器默认、通知、安全）+ 用户偏好（主题、语言）。
+
+![设置](docs/screenshots/10-settings.png)
 
 ## Schema 系统
 
