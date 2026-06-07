@@ -21,6 +21,12 @@ import {
   ShieldAlert,
   DollarSign,
   Webhook,
+  FlaskConical,
+  TestTube2,
+  Sparkles,
+  PieChart,
+  Layers as LayersIcon,
+  GitBranch,
 } from "lucide-react";
 
 interface NavGroup {
@@ -51,6 +57,8 @@ const navGroups: NavGroup[] = [
       { path: "/compare", icon: GitCompare, labelKey: "nav.compare" },
       { path: "/optimizer", icon: Scissors, labelKey: "nav.optimizer" },
       { path: "/migration", icon: ArrowRightLeft, labelKey: "nav.migration" },
+      { path: "/perf", icon: FlaskConical, labelKey: "nav.perf" },
+      { path: "/prompt-test", icon: TestTube2, labelKey: "nav.promptTest" },
     ],
   },
   {
@@ -70,6 +78,10 @@ const navGroups: NavGroup[] = [
       { path: "/templates", icon: Package, labelKey: "nav.templates" },
       { path: "/webhooks", icon: Webhook, labelKey: "nav.webhooks" },
       { path: "/cost", icon: DollarSign, labelKey: "nav.cost" },
+      { path: "/ai-assist", icon: Sparkles, labelKey: "nav.aiAssist" },
+      { path: "/analytics", icon: PieChart, labelKey: "nav.analytics" },
+      { path: "/environments", icon: LayersIcon, labelKey: "nav.environments" },
+      { path: "/inheritance", icon: GitBranch, labelKey: "nav.inheritance" },
       { path: "/backup", icon: Archive, labelKey: "nav.backup" },
       { path: "/settings", icon: Settings, labelKey: "nav.settings" },
     ],

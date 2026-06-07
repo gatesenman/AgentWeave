@@ -23,6 +23,12 @@ import MigrationWizard from "./pages/MigrationWizard";
 import ConfigLint from "./pages/ConfigLint";
 import CostDashboard from "./pages/CostDashboard";
 import Webhooks from "./pages/Webhooks";
+import PerformanceAB from "./pages/PerformanceAB";
+import PromptTesting from "./pages/PromptTesting";
+import AIAssist from "./pages/AIAssist";
+import ConfigAnalytics from "./pages/ConfigAnalytics";
+import Environments from "./pages/Environments";
+import InheritanceView from "./pages/InheritanceView";
 import { useEffect } from "react";
 
 function App() {
@@ -61,6 +67,12 @@ function App() {
             <Route path="/lint" element={<ConfigLint />} />
             <Route path="/cost" element={<CostDashboard />} />
             <Route path="/webhooks" element={<Webhooks />} />
+            <Route path="/perf" element={<PerformanceAB />} />
+            <Route path="/prompt-test" element={<PromptTesting />} />
+            <Route path="/ai-assist" element={<AIAssist />} />
+            <Route path="/analytics" element={<ConfigAnalytics />} />
+            <Route path="/environments" element={<Environments />} />
+            <Route path="/inheritance" element={<InheritanceView />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/search" element={<SearchPage />} />
           </Routes>
