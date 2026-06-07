@@ -1,167 +1,126 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import {
-  DollarSign,
-  TrendingUp,
-  AlertTriangle,
-  BarChart3,
-  Clock,
-  Zap,
-} from "lucide-react";
-
-interface VendorUsage {
-  vendor: string;
-  calls: number;
-  tokens: number;
-  cost: number;
-  trend: number;
-}
-
-interface BudgetAlert {
-  vendor: string;
-  limit: number;
-  used: number;
-  percent: number;
-}
-
-const mockUsage: VendorUsage[] = [
-  { vendor: "Claude Code", calls: 1240, tokens: 4500000, cost: 67.50, trend: 12 },
-  { vendor: "Cursor", calls: 890, tokens: 2100000, cost: 31.50, trend: -5 },
-  { vendor: "Codex", calls: 450, tokens: 1800000, cost: 27.00, trend: 8 },
-  { vendor: "Gemini CLI", calls: 320, tokens: 900000, cost: 9.00, trend: 25 },
-  { vendor: "Copilot", calls: 1560, tokens: 3200000, cost: 0, trend: 3 },
-  { vendor: "Windsurf", calls: 210, tokens: 600000, cost: 12.00, trend: -2 },
-];
-
-const mockAlerts: BudgetAlert[] = [
-  { vendor: "Claude Code", limit: 100, used: 67.50, percent: 67 },
-  { vendor: "Codex", limit: 50, used: 27, percent: 54 },
-];
+import { useState, useEffect, useCallback } from "react";
+import { DollarSign, Plus, Trash2, BarChart3 } from "lucide-react";
+import { listCostRecords, addCostRecord, deleteCostRecord, type CostRecord } from "../lib/tauri";
 
 export default function CostDashboard() {
   const { t } = useTranslation();
-  const [period, setPeriod] = useState<"day" | "week" | "month">("month");
+  const [records, setRecords] = useState<CostRecord[]>([]);
+  const [showNew, setShowNew] = useState(false);
+  const [newVendor, setNewVendor] = useState("cursor");
+  const [newTokens, setNewTokens] = useState("");
+  const [newCost, setNewCost] = useState("");
+  const [newRequests, setNewRequests] = useState("");
 
-  const totalCost = mockUsage.reduce((s, u) => s + u.cost, 0);
-  const totalCalls = mockUsage.reduce((s, u) => s + u.calls, 0);
-  const totalTokens = mockUsage.reduce((s, u) => s + u.tokens, 0);
+  const load = useCallback(async () => {
+    try { setRecords(await listCostRecords()); } catch (e) { console.error("listCostRecords", e); }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const handleAdd = async () => {
+    if (!newTokens || !newCost) return;
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      await addCostRecord(newVendor, today, parseInt(newRequests) || 1, parseInt(newTokens), parseFloat(newCost));
+      setShowNew(false); setNewTokens(""); setNewCost(""); setNewRequests("");
+      await load();
+    } catch (e) { console.error("addCostRecord", e); }
+  };
+
+  const handleDelete = async (id: string) => {
+    try { await deleteCostRecord(id); await load(); } catch (e) { console.error(e); }
+  };
+
+  const totalCost = records.reduce((sum, r) => sum + r.cost_usd, 0);
+  const totalTokens = records.reduce((sum, r) => sum + r.tokens, 0);
+  const vendorMap = new Map<string, { cost: number; tokens: number }>();
+  records.forEach((r) => {
+    const cur = vendorMap.get(r.vendor) || { cost: 0, tokens: 0 };
+    cur.cost += r.cost_usd;
+    cur.tokens += r.tokens;
+    vendorMap.set(r.vendor, cur);
+  });
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
-          <DollarSign size={16} className="text-green-600 dark:text-green-400" />
+      <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+          <DollarSign size={16} className="text-emerald-600 dark:text-emerald-400" />
         </div>
-        <div>
-          <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">
-            {t("cost.title", "成本仪表盘")}
-          </h2>
-          <p className="text-[11px] text-zinc-400">
-            {t("cost.subtitle", "API 用量追踪与预算告警")}
-          </p>
+        <div className="flex-1">
+          <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("cost.title", "成本仪表盘")}</h2>
+          <p className="text-[11px] text-zinc-400">API 用量追踪与费用分析</p>
         </div>
-        <div className="flex-1" />
-        <div className="flex items-center gap-1">
-          {(["day", "week", "month"] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-2.5 py-1 text-[11px] font-medium rounded-md ${
-                period === p ? "bg-indigo-600 text-white" : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              }`}
-            >
-              {p === "day" ? "今日" : p === "week" ? "本周" : "本月"}
-            </button>
-          ))}
-        </div>
+        <button onClick={() => setShowNew(true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700">
+          <Plus size={12} /> 记录
+        </button>
       </div>
 
+      {showNew && (
+        <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 space-y-2">
+          <div className="grid grid-cols-4 gap-2">
+            <input value={newVendor} onChange={(e) => setNewVendor(e.target.value)} placeholder="厂商" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newRequests} onChange={(e) => setNewRequests(e.target.value)} placeholder="请求数" type="number" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newTokens} onChange={(e) => setNewTokens(e.target.value)} placeholder="Tokens" type="number" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newCost} onChange={(e) => setNewCost(e.target.value)} placeholder="费用 ($)" type="number" step="0.01" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleAdd} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-emerald-600 rounded hover:bg-emerald-700">添加</button>
+            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">取消</button>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto px-5 py-4 space-y-4">
-        {/* Summary cards */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign size={13} className="text-green-500" />
-              <span className="text-[11px] text-zinc-400">总费用</span>
-            </div>
-            <div className="text-[20px] font-bold text-zinc-800 dark:text-zinc-100">${totalCost.toFixed(2)}</div>
+            <p className="text-[10px] text-zinc-400 uppercase font-medium mb-1">总费用</p>
+            <p className="text-[18px] font-bold text-zinc-800 dark:text-zinc-100">${totalCost.toFixed(2)}</p>
           </div>
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Zap size={13} className="text-blue-500" />
-              <span className="text-[11px] text-zinc-400">API 调用</span>
-            </div>
-            <div className="text-[20px] font-bold text-zinc-800 dark:text-zinc-100">{totalCalls.toLocaleString()}</div>
+            <p className="text-[10px] text-zinc-400 uppercase font-medium mb-1">总 Token</p>
+            <p className="text-[18px] font-bold text-zinc-800 dark:text-zinc-100">{totalTokens.toLocaleString()}</p>
           </div>
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <BarChart3 size={13} className="text-purple-500" />
-              <span className="text-[11px] text-zinc-400">总 Tokens</span>
-            </div>
-            <div className="text-[20px] font-bold text-zinc-800 dark:text-zinc-100">{(totalTokens / 1000000).toFixed(1)}M</div>
+            <p className="text-[10px] text-zinc-400 uppercase font-medium mb-1">厂商数</p>
+            <p className="text-[18px] font-bold text-zinc-800 dark:text-zinc-100">{vendorMap.size}</p>
           </div>
         </div>
 
-        {/* Budget alerts */}
-        {mockAlerts.length > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle size={13} className="text-amber-500" />
-              <span className="text-[12px] font-medium text-amber-700 dark:text-amber-300">预算告警</span>
-            </div>
+        {vendorMap.size > 0 && (
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+            <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 flex items-center gap-2 mb-3">
+              <BarChart3 size={13} /> 厂商分布
+            </h3>
             <div className="space-y-2">
-              {mockAlerts.map((alert) => (
-                <div key={alert.vendor} className="flex items-center gap-3">
-                  <span className="text-[11px] text-zinc-600 dark:text-zinc-300 w-[100px]">{alert.vendor}</span>
-                  <div className="flex-1 h-1.5 bg-amber-100 dark:bg-amber-500/20 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-amber-400 rounded-full"
-                      style={{ width: `${alert.percent}%` }}
-                    />
+              {Array.from(vendorMap.entries()).map(([vendor, { cost, tokens }]) => (
+                <div key={vendor} className="flex items-center gap-3">
+                  <span className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200 w-[100px]">{vendor}</span>
+                  <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${totalCost > 0 ? (cost / totalCost) * 100 : 0}%` }} />
                   </div>
-                  <span className="text-[10px] text-zinc-500 w-[80px] text-right">
-                    ${alert.used}/{alert.limit}
-                  </span>
+                  <span className="text-[11px] text-zinc-500 w-[60px] text-right">${cost.toFixed(2)}</span>
+                  <span className="text-[10px] text-zinc-400 w-[70px] text-right">{tokens.toLocaleString()} tk</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Vendor usage table */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
-                <th className="text-left px-3 py-2 text-[11px] font-semibold text-zinc-500">厂商</th>
-                <th className="text-right px-3 py-2 text-[11px] font-semibold text-zinc-500">调用次数</th>
-                <th className="text-right px-3 py-2 text-[11px] font-semibold text-zinc-500">Tokens</th>
-                <th className="text-right px-3 py-2 text-[11px] font-semibold text-zinc-500">费用</th>
-                <th className="text-right px-3 py-2 text-[11px] font-semibold text-zinc-500">趋势</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockUsage.map((usage) => (
-                <tr key={usage.vendor} className="border-b border-zinc-50 dark:border-zinc-800/50 last:border-0">
-                  <td className="px-3 py-2.5 text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{usage.vendor}</td>
-                  <td className="px-3 py-2.5 text-[12px] text-zinc-500 text-right">{usage.calls.toLocaleString()}</td>
-                  <td className="px-3 py-2.5 text-[12px] text-zinc-500 text-right">{(usage.tokens / 1000).toFixed(0)}K</td>
-                  <td className="px-3 py-2.5 text-[12px] text-zinc-700 dark:text-zinc-200 text-right font-medium">
-                    {usage.cost > 0 ? `$${usage.cost.toFixed(2)}` : "Free"}
-                  </td>
-                  <td className="px-3 py-2.5 text-right">
-                    <span className={`inline-flex items-center gap-0.5 text-[10px] font-medium ${
-                      usage.trend > 0 ? "text-red-500" : usage.trend < 0 ? "text-emerald-500" : "text-zinc-400"
-                    }`}>
-                      <TrendingUp size={10} className={usage.trend < 0 ? "rotate-180" : ""} />
-                      {Math.abs(usage.trend)}%
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-1">
+          <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 mb-2">记录明细</h3>
+          {records.length === 0 && <p className="text-center text-[12px] text-zinc-400 py-4">暂无费用记录</p>}
+          {records.map((r) => (
+            <div key={r.id} className="flex items-center gap-3 px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded group">
+              <span className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200 w-[80px]">{r.vendor}</span>
+              <span className="text-[11px] text-zinc-500 flex-1">{r.tokens.toLocaleString()} tokens · {r.requests} 次</span>
+              <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">${r.cost_usd.toFixed(2)}</span>
+              <span className="text-[10px] text-zinc-400">{r.date}</span>
+              <button onClick={() => handleDelete(String(r.id))} className="p-0.5 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100">
+                <Trash2 size={11} />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>

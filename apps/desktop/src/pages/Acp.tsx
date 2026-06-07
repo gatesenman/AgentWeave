@@ -75,7 +75,7 @@ export default function Acp() {
                   <tr key={vendor.name} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                     <td className="px-4 py-2.5 text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{vendor.display_name}</td>
                     <td className="px-4 py-2.5 text-[12px] text-zinc-500">
-                      {compareEntries.find((e) => e.vendor === vendor.name)?.files ?? "—"}
+                      {compareEntries.find((e) => e.vendor === vendor.name)?.file_count ?? "—"}
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex flex-wrap gap-1">

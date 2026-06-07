@@ -1,181 +1,132 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfigStore } from "../store/config";
-import { Download, Upload, Camera, Clock, RotateCcw, HardDrive, FileArchive } from "lucide-react";
-
-interface Snapshot {
-  id: string;
-  name: string;
-  date: string;
-  size: string;
-  vendors: number;
-}
-
-const mockSnapshots: Snapshot[] = [
-  { id: "1", name: "pre-migration-backup", date: "2024-01-15 14:30", size: "2.4 MB", vendors: 12 },
-  { id: "2", name: "stable-v0.1.0", date: "2024-01-10 09:15", size: "1.8 MB", vendors: 8 },
-  { id: "3", name: "initial-setup", date: "2024-01-05 16:45", size: "0.9 MB", vendors: 4 },
-];
+import { Download, Upload, Camera, Clock, Trash2, HardDrive } from "lucide-react";
+import { listSnapshots, createSnapshot, deleteSnapshot, exportProjectZip, importProjectZip, type SnapshotInfo } from "../lib/tauri";
 
 export default function Backup() {
   const { t } = useTranslation();
-  const { projectDir } = useConfigStore();
-  const [activeTab, setActiveTab] = useState<"export" | "import" | "snapshots">("export");
+  const projectDir = useConfigStore((s) => s.projectDir) || "";
+  const [activeTab, setActiveTab] = useState<"export" | "import" | "snapshots">("snapshots");
+  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
+  const [snapshotLabel, setSnapshotLabel] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importPath, setImportPath] = useState("");
 
-  if (!projectDir) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-3">
-            <FileArchive size={22} className="text-zinc-400" />
-          </div>
-          <p className="text-[13px] text-zinc-500">{t("backup.noProject")}</p>
-        </div>
-      </div>
-    );
-  }
+  const load = useCallback(async () => {
+    if (!projectDir) return;
+    try { setSnapshots(await listSnapshots(projectDir)); } catch (e) { console.error("listSnapshots", e); }
+  }, [projectDir]);
+  useEffect(() => { load(); }, [load]);
+
+  const handleSnapshot = async () => {
+    if (!projectDir) return;
+    try {
+      await createSnapshot(snapshotLabel || "snapshot", projectDir);
+      setSnapshotLabel("");
+      await load();
+    } catch (e) { console.error("createSnapshot", e); }
+  };
+
+  const handleDelete = async (id: string) => {
+    try { await deleteSnapshot(id); await load(); } catch (e) { console.error(e); }
+  };
+
+  const handleExport = async () => {
+    if (!projectDir) return;
+    setExporting(true);
+    try { await exportProjectZip(projectDir); } catch (e) { console.error(e); }
+    setExporting(false);
+  };
+
+  const handleImport = async () => {
+    if (!importPath.trim()) return;
+    setImporting(true);
+    try { await importProjectZip(projectDir, importPath); setImportPath(""); } catch (e) { console.error(e); }
+    setImporting(false);
+  };
+
+  const tabs = [
+    { key: "snapshots" as const, label: "快照", icon: Camera },
+    { key: "export" as const, label: "导出", icon: Download },
+    { key: "import" as const, label: "导入", icon: Upload },
+  ];
 
   return (
     <div className="h-full flex flex-col">
-      {/* Tabs */}
-      <div className="px-5 py-0 border-b border-zinc-100 dark:border-zinc-800 flex items-center shrink-0">
-        <button
-          onClick={() => setActiveTab("export")}
-          className={`px-4 py-3 text-[13px] font-medium border-b-2 transition-colors ${
-            activeTab === "export" ? "border-indigo-600 text-indigo-700 dark:text-indigo-300" : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-          }`}
-        >
-          <Download size={13} className="inline mr-1.5 -mt-0.5" />
-          {t("backup.export")}
-        </button>
-        <button
-          onClick={() => setActiveTab("import")}
-          className={`px-4 py-3 text-[13px] font-medium border-b-2 transition-colors ${
-            activeTab === "import" ? "border-indigo-600 text-indigo-700 dark:text-indigo-300" : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-          }`}
-        >
-          <Upload size={13} className="inline mr-1.5 -mt-0.5" />
-          {t("backup.import")}
-        </button>
-        <button
-          onClick={() => setActiveTab("snapshots")}
-          className={`px-4 py-3 text-[13px] font-medium border-b-2 transition-colors ${
-            activeTab === "snapshots" ? "border-indigo-600 text-indigo-700 dark:text-indigo-300" : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-          }`}
-        >
-          <Camera size={13} className="inline mr-1.5 -mt-0.5" />
-          {t("backup.snapshots")}
-        </button>
+      <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
+            <HardDrive size={16} className="text-sky-600 dark:text-sky-400" />
+          </div>
+          <div>
+            <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("backup.title", "版本备份")}</h2>
+            <p className="text-[11px] text-zinc-400">快照管理、配置导出与导入</p>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          {tabs.map(({ key, label, icon: Icon }) => (
+            <button key={key} onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md ${activeTab === key ? "bg-sky-600 text-white" : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-400"}`}>
+              <Icon size={12} /> {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto px-5 py-4">
-        {activeTab === "export" && (
-          <div className="max-w-[480px]">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-zinc-100 dark:border-zinc-800">
-                <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-200">{t("backup.exportConfig")}</span>
+      {!projectDir && (
+        <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">请先打开一个项目</div>
+      )}
+
+      {projectDir && (
+        <div className="flex-1 overflow-auto px-5 py-4">
+          {activeTab === "snapshots" && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input value={snapshotLabel} onChange={(e) => setSnapshotLabel(e.target.value)} placeholder="快照标签 (可选)" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                <button onClick={handleSnapshot} className="inline-flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700">
+                  <Camera size={12} /> 创建快照
+                </button>
               </div>
-              <div className="px-4 py-4 space-y-3">
-                <label className="flex items-center gap-2.5 text-[12px] text-zinc-600 dark:text-zinc-300 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-3.5 h-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-                  包含已生成的厂商配置
-                </label>
-                <label className="flex items-center gap-2.5 text-[12px] text-zinc-600 dark:text-zinc-300 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-3.5 h-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-                  包含版本历史
-                </label>
-                <label className="flex items-center gap-2.5 text-[12px] text-zinc-600 dark:text-zinc-300 cursor-pointer">
-                  <input type="checkbox" className="w-3.5 h-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-                  包含凭证信息（加密）
-                </label>
-              </div>
-              <div className="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-                <button className="inline-flex items-center gap-2 px-4 py-2 text-[12px] font-medium bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
-                  <Download size={13} />
-                  导出为 ZIP
+              {snapshots.length === 0 && <p className="text-center text-[12px] text-zinc-400 py-4">暂无快照</p>}
+              {snapshots.map((s) => (
+                <div key={s.id} className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-3 group">
+                  <Clock size={14} className="text-zinc-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{s.name || "自动快照"}</p>
+                    <p className="text-[10px] text-zinc-400">{s.date} · {s.size_bytes ? `${(s.size_bytes / 1024).toFixed(1)} KB` : ""} · {s.vendors_count} 厂商</p>
+                  </div>
+                  <button onClick={() => handleDelete(s.id)} className="p-1 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "export" && (
+            <div className="space-y-3">
+              <p className="text-[12px] text-zinc-500">将项目配置导出为 ZIP 文件</p>
+              <button onClick={handleExport} disabled={exporting} className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 disabled:opacity-50">
+                <Download size={14} /> {exporting ? "导出中..." : "导出 ZIP"}
+              </button>
+            </div>
+          )}
+
+          {activeTab === "import" && (
+            <div className="space-y-3">
+              <p className="text-[12px] text-zinc-500">从 ZIP 文件导入配置</p>
+              <div className="flex items-center gap-2">
+                <input value={importPath} onChange={(e) => setImportPath(e.target.value)} placeholder="ZIP 文件路径" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                <button onClick={handleImport} disabled={importing} className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 disabled:opacity-50">
+                  <Upload size={14} /> {importing ? "导入中..." : "导入"}
                 </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === "import" && (
-          <div className="max-w-[480px]">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-zinc-100 dark:border-zinc-800">
-                <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-200">{t("backup.importConfig")}</span>
-              </div>
-              <div className="px-4 py-6">
-                <div className="border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg p-8 text-center hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors cursor-pointer group">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 flex items-center justify-center mx-auto mb-3 transition-colors">
-                    <Upload size={18} className="text-zinc-400 group-hover:text-indigo-500 transition-colors" />
-                  </div>
-                  <p className="text-[12px] text-zinc-500">拖拽 ZIP 文件到此处，或点击选择</p>
-                  <p className="text-[11px] text-zinc-400 mt-1">支持 .zip 格式的 AgentWeave 导出文件</p>
-                </div>
-              </div>
-              <div className="px-4 py-2.5 border-t border-zinc-100 dark:border-zinc-800 bg-amber-50 dark:bg-amber-500/5">
-                <p className="text-[11px] text-amber-600 dark:text-amber-400">
-                  注意：导入将覆盖当前配置，建议先创建快照备份
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "snapshots" && (
-          <div className="space-y-3">
-            <button className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-              <Camera size={13} />
-              创建快照
-            </button>
-
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-                  <tr className="text-left text-[11px] text-zinc-400 uppercase tracking-wider">
-                    <th className="px-4 py-2 font-medium">名称</th>
-                    <th className="px-4 py-2 font-medium">日期</th>
-                    <th className="px-4 py-2 font-medium">大小</th>
-                    <th className="px-4 py-2 font-medium">厂商</th>
-                    <th className="px-4 py-2 font-medium">操作</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {mockSnapshots.map((snap) => (
-                    <tr key={snap.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <HardDrive size={12} className="text-indigo-500" />
-                          <span className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{snap.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className="text-[12px] text-zinc-500 flex items-center gap-1">
-                          <Clock size={11} /> {snap.date}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-[12px] text-zinc-500">{snap.size}</td>
-                      <td className="px-4 py-2.5 text-[12px] text-zinc-500">{snap.vendors}</td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex gap-1">
-                          <button className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded transition-colors">
-                            <RotateCcw size={11} /> 恢复
-                          </button>
-                          <button className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded transition-colors">
-                            <Download size={11} /> 下载
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
