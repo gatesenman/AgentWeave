@@ -37,6 +37,9 @@ export default function ConfigHub() {
   const [activeConcept, setActiveConcept] = useState<ConceptType>("agents");
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["agents", "rules", "mcp_servers"]));
   const [concepts, setConcepts] = useState<ConceptItem[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newDesc, setNewDesc] = useState("");
 
   const load = useCallback(async () => {
     if (!projectDir) return;
@@ -122,11 +125,27 @@ export default function ConfigHub() {
               {getCount(activeConcept)} {t("config.items", "项")}
             </span>
           </div>
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
+          <button onClick={() => setShowAddForm(!showAddForm)} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
             <Plus size={12} />
             {t("config.add", "新增")}
           </button>
         </div>
+
+        {showAddForm && (
+          <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+            <div className="flex items-center gap-2">
+              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="名称" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+              <input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="描述 (可选)" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+              <button onClick={() => {
+                if (!newName.trim()) return;
+                setConcepts((prev) => [...prev, { name: newName.trim(), description: newDesc.trim(), concept_type: conceptSections.find(s => s.key === activeConcept)?.backendType ?? activeConcept, fields: [] }]);
+                setNewName(""); setNewDesc(""); setShowAddForm(false);
+              }} className="px-3 py-1.5 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">添加</button>
+              <button onClick={() => { setShowAddForm(false); setNewName(""); setNewDesc(""); }} className="px-2 py-1.5 text-[11px] text-zinc-500 hover:text-zinc-700">取消</button>
+            </div>
+            <p className="text-[10px] text-zinc-400 mt-1">将添加到当前分类: {t(conceptSections.find(s => s.key === activeConcept)?.labelKey ?? "")}</p>
+          </div>
+        )}
 
         <div className="flex-1 overflow-auto px-5 py-4">
           <ConceptContent

@@ -1,8 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
 import { Sparkles, Send, Lightbulb, Wrench, Plus, AlertTriangle } from "lucide-react";
-import { getAiSuggestions, type AiSuggestion } from "../lib/tauri";
+import { getAiSuggestions, askAiQuestion, type AiSuggestion, type AiAnswer } from "../lib/tauri";
 import { useConfigStore } from "../store/config";
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
 export default function AIAssist() {
   const { t } = useTranslation();
@@ -10,6 +15,8 @@ export default function AIAssist() {
   const [suggestions, setSuggestions] = useState<AiSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [asking, setAsking] = useState(false);
 
   const load = useCallback(async () => {
     if (!projectDir) return;
@@ -18,6 +25,28 @@ export default function AIAssist() {
     setLoading(false);
   }, [projectDir]);
   useEffect(() => { load(); }, [load]);
+
+  const handleAsk = async () => {
+    if (!question.trim() || !projectDir || asking) return;
+    const q = question.trim();
+    setQuestion("");
+    setMessages((prev) => [...prev, { role: "user", content: q }]);
+    setAsking(true);
+    try {
+      const answer: AiAnswer = await askAiQuestion(projectDir, q);
+      setMessages((prev) => [...prev, { role: "assistant", content: answer.answer }]);
+      if (answer.related_suggestions.length > 0) {
+        setSuggestions((prev) => [...answer.related_suggestions, ...prev]);
+      }
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: "assistant", content: `错误: ${e}` }]);
+    }
+    setAsking(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAsk(); }
+  };
 
   const typeIcon = (type: string) => {
     if (type === "optimization") return <Wrench size={12} className="text-blue-500" />;
@@ -46,7 +75,26 @@ export default function AIAssist() {
       )}
 
       <div className="flex-1 overflow-auto px-5 py-4 space-y-3">
-        {suggestions.length === 0 && !loading && projectDir && (
+        {/* Chat messages */}
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[80%] px-3 py-2 rounded-lg text-[12px] ${
+              msg.role === "user"
+                ? "bg-violet-600 text-white"
+                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200"
+            }`}>
+              {msg.content}
+            </div>
+          </div>
+        ))}
+        {asking && (
+          <div className="flex justify-start">
+            <div className="px-3 py-2 rounded-lg text-[12px] bg-zinc-100 dark:bg-zinc-800 text-zinc-400">思考中...</div>
+          </div>
+        )}
+
+        {/* Suggestions */}
+        {messages.length === 0 && suggestions.length === 0 && !loading && projectDir && (
           <div className="text-center py-8 text-[12px] text-zinc-400">暂无建议。配置解析后 AI 会自动提供优化建议。</div>
         )}
         {loading && (
@@ -70,10 +118,11 @@ export default function AIAssist() {
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="向 AI 提问关于配置的问题..."
             className="flex-1 px-3 py-2 text-[12px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-zinc-700 dark:text-zinc-200 placeholder-zinc-400"
           />
-          <button className="p-2 text-white bg-violet-600 rounded-md hover:bg-violet-700">
+          <button onClick={handleAsk} disabled={asking || !question.trim()} className="p-2 text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50">
             <Send size={14} />
           </button>
         </div>

@@ -15,6 +15,7 @@ import {
   listPromptTests,
   createPromptTest,
   deletePromptTest,
+  runPromptTests,
   type PromptTestCase,
 } from "../lib/tauri";
 
@@ -48,6 +49,17 @@ export default function PromptTesting() {
       await load();
       setSelectedTest(id);
     } catch (e) { console.error("createPromptTest", e); }
+  };
+
+  const [running, setRunning] = useState(false);
+
+  const handleRun = async (id: string) => {
+    setRunning(true);
+    try {
+      await runPromptTests(id);
+      await load();
+    } catch (e) { console.error("runPromptTests", e); }
+    setRunning(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -135,8 +147,8 @@ export default function PromptTesting() {
               <div className="flex items-center justify-between">
                 <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{currentTest.name}</h2>
                 <div className="flex items-center gap-2">
-                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700">
-                    <Play size={12} /> 运行全部
+                  <button onClick={() => currentTest && handleRun(currentTest.id)} disabled={running} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50">
+                    <Play size={12} /> {running ? "运行中..." : "运行全部"}
                   </button>
                   <button onClick={() => handleDelete(currentTest.id)} className="p-1.5 text-zinc-400 hover:text-red-500 rounded">
                     <Trash2 size={13} />

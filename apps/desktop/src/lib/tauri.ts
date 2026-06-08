@@ -765,3 +765,85 @@ export interface VendorConceptSupport {
 export async function getVendorSupportMatrix(): Promise<VendorConceptSupport[]> {
   return invoke<VendorConceptSupport[]>("get_vendor_support_matrix");
 }
+
+// ============================================================
+// AI Question (conversational)
+// ============================================================
+
+export interface AiAnswer {
+  answer: string;
+  related_suggestions: AiSuggestion[];
+}
+
+export async function askAiQuestion(projectDir: string, question: string): Promise<AiAnswer> {
+  return invoke<AiAnswer>("ask_ai_question", { projectDir, question });
+}
+
+// ============================================================
+// Trace logs & alerts
+// ============================================================
+
+export interface TraceLogEntry {
+  timestamp: string;
+  level: string;
+  message: string;
+}
+
+export async function getTraceLogs(): Promise<TraceLogEntry[]> {
+  return invoke<TraceLogEntry[]>("get_trace_logs");
+}
+
+export interface AlertInfo {
+  id: string;
+  level: string;
+  title: string;
+  description: string;
+  timestamp: string;
+}
+
+export async function getAlerts(): Promise<AlertInfo[]> {
+  return invoke<AlertInfo[]>("get_alerts");
+}
+
+// ============================================================
+// Run prompt tests
+// ============================================================
+
+export async function runPromptTests(testId: string): Promise<void> {
+  return invoke<void>("run_prompt_tests", { testId });
+}
+
+// ============================================================
+// Routing strategy
+// ============================================================
+
+export async function setRoutingStrategy(strategy: string): Promise<void> {
+  return invoke<void>("set_routing_strategy", { strategy });
+}
+
+export async function getRoutingStrategy(): Promise<string> {
+  return invoke<string>("get_routing_strategy");
+}
+
+// ============================================================
+// ACP Metrics
+// ============================================================
+
+export interface AcpLogEntry {
+  timestamp: string;
+  vendor: string;
+  name: string;
+  latency_ms: number;
+  status: string;
+}
+
+export interface AcpMetrics {
+  total_requests: number;
+  avg_latency_ms: number;
+  success_rate: number;
+  recent_logs: AcpLogEntry[];
+}
+
+export async function getAcpMetrics(): Promise<AcpMetrics> {
+  return invoke<AcpMetrics>("get_acp_metrics");
+}

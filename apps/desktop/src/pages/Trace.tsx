@@ -1,17 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfigStore } from "../store/config";
-import { Activity, RefreshCw, ListTree } from "lucide-react";
+import { RefreshCw, ListTree } from "lucide-react";
+import { getTraceLogs, getAlerts, type TraceLogEntry, type AlertInfo } from "../lib/tauri";
 
 export default function Trace() {
   const { t } = useTranslation();
   const { traceSpans, loadTraces } = useConfigStore();
   const [activeTab, setActiveTab] = useState<"traces" | "logs" | "alerts">("traces");
   const [selectedSpan, setSelectedSpan] = useState<string | null>(null);
+  const [logs, setLogs] = useState<TraceLogEntry[]>([]);
+  const [alerts, setAlerts] = useState<AlertInfo[]>([]);
 
-  useEffect(() => {
+  const loadAll = useCallback(async () => {
     loadTraces();
+    try { setLogs(await getTraceLogs()); } catch (e) { console.error("getTraceLogs", e); }
+    try { setAlerts(await getAlerts()); } catch (e) { console.error("getAlerts", e); }
   }, [loadTraces]);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
 
   return (
     <div className="h-full flex flex-col">
@@ -32,7 +39,7 @@ export default function Trace() {
         ))}
         <div className="flex-1" />
         <button
-          onClick={() => loadTraces()}
+          onClick={() => loadAll()}
           className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
         >
           <RefreshCw size={14} />
@@ -129,30 +136,39 @@ export default function Trace() {
 
       {activeTab === "logs" && (
         <div className="flex-1 overflow-auto font-mono text-[11px] px-5 py-3 space-y-0.5">
-          <LogLine level="info" text="Config loaded successfully" />
-          <LogLine level="debug" text="Adapter registry: 12 adapters registered" />
-          <LogLine level="info" text="Generate: 12/12 vendors completed" />
-          <LogLine level="warn" text="Windsurf: memory section not fully supported" />
-          <LogLine level="info" text="Watch mode active, monitoring .agentweave/" />
+          {logs.length === 0 ? (
+            <div className="text-center py-8 text-[12px] text-zinc-400">暂无日志记录。执行操作（生成、验证等）后日志会自动记录。</div>
+          ) : (
+            logs.map((log, i) => (
+              <LogLine key={i} level={log.level as "info" | "debug" | "warn" | "error"} text={`${log.timestamp} ${log.message}`} />
+            ))
+          )}
         </div>
       )}
 
       {activeTab === "alerts" && (
         <div className="flex-1 overflow-auto px-5 py-4 space-y-2">
-          <div className="bg-white dark:bg-zinc-900 border border-amber-200 dark:border-amber-500/20 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <span className="text-[12px] font-medium text-zinc-800 dark:text-zinc-100">Cost threshold approaching</span>
-            </div>
-            <p className="text-[11px] text-zinc-500 mt-1 pl-4">Monthly API usage at 82% of budget limit</p>
-          </div>
-          <div className="bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-500/20 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="text-[12px] font-medium text-zinc-800 dark:text-zinc-100">All adapters healthy</span>
-            </div>
-            <p className="text-[11px] text-zinc-500 mt-1 pl-4">Last health check: all 12 adapters responding</p>
-          </div>
+          {alerts.length === 0 ? (
+            <div className="text-center py-8 text-[12px] text-zinc-400">暂无告警</div>
+          ) : (
+            alerts.map((alert) => (
+              <div key={alert.id} className={`bg-white dark:bg-zinc-900 border rounded-lg p-3 ${
+                alert.level === "error" ? "border-red-200 dark:border-red-500/20" :
+                alert.level === "warning" ? "border-amber-200 dark:border-amber-500/20" :
+                "border-emerald-200 dark:border-emerald-500/20"
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${
+                    alert.level === "error" ? "bg-red-400" :
+                    alert.level === "warning" ? "bg-amber-400" : "bg-emerald-400"
+                  }`} />
+                  <span className="text-[12px] font-medium text-zinc-800 dark:text-zinc-100">{alert.title}</span>
+                  <span className="text-[10px] text-zinc-400 ml-auto">{alert.timestamp}</span>
+                </div>
+                <p className="text-[11px] text-zinc-500 mt-1 pl-4">{alert.description}</p>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

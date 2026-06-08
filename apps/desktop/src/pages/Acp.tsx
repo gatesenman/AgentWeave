@@ -1,25 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfigStore } from "../store/config";
 import { Radio, Zap, BarChart3, Check } from "lucide-react";
+import { setRoutingStrategy, getRoutingStrategy, getAcpMetrics, type AcpMetrics } from "../lib/tauri";
+
+const ALL_STRATEGIES = [
+  { name: "BestMatch", description: "Route to vendor with highest concept coverage" },
+  { name: "RoundRobin", description: "Distribute requests evenly across vendors" },
+  { name: "LeastLatency", description: "Pick fastest responding vendor" },
+  { name: "RaceFirst", description: "Send to all, use first response" },
+  { name: "Fanout", description: "Broadcast to all vendors in parallel" },
+];
 
 export default function Acp() {
   const { t } = useTranslation();
   const { vendors, compareEntries, projectDir, loadVendors, loadCompare } = useConfigStore();
   const [activeTab, setActiveTab] = useState<"agents" | "routing" | "monitor">("agents");
+  const [activeStrategy, setActiveStrategy] = useState("BestMatch");
+  const [metrics, setMetrics] = useState<AcpMetrics | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     loadVendors();
     if (projectDir) loadCompare();
+    try { setActiveStrategy(await getRoutingStrategy()); } catch (e) { console.error(e); }
+    try { setMetrics(await getAcpMetrics()); } catch (e) { console.error(e); }
   }, [loadVendors, loadCompare, projectDir]);
 
-  const routingStrategies = [
-    { name: "BestMatch", description: "Route to vendor with highest concept coverage", active: true },
-    { name: "RoundRobin", description: "Distribute requests evenly across vendors", active: false },
-    { name: "LeastLatency", description: "Pick fastest responding vendor", active: false },
-    { name: "RaceFirst", description: "Send to all, use first response", active: false },
-    { name: "Fanout", description: "Broadcast to all vendors in parallel", active: false },
-  ];
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleStrategyChange = async (name: string) => {
+    try {
+      await setRoutingStrategy(name);
+      setActiveStrategy(name);
+    } catch (e) { console.error("setRoutingStrategy", e); }
+  };
 
   if (!projectDir) {
     return (
@@ -100,11 +114,12 @@ export default function Acp() {
 
         {activeTab === "routing" && (
           <div className="space-y-2 max-w-[520px]">
-            {routingStrategies.map((s) => (
+            {ALL_STRATEGIES.map((s) => (
               <div
                 key={s.name}
+                onClick={() => handleStrategyChange(s.name)}
                 className={`bg-white dark:bg-zinc-900 border rounded-lg p-3 flex items-center justify-between cursor-pointer transition-colors ${
-                  s.active
+                  activeStrategy === s.name
                     ? "border-indigo-300 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/5"
                     : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
                 }`}
@@ -112,7 +127,7 @@ export default function Acp() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">{s.name}</span>
-                    {s.active && (
+                    {activeStrategy === s.name && (
                       <span className="px-1.5 py-0.5 text-[10px] font-medium bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 rounded">
                         ACTIVE
                       </span>
@@ -121,9 +136,9 @@ export default function Acp() {
                   <p className="text-[11px] text-zinc-500 mt-0.5">{s.description}</p>
                 </div>
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                  s.active ? "border-indigo-600 bg-indigo-600" : "border-zinc-300 dark:border-zinc-600"
+                  activeStrategy === s.name ? "border-indigo-600 bg-indigo-600" : "border-zinc-300 dark:border-zinc-600"
                 }`}>
-                  {s.active && <Check size={10} className="text-white" />}
+                  {activeStrategy === s.name && <Check size={10} className="text-white" />}
                 </div>
               </div>
             ))}
@@ -133,28 +148,28 @@ export default function Acp() {
         {activeTab === "monitor" && (
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-3">
-              <MonitorCard label="总请求" value="1,247" />
-              <MonitorCard label="平均延迟" value="120ms" />
-              <MonitorCard label="成功率" value="99.2%" />
+              <MonitorCard label="总请求" value={metrics ? String(metrics.total_requests) : "—"} />
+              <MonitorCard label="平均延迟" value={metrics ? `${Math.round(metrics.avg_latency_ms)}ms` : "—"} />
+              <MonitorCard label="成功率" value={metrics ? `${metrics.success_rate.toFixed(1)}%` : "—"} />
             </div>
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
               <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wide mb-3">
                 近期调度
               </h3>
               <div className="space-y-2">
-                {[
-                  { time: "14:32:01", vendor: "codex", agent: "code-writer", latency: "89ms", status: "ok" },
-                  { time: "14:31:58", vendor: "claude-code", agent: "reviewer", latency: "156ms", status: "ok" },
-                  { time: "14:31:45", vendor: "cursor", agent: "code-writer", latency: "67ms", status: "ok" },
-                ].map((log, i) => (
-                  <div key={i} className="flex items-center gap-4 text-[11px]">
-                    <span className="font-mono text-zinc-400 w-[60px]">{log.time}</span>
-                    <span className="text-zinc-600 dark:text-zinc-300 w-[90px]">{log.vendor}</span>
-                    <span className="text-zinc-500 w-[80px]">{log.agent}</span>
-                    <span className="text-zinc-400 w-[50px]">{log.latency}</span>
-                    <span className="text-emerald-500">{log.status}</span>
-                  </div>
-                ))}
+                {(!metrics || metrics.recent_logs.length === 0) ? (
+                  <p className="text-[11px] text-zinc-400">暂无调度记录。执行生成操作后会自动记录。</p>
+                ) : (
+                  metrics.recent_logs.map((log, i) => (
+                    <div key={i} className="flex items-center gap-4 text-[11px]">
+                      <span className="font-mono text-zinc-400 w-[140px] truncate">{log.timestamp}</span>
+                      <span className="text-zinc-600 dark:text-zinc-300 w-[90px]">{log.vendor}</span>
+                      <span className="text-zinc-500 w-[120px] truncate">{log.name}</span>
+                      <span className="text-zinc-400 w-[50px]">{log.latency_ms}ms</span>
+                      <span className={log.status === "ok" ? "text-emerald-500" : "text-red-400"}>{log.status}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

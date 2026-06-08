@@ -756,4 +756,64 @@ impl Database {
         conn.execute("UPDATE conflict_records SET status=?2 WHERE id=?1", params![id, resolution]).map_err(|e| e.to_string())?;
         Ok(())
     }
+
+    // --- Aggregation helpers ---
+
+    pub fn get_total_cost(&self) -> Result<f64, String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let result: f64 = conn.query_row(
+            "SELECT COALESCE(SUM(cost_usd), 0.0) FROM cost_records", [], |row| row.get(0),
+        ).unwrap_or(0.0);
+        Ok(result)
+    }
+
+    pub fn count_failed_spans(&self) -> Result<i64, String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let result: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM trace_spans WHERE status != 'ok'", [], |row| row.get(0),
+        ).unwrap_or(0);
+        Ok(result)
+    }
+
+    pub fn count_unresolved_conflicts(&self) -> Result<i64, String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let result: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM conflict_records WHERE status = 'unresolved' OR status = 'pending'",
+            [], |row| row.get(0),
+        ).unwrap_or(0);
+        Ok(result)
+    }
+
+    pub fn get_span_metrics(&self) -> Result<(i64, f64, i64), String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let total: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM trace_spans", [], |row| row.get(0),
+        ).unwrap_or(0);
+        let avg: f64 = conn.query_row(
+            "SELECT COALESCE(AVG(duration_ms), 0.0) FROM trace_spans", [], |row| row.get(0),
+        ).unwrap_or(0.0);
+        let ok_count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM trace_spans WHERE status = 'ok'", [], |row| row.get(0),
+        ).unwrap_or(0);
+        Ok((total, avg, ok_count))
+    }
+
+    pub fn update_prompt_test_results(&self, id: &str, results_json: &str) -> Result<(), String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE prompt_tests SET results_json = ?1 WHERE id = ?2",
+            params![results_json, id],
+        ).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub fn get_prompt_test_vendors(&self, id: &str) -> Result<String, String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        let result: String = conn.query_row(
+            "SELECT vendors_json FROM prompt_tests WHERE id = ?1",
+            params![id],
+            |row| row.get(0),
+        ).map_err(|e| format!("Test not found: {}", e))?;
+        Ok(result)
+    }
 }

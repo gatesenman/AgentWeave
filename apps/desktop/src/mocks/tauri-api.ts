@@ -75,6 +75,13 @@ const mockData: Record<string, unknown> = {
   get_vendor_support_matrix: [],
   set_preference: undefined,
   get_preference: null,
+  ask_ai_question: { answer: "当前项目概览: 5 Agent, 12 Rule, 4 MCP Server, 8 Skill, 3 Workflow, 6 Hook。", related_suggestions: [] },
+  get_trace_logs: [],
+  get_alerts: [{ id: "a1", level: "info", title: "适配器状态正常", description: "全部 12 个适配器就绪", timestamp: "2024-01-01 12:00:00" }],
+  run_prompt_tests: undefined,
+  set_routing_strategy: undefined,
+  get_routing_strategy: "BestMatch",
+  get_acp_metrics: { total_requests: 0, avg_latency_ms: 0, success_rate: 100, recent_logs: [] },
 
   // Write commands return success
   create_experiment: "exp-mock",
