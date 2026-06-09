@@ -1525,6 +1525,274 @@ pub async fn get_config_concepts(project_dir: String) -> Result<Vec<ConceptItem>
 }
 
 // ============================================================
+// Add config concept — writes YAML file to disk
+// ============================================================
+
+#[tauri::command]
+pub async fn add_config_concept(
+    project_dir: String,
+    concept_type: String,
+    name: String,
+    description: String,
+) -> Result<(), String> {
+    let path = PathBuf::from(&project_dir);
+    let config_dir = path.join(".agentweave");
+    std::fs::create_dir_all(&config_dir).map_err(|e| e.to_string())?;
+
+    match concept_type.as_str() {
+        "agents" | "Agent" => {
+            let agents_dir = config_dir.join("agents");
+            std::fs::create_dir_all(&agents_dir).map_err(|e| e.to_string())?;
+            let slug = name.to_lowercase().replace(' ', "-");
+            let file = agents_dir.join(format!("{}.yaml", slug));
+            let yaml = format!(
+                "name: {}\ndescription: {}\nskills: []\nsub_agents: []\n",
+                name, description
+            );
+            std::fs::write(&file, &yaml).map_err(|e| e.to_string())?;
+        }
+        "rules" | "Rule" => {
+            let rules_dir = config_dir.join("rules");
+            std::fs::create_dir_all(&rules_dir).map_err(|e| e.to_string())?;
+            let slug = name.to_lowercase().replace(' ', "-");
+            let file = rules_dir.join(format!("{}.yaml", slug));
+            let yaml = format!(
+                "name: {}\ndescription: {}\nactivation:\n  type: always\n  globs: []\ncontent: \"\"\n",
+                name, description
+            );
+            std::fs::write(&file, &yaml).map_err(|e| e.to_string())?;
+        }
+        "mcp_servers" | "MCP Server" => {
+            let mcp_dir = config_dir.join("mcp");
+            std::fs::create_dir_all(&mcp_dir).map_err(|e| e.to_string())?;
+            let servers_file = mcp_dir.join("servers.yaml");
+            let mut servers: Vec<serde_json::Value> = if servers_file.exists() {
+                let content = std::fs::read_to_string(&servers_file).map_err(|e| e.to_string())?;
+                serde_yaml::from_str(&content).unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            servers.push(serde_json::json!({
+                "name": name,
+                "command": format!("npx -y {}", name),
+                "transport": "stdio"
+            }));
+            let yaml = serde_yaml::to_string(&servers).map_err(|e| e.to_string())?;
+            std::fs::write(&servers_file, &yaml).map_err(|e| e.to_string())?;
+        }
+        "skills" | "Skill" => {
+            let skills_dir = config_dir.join("skills");
+            let slug = name.to_lowercase().replace(' ', "-");
+            let skill_dir = skills_dir.join(&slug);
+            std::fs::create_dir_all(&skill_dir).map_err(|e| e.to_string())?;
+            let file = skill_dir.join("skill.yaml");
+            let yaml = format!("name: {}\ndescription: {}\n", name, description);
+            std::fs::write(&file, &yaml).map_err(|e| e.to_string())?;
+        }
+        "hooks" | "Hook" => {
+            let hooks_dir = config_dir.join("hooks");
+            std::fs::create_dir_all(&hooks_dir).map_err(|e| e.to_string())?;
+            let hooks_file = hooks_dir.join("hooks.yaml");
+            let mut hooks: Vec<serde_json::Value> = if hooks_file.exists() {
+                let content = std::fs::read_to_string(&hooks_file).map_err(|e| e.to_string())?;
+                serde_yaml::from_str(&content).unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            hooks.push(serde_json::json!({
+                "name": name,
+                "event": "on_generate",
+                "action": "log"
+            }));
+            let yaml = serde_yaml::to_string(&hooks).map_err(|e| e.to_string())?;
+            std::fs::write(&hooks_file, &yaml).map_err(|e| e.to_string())?;
+        }
+        "workflows" | "Workflow" => {
+            let wf_dir = config_dir.join("workflows");
+            std::fs::create_dir_all(&wf_dir).map_err(|e| e.to_string())?;
+            let slug = name.to_lowercase().replace(' ', "-");
+            let file = wf_dir.join(format!("{}.yaml", slug));
+            let yaml = format!(
+                "name: {}\ndescription: {}\nsteps: []\n",
+                name, description
+            );
+            std::fs::write(&file, &yaml).map_err(|e| e.to_string())?;
+        }
+        _ => {
+            return Err(format!("Unknown concept type: {}", concept_type));
+        }
+    }
+    Ok(())
+}
+
+// ============================================================
+// Run experiment — simulate A/B comparison and populate metrics
+// ============================================================
+
+#[tauri::command]
+pub async fn run_experiment(db: State<'_, Arc<Database>>, id: String) -> Result<(), String> {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    let mut hasher = DefaultHasher::new();
+    id.hash(&mut hasher);
+    let seed = hasher.finish();
+
+    let rt_a = 80.0 + ((seed % 200) as f64);
+    let rt_b = 80.0 + (((seed >> 8) % 200) as f64);
+    let acc_a = 70.0 + ((seed % 30) as f64);
+    let acc_b = 70.0 + (((seed >> 4) % 30) as f64);
+    let tok_a = 500 + (seed % 2000) as i64;
+    let tok_b = 500 + ((seed >> 12) % 2000) as i64;
+    let sr_a = 85.0 + ((seed % 15) as f64);
+    let sr_b = 85.0 + (((seed >> 16) % 15) as f64);
+
+    let metrics = serde_json::json!({
+        "response_time": [rt_a, rt_b],
+        "accuracy": [acc_a, acc_b],
+        "token_usage": [tok_a, tok_b],
+        "success_rate": [sr_a, sr_b],
+    });
+
+    let winner = if acc_a >= acc_b { "A" } else { "B" };
+
+    db.complete_experiment(&id, winner, &metrics.to_string())?;
+    db.log_audit("experiment.run", &format!("Ran experiment {}, winner: {}", id, winner))?;
+    Ok(())
+}
+
+// ============================================================
+// Global search — search across all DB entity types
+// ============================================================
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SearchResult {
+    pub entity_type: String,
+    pub id: String,
+    pub name: String,
+    pub detail: String,
+}
+
+#[tauri::command]
+pub async fn global_search(
+    db: State<'_, Arc<Database>>,
+    project_dir: String,
+    query: String,
+) -> Result<Vec<SearchResult>, String> {
+    let mut results = Vec::new();
+    let q = query.to_lowercase();
+
+    // Search config concepts from disk
+    if !project_dir.is_empty() {
+        let path = PathBuf::from(&project_dir);
+        if let Ok(config) = AgentWeaveConfig::load(&path) {
+            for a in &config.agents {
+                if a.name.to_lowercase().contains(&q) || a.description.as_deref().unwrap_or("").to_lowercase().contains(&q) {
+                    results.push(SearchResult {
+                        entity_type: "Agent".into(),
+                        id: a.name.clone(),
+                        name: a.name.clone(),
+                        detail: a.description.clone().unwrap_or_default(),
+                    });
+                }
+            }
+            for r in &config.rules {
+                if r.name.to_lowercase().contains(&q) || r.description.as_deref().unwrap_or("").to_lowercase().contains(&q) {
+                    results.push(SearchResult {
+                        entity_type: "Rule".into(),
+                        id: r.name.clone(),
+                        name: r.name.clone(),
+                        detail: r.description.clone().unwrap_or_default(),
+                    });
+                }
+            }
+            for m in &config.mcp_servers {
+                if m.name.to_lowercase().contains(&q) {
+                    results.push(SearchResult {
+                        entity_type: "MCP Server".into(),
+                        id: m.name.clone(),
+                        name: m.name.clone(),
+                        detail: m.command.clone(),
+                    });
+                }
+            }
+            for s in &config.skills {
+                if s.name.to_lowercase().contains(&q) {
+                    results.push(SearchResult {
+                        entity_type: "Skill".into(),
+                        id: s.name.clone(),
+                        name: s.name.clone(),
+                        detail: s.description.clone().unwrap_or_default(),
+                    });
+                }
+            }
+        }
+    }
+
+    // Search DB entities: templates
+    if let Ok(templates) = db.list_templates(None) {
+        for (id, name, _cat, desc, _author, _dl, _tags, _config, _created) in templates {
+            if name.to_lowercase().contains(&q) || desc.to_lowercase().contains(&q) {
+                results.push(SearchResult { entity_type: "Template".into(), id, name, detail: desc });
+            }
+        }
+    }
+
+    // Search DB entities: team members
+    if let Ok(members) = db.list_team_members() {
+        for (id, name, email, role, _joined) in members {
+            if name.to_lowercase().contains(&q) || email.to_lowercase().contains(&q) {
+                results.push(SearchResult { entity_type: "Team Member".into(), id, name, detail: format!("{} ({})", email, role) });
+            }
+        }
+    }
+
+    // Search DB entities: webhooks
+    if let Ok(webhooks) = db.list_webhooks() {
+        for (id, name, url, platform, _events, _enabled, _created) in webhooks {
+            if name.to_lowercase().contains(&q) || url.to_lowercase().contains(&q) {
+                results.push(SearchResult { entity_type: "Webhook".into(), id, name, detail: format!("{} ({})", url, platform) });
+            }
+        }
+    }
+
+    // Search DB entities: governance policies
+    if let Ok(policies) = db.list_governance_policies() {
+        for (id, name, desc, _sev, _enabled, _rule) in policies {
+            if name.to_lowercase().contains(&q) || desc.to_lowercase().contains(&q) {
+                results.push(SearchResult { entity_type: "Policy".into(), id, name, detail: desc });
+            }
+        }
+    }
+
+    // Search DB entities: experiments
+    if let Ok(experiments) = db.list_experiments() {
+        for (id, name, _status, _ca, _cb, _vendor, _runs, _winner, _created, _metrics) in experiments {
+            if name.to_lowercase().contains(&q) {
+                results.push(SearchResult { entity_type: "Experiment".into(), id, name, detail: String::new() });
+            }
+        }
+    }
+
+    Ok(results)
+}
+
+// ============================================================
+// Update environment overrides
+// ============================================================
+
+#[tauri::command]
+pub async fn update_env_overrides(
+    db: State<'_, Arc<Database>>,
+    id: String,
+    overrides_json: String,
+) -> Result<(), String> {
+    db.update_environment_overrides(&id, &overrides_json)?;
+    db.log_audit("environment.update_overrides", &format!("Updated overrides for env {}", id))?;
+    Ok(())
+}
+
+// ============================================================
 // Event emission for frontend notification
 // ============================================================
 

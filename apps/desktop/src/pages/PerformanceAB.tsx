@@ -16,6 +16,7 @@ import {
   createExperiment,
   updateExperimentStatus,
   deleteExperiment,
+  runExperiment,
   type Experiment,
 } from "../lib/tauri";
 
@@ -62,7 +63,9 @@ export default function PerformanceAB() {
     try {
       await updateExperimentStatus(id, "running");
       await load();
-    } catch (e) { console.error("updateExperimentStatus", e); }
+      await runExperiment(id);
+      await load();
+    } catch (e) { console.error("runExperiment", e); }
   };
 
   const selectedExp = experiments.find((e) => e.id === selected);

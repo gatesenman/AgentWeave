@@ -99,6 +99,10 @@ const mockData: Record<string, unknown> = {
   add_recent_project: undefined,
   export_project_zip: "/tmp/mock-export.zip",
   import_project_zip: "Imported 0 files",
+  add_config_concept: undefined,
+  run_experiment: undefined,
+  global_search: [],
+  update_env_overrides: undefined,
 };
 
 export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): Promise<T> {

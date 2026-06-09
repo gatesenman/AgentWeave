@@ -132,6 +132,11 @@ fn main() {
             commands::set_routing_strategy,
             commands::get_routing_strategy,
             commands::get_acp_metrics,
+            // New: solidified features
+            commands::add_config_concept,
+            commands::run_experiment,
+            commands::global_search,
+            commands::update_env_overrides,
         ])
         .run(tauri::generate_context!())
         .expect("error while running AgentWeave desktop app");

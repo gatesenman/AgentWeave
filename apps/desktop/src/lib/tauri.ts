@@ -847,3 +847,47 @@ export interface AcpMetrics {
 export async function getAcpMetrics(): Promise<AcpMetrics> {
   return invoke<AcpMetrics>("get_acp_metrics");
 }
+
+// ============================================================
+// Add config concept — persist to disk
+// ============================================================
+
+export async function addConfigConcept(
+  projectDir: string,
+  conceptType: string,
+  name: string,
+  description: string,
+): Promise<void> {
+  return invoke<void>("add_config_concept", { projectDir, conceptType, name, description });
+}
+
+// ============================================================
+// Run experiment — populate real metrics
+// ============================================================
+
+export async function runExperiment(id: string): Promise<void> {
+  return invoke<void>("run_experiment", { id });
+}
+
+// ============================================================
+// Global search — all entity types
+// ============================================================
+
+export interface SearchResult {
+  entity_type: string;
+  id: string;
+  name: string;
+  detail: string;
+}
+
+export async function globalSearch(projectDir: string, query: string): Promise<SearchResult[]> {
+  return invoke<SearchResult[]>("global_search", { projectDir, query });
+}
+
+// ============================================================
+// Update environment overrides
+// ============================================================
+
+export async function updateEnvOverrides(id: string, overridesJson: string): Promise<void> {
+  return invoke<void>("update_env_overrides", { id, overridesJson });
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfigStore } from "../store/config";
-import { getConfigConcepts, type ConceptItem } from "../lib/tauri";
+import { getConfigConcepts, addConfigConcept, type ConceptItem } from "../lib/tauri";
 import {
   Cpu, BookOpen, Server, Sparkles, GitBranch, Anchor,
   Wrench, Brain, FileText, Code2, FolderTree, Plus, ChevronRight, ChevronDown
@@ -136,9 +136,13 @@ export default function ConfigHub() {
             <div className="flex items-center gap-2">
               <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="名称" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
               <input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="描述 (可选)" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-              <button onClick={() => {
-                if (!newName.trim()) return;
-                setConcepts((prev) => [...prev, { name: newName.trim(), description: newDesc.trim(), concept_type: conceptSections.find(s => s.key === activeConcept)?.backendType ?? activeConcept, fields: [] }]);
+              <button onClick={async () => {
+                if (!newName.trim() || !projectDir) return;
+                const ct = conceptSections.find(s => s.key === activeConcept)?.backendType ?? activeConcept;
+                try {
+                  await addConfigConcept(projectDir, ct, newName.trim(), newDesc.trim());
+                  await load();
+                } catch (e) { console.error("addConfigConcept", e); }
                 setNewName(""); setNewDesc(""); setShowAddForm(false);
               }} className="px-3 py-1.5 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">添加</button>
               <button onClick={() => { setShowAddForm(false); setNewName(""); setNewDesc(""); }} className="px-2 py-1.5 text-[11px] text-zinc-500 hover:text-zinc-700">取消</button>

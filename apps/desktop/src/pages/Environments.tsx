@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
 import { Layers, Plus, Trash2, CheckCircle2, Circle } from "lucide-react";
-import { listEnvironments, createEnvironment, activateEnvironment, deleteEnvironment, type EnvironmentInfo } from "../lib/tauri";
+import { listEnvironments, createEnvironment, activateEnvironment, deleteEnvironment, updateEnvOverrides, type EnvironmentInfo, type EnvironmentOverride } from "../lib/tauri";
 import { useConfigStore } from "../store/config";
 
 export default function Environments() {
@@ -11,6 +11,10 @@ export default function Environments() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newLabel, setNewLabel] = useState("");
+  const [editingOverrides, setEditingOverrides] = useState<string | null>(null);
+  const [overrideConcept, setOverrideConcept] = useState("");
+  const [overrideField, setOverrideField] = useState("");
+  const [overrideValue, setOverrideValue] = useState("");
 
   const load = useCallback(async () => {
     if (!projectDir) return;
@@ -34,6 +38,28 @@ export default function Environments() {
 
   const handleDelete = async (id: string) => {
     try { await deleteEnvironment(id); await load(); } catch (e) { console.error(e); }
+  };
+
+  const handleAddOverride = async (envId: string) => {
+    if (!overrideConcept.trim() || !overrideField.trim()) return;
+    const env = envs.find(e => e.id === envId);
+    if (!env) return;
+    const newOverrides: EnvironmentOverride[] = [...env.overrides, { concept: overrideConcept, field: overrideField, base_value: "", override_value: overrideValue }];
+    try {
+      await updateEnvOverrides(envId, JSON.stringify(newOverrides));
+      setOverrideConcept(""); setOverrideField(""); setOverrideValue("");
+      await load();
+    } catch (e) { console.error("updateEnvOverrides", e); }
+  };
+
+  const handleRemoveOverride = async (envId: string, idx: number) => {
+    const env = envs.find(e => e.id === envId);
+    if (!env) return;
+    const newOverrides = env.overrides.filter((_, i) => i !== idx);
+    try {
+      await updateEnvOverrides(envId, JSON.stringify(newOverrides));
+      await load();
+    } catch (e) { console.error("updateEnvOverrides", e); }
   };
 
   return (
@@ -87,10 +113,33 @@ export default function Environments() {
                   </div>
                   {env.last_deployed && <p className="text-[10px] text-zinc-400 mt-0.5">上次部署: {env.last_deployed}</p>}
                 </div>
+                <button onClick={() => setEditingOverrides(editingOverrides === env.id ? null : env.id)} className="px-2 py-1 text-[10px] text-zinc-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded">
+                  覆盖 ({env.overrides.length})
+                </button>
                 <button onClick={() => handleDelete(env.id)} className="p-1 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100">
                   <Trash2 size={12} />
                 </button>
               </div>
+              {editingOverrides === env.id && (
+                <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
+                  {env.overrides.map((ov, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-[11px]">
+                      <span className="text-zinc-500">{ov.concept}</span>
+                      <span className="text-zinc-400">.</span>
+                      <span className="text-zinc-600 dark:text-zinc-300">{ov.field}</span>
+                      <span className="text-zinc-400">=</span>
+                      <span className="text-purple-600 dark:text-purple-400 font-mono">{ov.override_value}</span>
+                      <button onClick={() => handleRemoveOverride(env.id, idx)} className="ml-auto p-0.5 text-zinc-300 hover:text-red-500"><Trash2 size={10} /></button>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-1">
+                    <input value={overrideConcept} onChange={(e) => setOverrideConcept(e.target.value)} placeholder="概念" className="w-[80px] px-1 py-0.5 text-[10px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                    <input value={overrideField} onChange={(e) => setOverrideField(e.target.value)} placeholder="字段" className="w-[80px] px-1 py-0.5 text-[10px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                    <input value={overrideValue} onChange={(e) => setOverrideValue(e.target.value)} placeholder="值" className="flex-1 px-1 py-0.5 text-[10px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                    <button onClick={() => handleAddOverride(env.id)} className="px-1.5 py-0.5 text-[10px] text-white bg-purple-600 rounded hover:bg-purple-700">+</button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

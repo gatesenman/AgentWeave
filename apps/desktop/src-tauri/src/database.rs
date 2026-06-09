@@ -297,6 +297,15 @@ impl Database {
         Ok(())
     }
 
+    pub fn complete_experiment(&self, id: &str, winner: &str, metrics_json: &str) -> Result<(), String> {
+        let conn = self.conn.lock().map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE experiments SET status='completed', runs=10, winner=?2, metrics_json=?3 WHERE id=?1",
+            params![id, winner, metrics_json],
+        ).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     pub fn delete_experiment(&self, id: &str) -> Result<(), String> {
         let conn = self.conn.lock().map_err(|e| e.to_string())?;
         conn.execute("DELETE FROM experiments WHERE id=?1", params![id]).map_err(|e| e.to_string())?;

@@ -163,28 +163,7 @@ export default function Governance() {
         )}
 
         {activeTab === "roles" && (
-          <div className="space-y-3">
-            <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300">角色管理</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {roles.length === 0 && <p className="col-span-3 text-center text-[12px] text-zinc-400 py-4">暂无角色</p>}
-              {roles.map((role) => (
-                <div key={role.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Users size={14} className="text-indigo-500" />
-                      <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">{role.name}</span>
-                    </div>
-                    <button onClick={() => handleDeleteRole(role.id)} className="p-0.5 text-zinc-300 hover:text-red-500"><Trash2 size={11} /></button>
-                  </div>
-                  <div className="space-y-1">
-                    {role.permissions.map((perm: string, j: number) => (
-                      <p key={j} className="text-[11px] text-zinc-500">{perm}</p>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <RolesTab roles={roles} onDelete={handleDeleteRole} onCreated={load} />
         )}
 
         {activeTab === "audit" && (
@@ -210,6 +189,63 @@ export default function Governance() {
             </table>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function RolesTab({ roles, onDelete, onCreated }: { roles: GovernanceRoleInfo[]; onDelete: (id: string) => void; onCreated: () => void }) {
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPerms, setNewPerms] = useState("read,write");
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    try {
+      await createGovernanceRole(newName.trim(), newPerms.split(",").map(p => p.trim()).filter(Boolean));
+      setNewName(""); setNewPerms("read,write"); setShowNew(false);
+      onCreated();
+    } catch (e) { console.error("createGovernanceRole", e); }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300">角色管理</h3>
+        <button onClick={() => setShowNew(true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+          <Plus size={11} /> 新增
+        </button>
+      </div>
+      {showNew && (
+        <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="角色名" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newPerms} onChange={(e) => setNewPerms(e.target.value)} placeholder="权限 (逗号分隔)" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleCreate} className="px-3 py-1 text-[11px] text-white bg-indigo-600 rounded hover:bg-indigo-700">创建</button>
+            <button onClick={() => setShowNew(false)} className="px-3 py-1 text-[11px] text-zinc-500">取消</button>
+          </div>
+        </div>
+      )}
+      <div className="grid grid-cols-3 gap-3">
+        {roles.length === 0 && <p className="col-span-3 text-center text-[12px] text-zinc-400 py-4">暂无角色</p>}
+        {roles.map((role) => (
+          <div key={role.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-indigo-500" />
+                <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">{role.name}</span>
+              </div>
+              <button onClick={() => onDelete(role.id)} className="p-0.5 text-zinc-300 hover:text-red-500"><Trash2 size={11} /></button>
+            </div>
+            <div className="space-y-1">
+              {role.permissions.map((perm: string, j: number) => (
+                <p key={j} className="text-[11px] text-zinc-500">{perm}</p>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
