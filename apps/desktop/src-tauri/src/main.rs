@@ -137,6 +137,7 @@ fn main() {
             commands::run_experiment,
             commands::global_search,
             commands::update_env_overrides,
+            commands::detect_conflicts,
         ])
         .run(tauri::generate_context!())
         .expect("error while running AgentWeave desktop app");

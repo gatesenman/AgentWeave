@@ -638,6 +638,10 @@ export async function resolveConflict(id: string, resolution: string): Promise<v
   return invoke<void>("resolve_conflict", { id, resolution });
 }
 
+export async function detectConflicts(projectDir: string): Promise<number> {
+  return invoke<number>("detect_conflicts", { projectDir });
+}
+
 // ============================================================
 // Recent Projects & Persistence
 // ============================================================

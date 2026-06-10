@@ -1,12 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
-import { GitMerge, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
-import { listConflicts, resolveConflict, type ConflictInfo } from "../lib/tauri";
+import { GitMerge, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Search, RefreshCw } from "lucide-react";
+import { listConflicts, resolveConflict, detectConflicts, type ConflictInfo } from "../lib/tauri";
+import { useConfigStore } from "../store/config";
 
 export default function ConflictResolver() {
   const { t } = useTranslation();
+  const projectDir = useConfigStore((s) => s.projectDir) || "";
   const [conflicts, setConflicts] = useState<ConflictInfo[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [detecting, setDetecting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -16,6 +19,16 @@ export default function ConflictResolver() {
     } catch (e) { console.error("listConflicts", e); }
   }, [selected]);
   useEffect(() => { load(); }, [load]);
+
+  const handleDetect = async () => {
+    if (!projectDir) return;
+    setDetecting(true);
+    try {
+      await detectConflicts(projectDir);
+      await load();
+    } catch (e) { console.error("detectConflicts", e); }
+    setDetecting(false);
+  };
 
   const handleResolve = async (id: string, winner: string) => {
     try { await resolveConflict(id, winner); await load(); } catch (e) { console.error(e); }
@@ -30,6 +43,12 @@ export default function ConflictResolver() {
         <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
           <GitMerge size={14} className="text-red-500" />
           <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{t("conflict.title", "冲突解决")}</span>
+          <div className="flex-1" />
+          <button onClick={handleDetect} disabled={detecting || !projectDir}
+            className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded disabled:opacity-50"
+            title="扫描配置冲突">
+            {detecting ? <RefreshCw size={12} className="animate-spin" /> : <Search size={12} />}
+          </button>
         </div>
         <div className="flex-1 overflow-auto">
           {conflicts.length === 0 && (

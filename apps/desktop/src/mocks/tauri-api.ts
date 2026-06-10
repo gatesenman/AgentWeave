@@ -67,6 +67,7 @@ const mockData: Record<string, unknown> = {
   list_snapshots: [],
   list_cost_records: [],
   list_conflicts: [],
+  detect_conflicts: 0,
   list_recent_projects: [],
   get_audit_log: [],
   get_config_concepts: [],

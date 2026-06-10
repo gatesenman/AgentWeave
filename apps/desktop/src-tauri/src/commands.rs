@@ -1293,7 +1293,6 @@ pub async fn create_snapshot(
                 backup_content.push_str(&format!("--- {} ---\n", rel.display()));
                 backup_content.push_str(&content);
                 backup_content.push('\n');
-                total_size += content.len() as i64;
                 file_count += 1;
             }
         }
@@ -1384,6 +1383,47 @@ pub async fn resolve_conflict(
     db.resolve_conflict(&id, &resolution)?;
     db.log_audit("conflict.resolve", &format!("Resolved conflict {} with {}", id, resolution))?;
     Ok(())
+}
+
+/// Detect configuration conflicts by comparing generated vendor configs with on-disk versions.
+/// If a vendor config file was manually edited (differs from what AgentWeave would generate),
+/// it's flagged as a conflict so the user can choose which version to keep.
+#[tauri::command]
+pub async fn detect_conflicts(
+    db: State<'_, Arc<Database>>,
+    project_dir: String,
+) -> Result<u32, String> {
+    let path = PathBuf::from(&project_dir);
+    let config = AgentWeaveConfig::load(&path).map_err(|e| e.to_string())?;
+    let registry = build_registry();
+    let mut count = 0u32;
+
+    for vid in registry.list() {
+        if let Some(adapter) = registry.get(vid) {
+            let output = adapter.generate(&config, &path).map_err(|e| e.to_string())?;
+            for (file_name, generated_content) in &output.files {
+                let file_path = path.join(file_name);
+                if file_path.exists() {
+                    if let Ok(disk_content) = std::fs::read_to_string(&file_path) {
+                        if disk_content.trim() != generated_content.trim() {
+                            let id = gen_id("conflict");
+                            db.create_conflict(
+                                &id,
+                                file_name,
+                                &disk_content,
+                                generated_content,
+                            )?;
+                            count += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if count > 0 {
+        db.log_audit("conflict.detect", &format!("Detected {} config conflicts", count))?;
+    }
+    Ok(count)
 }
 
 // ============================================================
@@ -2277,12 +2317,11 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
     let config = AgentWeaveConfig::load(&path).map_err(|e| e.to_string())?;
 
     let q = question.to_lowercase();
-    let mut answer = String::new();
     let mut suggestions = Vec::new();
 
     // Analyze question intent and provide context-aware answers
-    if q.contains("agent") || q.contains("智能体") {
-        answer = format!(
+    let answer = if q.contains("agent") || q.contains("智能体") {
+        format!(
             "当前项目配置了 {} 个 Agent。{}",
             config.agents.len(),
             if config.agents.is_empty() {
@@ -2290,9 +2329,9 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
             } else {
                 format!("包括: {}", config.agents.iter().map(|a| a.name.as_str()).collect::<Vec<_>>().join(", "))
             }
-        );
+        )
     } else if q.contains("rule") || q.contains("规则") {
-        answer = format!(
+        format!(
             "当前有 {} 条规则。{}",
             config.rules.len(),
             if config.rules.is_empty() {
@@ -2300,23 +2339,21 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
             } else {
                 format!("规则列表: {}", config.rules.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(", "))
             }
-        );
+        )
     } else if q.contains("mcp") || q.contains("server") || q.contains("插件") {
-        answer = format!(
+        format!(
             "当前配置了 {} 个 MCP Server。MCP Server 为 Agent 提供工具调用能力（文件系统、数据库等）。",
             config.mcp_servers.len()
-        );
+        )
     } else if q.contains("vendor") || q.contains("厂商") || q.contains("适配") {
         let registry = build_registry();
         let count = registry.list().len();
-        answer = format!(
+        format!(
             "AgentWeave 支持 {} 个 AI 厂商适配器。可通过「厂商生成」页面为所有厂商生成配置。",
             count
-        );
+        )
     } else if q.contains("优化") || q.contains("improve") || q.contains("建议") {
-        // Return suggestions
-        answer = "以下是基于当前配置的优化建议：".to_string();
-        if config.agents.len() > 0 && config.rules.is_empty() {
+        if !config.agents.is_empty() && config.rules.is_empty() {
             suggestions.push(AiSuggestion {
                 id: gen_id("sug"),
                 suggestion_type: "recommendation".into(),
@@ -2336,8 +2373,9 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
                 confidence: 0.82,
             });
         }
+        "以下是基于当前配置的优化建议：".to_string()
     } else {
-        answer = format!(
+        format!(
             "当前项目概览: {} Agent, {} Rule, {} MCP Server, {} Skill, {} Workflow, {} Hook。\n可以问我关于配置优化、厂商支持、概念关系等问题。",
             config.agents.len(),
             config.rules.len(),
@@ -2345,8 +2383,8 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
             config.skills.len(),
             config.workflows.len(),
             config.hooks.len(),
-        );
-    }
+        )
+    };
 
     Ok(AiAnswer { answer, related_suggestions: suggestions })
 }
