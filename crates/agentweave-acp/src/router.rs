@@ -82,9 +82,7 @@ async fn get_agent_health(
         .ok_or(StatusCode::NOT_FOUND)
 }
 
-async fn get_all_health(
-    State(gateway): State<Arc<AcpGateway>>,
-) -> Json<serde_json::Value> {
+async fn get_all_health(State(gateway): State<Arc<AcpGateway>>) -> Json<serde_json::Value> {
     let all = gateway.get_all_health();
     let entries: Vec<serde_json::Value> = all
         .iter()
@@ -113,9 +111,7 @@ async fn create_run(
     (status, Json(response))
 }
 
-async fn get_run_history(
-    State(gateway): State<Arc<AcpGateway>>,
-) -> Json<serde_json::Value> {
+async fn get_run_history(State(gateway): State<Arc<AcpGateway>>) -> Json<serde_json::Value> {
     let runs = gateway.get_runs(50);
     let entries: Vec<serde_json::Value> = runs
         .iter()

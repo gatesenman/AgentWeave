@@ -339,7 +339,10 @@ mod tests {
             mcp_servers: vec![McpServerConfig {
                 name: "filesystem".to_string(),
                 command: "npx".to_string(),
-                args: vec!["-y".to_string(), "@modelcontextprotocol/server-filesystem".to_string()],
+                args: vec![
+                    "-y".to_string(),
+                    "@modelcontextprotocol/server-filesystem".to_string(),
+                ],
                 env: HashMap::new(),
                 transport: None,
             }],

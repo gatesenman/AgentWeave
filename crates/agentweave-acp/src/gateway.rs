@@ -162,10 +162,7 @@ impl AcpGateway {
                     }
                 }
                 // Filter by health
-                health
-                    .get(&a.id)
-                    .map(|h| h.healthy)
-                    .unwrap_or(false)
+                health.get(&a.id).map(|h| h.healthy).unwrap_or(false)
             })
             .collect();
 
@@ -276,7 +273,10 @@ impl AcpGateway {
             }
         }
 
-        let vendor_name = target.vendor.clone().unwrap_or_else(|| "unknown".to_string());
+        let vendor_name = target
+            .vendor
+            .clone()
+            .unwrap_or_else(|| "unknown".to_string());
         RunResponse {
             id: run_id,
             status: RunStatus::Completed,
