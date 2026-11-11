@@ -49,9 +49,11 @@ AgentWeave 定义了一套 **AI 智能体配置超集规范**，并提供完整�
 cargo install --path crates/agentweave-cli
 
 # 或下载预编译二进制
-curl -fsSL https://github.com/gaosichun888/AgentWeave/releases/latest/download/agentweave-linux-x86_64.tar.gz | tar xz
+curl -fsSL https://github.com/gatesenman/AgentWeave/releases/latest/download/agentweave-linux-x86_64.tar.gz | tar xz
 sudo mv agentweave /usr/local/bin/
 ```
+
+> 目前 [Releases](https://github.com/gatesenman/AgentWeave/releases) 页面还没有发布版本，预编译二进制下载暂不可用，请先从源码安装。
 
 ### 初始化项目
 
@@ -313,7 +315,7 @@ AI 智能配置建议 + 对话式优化 + 代码 diff 预览。
 
 ```bash
 # 克隆仓库
-git clone https://github.com/gaosichun888/AgentWeave.git
+git clone https://github.com/gatesenman/AgentWeave.git
 cd AgentWeave
 
 # 构建所有 Rust crate

@@ -45,12 +45,11 @@ AgentWeave defines a **superset specification** for AI agent configuration and p
 ### Installation
 
 ```bash
-# Install CLI
-cargo install agentweave-cli
-
-# Or download pre-built binary
-curl -fsSL https://agentweave.dev/install.sh | bash
+# Install the CLI from source
+cargo install --path crates/agentweave-cli
 ```
+
+> `agentweave-cli` is not published on crates.io, and `agentweave.dev` is an unrelated site, so install from source. Pre-built binaries will be on [GitHub Releases](https://github.com/gatesenman/AgentWeave/releases) once a release is published (none yet).
 
 ### Initialize a Project
 
