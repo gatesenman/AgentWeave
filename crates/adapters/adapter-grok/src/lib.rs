@@ -101,8 +101,7 @@ impl GrokBuildAdapter {
                 toml.push_str(&format!("prompt = \"{}\"\n", escaped));
             }
             if !skill.tools.is_empty() {
-                let tools: Vec<String> =
-                    skill.tools.iter().map(|t| format!("\"{}\"", t)).collect();
+                let tools: Vec<String> = skill.tools.iter().map(|t| format!("\"{}\"", t)).collect();
                 toml.push_str(&format!("tools = [{}]\n", tools.join(", ")));
             }
             toml.push('\n');
@@ -132,8 +131,7 @@ impl GrokBuildAdapter {
             toml.push_str(&format!("name = \"{}\"\n", mcp.name));
             toml.push_str(&format!("command = \"{}\"\n", mcp.command));
             if !mcp.args.is_empty() {
-                let args: Vec<String> =
-                    mcp.args.iter().map(|a| format!("\"{}\"", a)).collect();
+                let args: Vec<String> = mcp.args.iter().map(|a| format!("\"{}\"", a)).collect();
                 toml.push_str(&format!("args = [{}]\n", args.join(", ")));
             }
             toml.push('\n');

@@ -18,18 +18,16 @@ impl FileWatcher {
         event_tx: mpsc::UnboundedSender<PathBuf>,
     ) -> notify::Result<Self> {
         let tx = event_tx.clone();
-        let watcher = notify::recommended_watcher(move |res: notify::Result<Event>| {
-            match res {
-                Ok(event) => {
-                    if Self::is_relevant_event(&event.kind) {
-                        for path in event.paths {
-                            let _ = tx.send(path);
-                        }
+        let watcher = notify::recommended_watcher(move |res: notify::Result<Event>| match res {
+            Ok(event) => {
+                if Self::is_relevant_event(&event.kind) {
+                    for path in event.paths {
+                        let _ = tx.send(path);
                     }
                 }
-                Err(e) => {
-                    tracing::error!("File watcher error: {:?}", e);
-                }
+            }
+            Err(e) => {
+                tracing::error!("File watcher error: {:?}", e);
             }
         })?;
 
@@ -61,9 +59,7 @@ impl FileWatcher {
     fn is_relevant_event(kind: &EventKind) -> bool {
         matches!(
             kind,
-            EventKind::Create(_)
-                | EventKind::Modify(_)
-                | EventKind::Remove(_)
+            EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)
         )
     }
 }

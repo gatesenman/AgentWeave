@@ -114,13 +114,21 @@ content: |
 
         // Step 3: Generate for all 12 vendors
         let results = registry.generate_all(&config, dir.path());
-        assert_eq!(results.len(), 12, "Should generate for all 12 target vendors");
+        assert_eq!(
+            results.len(),
+            12,
+            "Should generate for all 12 target vendors"
+        );
 
         let mut success_count = 0;
         for (vendor, result) in &results {
             match result {
                 Ok(output) => {
-                    assert!(!output.files.is_empty(), "Vendor {:?} should produce at least one file", vendor);
+                    assert!(
+                        !output.files.is_empty(),
+                        "Vendor {:?} should produce at least one file",
+                        vendor
+                    );
                     success_count += 1;
                 }
                 Err(e) => {
@@ -144,7 +152,10 @@ content: |
         let adapter = adapter_codex::CodexAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
 
-        assert!(output.files.contains_key("AGENTS.md"), "Codex should generate AGENTS.md");
+        assert!(
+            output.files.contains_key("AGENTS.md"),
+            "Codex should generate AGENTS.md"
+        );
         let content = &output.files["AGENTS.md"];
         assert!(content.contains("architect"), "Should contain agent name");
     }
@@ -158,7 +169,10 @@ content: |
         let adapter = adapter_claude::ClaudeCodeAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
 
-        assert!(output.files.contains_key("CLAUDE.md"), "Claude should generate CLAUDE.md");
+        assert!(
+            output.files.contains_key("CLAUDE.md"),
+            "Claude should generate CLAUDE.md"
+        );
         let content = &output.files["CLAUDE.md"];
         assert!(content.contains("architect"), "Should contain agent info");
     }
@@ -172,7 +186,10 @@ content: |
         let adapter = adapter_cursor::CursorAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
 
-        let has_mdc = output.files.keys().any(|k| k.ends_with(".mdc") || k.contains(".cursor"));
+        let has_mdc = output
+            .files
+            .keys()
+            .any(|k| k.ends_with(".mdc") || k.contains(".cursor"));
         assert!(has_mdc, "Cursor should generate .mdc rule files");
     }
 
@@ -185,7 +202,10 @@ content: |
         let adapter = adapter_windsurf::WindsurfAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
 
-        let has_rules = output.files.keys().any(|k| k.contains("windsurf") || k.contains("rules"));
+        let has_rules = output
+            .files
+            .keys()
+            .any(|k| k.contains("windsurf") || k.contains("rules"));
         assert!(has_rules, "Windsurf should generate rule files");
     }
 
@@ -198,7 +218,10 @@ content: |
         let adapter = adapter_gemini::GeminiAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
 
-        let has_gemini = output.files.keys().any(|k| k.contains("GEMINI") || k.contains("gemini"));
+        let has_gemini = output
+            .files
+            .keys()
+            .any(|k| k.contains("GEMINI") || k.contains("gemini"));
         assert!(has_gemini, "Gemini should generate GEMINI.md or settings");
     }
 
@@ -211,7 +234,10 @@ content: |
         let adapter = adapter_copilot::CopilotAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
 
-        let has_copilot = output.files.keys().any(|k| k.contains("copilot") || k.contains(".github"));
+        let has_copilot = output
+            .files
+            .keys()
+            .any(|k| k.contains("copilot") || k.contains(".github"));
         assert!(has_copilot, "Copilot should generate instructions file");
     }
 
@@ -223,7 +249,10 @@ content: |
 
         let adapter = adapter_devin::DevinAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
-        assert!(!output.files.is_empty(), "Devin should generate config files");
+        assert!(
+            !output.files.is_empty(),
+            "Devin should generate config files"
+        );
     }
 
     #[test]
@@ -234,7 +263,10 @@ content: |
 
         let adapter = adapter_cline::ClineAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
-        assert!(!output.files.is_empty(), "Cline should generate config files");
+        assert!(
+            !output.files.is_empty(),
+            "Cline should generate config files"
+        );
     }
 
     #[test]
@@ -245,7 +277,10 @@ content: |
 
         let adapter = adapter_codebuddy::CodebuddyAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
-        assert!(!output.files.is_empty(), "CodeBuddy should generate config files");
+        assert!(
+            !output.files.is_empty(),
+            "CodeBuddy should generate config files"
+        );
     }
 
     #[test]
@@ -256,7 +291,10 @@ content: |
 
         let adapter = adapter_qoder::QoderAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
-        assert!(!output.files.is_empty(), "Qoder should generate config files");
+        assert!(
+            !output.files.is_empty(),
+            "Qoder should generate config files"
+        );
     }
 
     #[test]
@@ -267,7 +305,10 @@ content: |
 
         let adapter = adapter_grok::GrokBuildAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
-        assert!(!output.files.is_empty(), "Grok Build should generate config files");
+        assert!(
+            !output.files.is_empty(),
+            "Grok Build should generate config files"
+        );
     }
 
     #[test]
@@ -278,7 +319,10 @@ content: |
 
         let adapter = adapter_openclaw::OpenclawAdapter::new();
         let output = adapter.generate(&config, dir.path()).unwrap();
-        assert!(!output.files.is_empty(), "OpenClaw should generate config files");
+        assert!(
+            !output.files.is_empty(),
+            "OpenClaw should generate config files"
+        );
     }
 
     // =========================================================================
@@ -307,7 +351,11 @@ content: |
         ];
 
         for v in &expected {
-            assert!(registry.get(v).is_some(), "Registry missing vendor: {:?}", v);
+            assert!(
+                registry.get(v).is_some(),
+                "Registry missing vendor: {:?}",
+                v
+            );
         }
     }
 
@@ -394,7 +442,12 @@ content: |
 
         // Verify all vendors produce at least 1 file
         for (vendor, count) in &file_counts {
-            assert!(*count >= 1, "Vendor {:?} should produce at least 1 file, got {}", vendor, count);
+            assert!(
+                *count >= 1,
+                "Vendor {:?} should produce at least 1 file, got {}",
+                vendor,
+                count
+            );
         }
     }
 
@@ -409,7 +462,12 @@ content: |
 
         for (vendor, result) in &results {
             if let Ok(output) = result {
-                let all_content: String = output.files.values().cloned().collect::<Vec<_>>().join("\n");
+                let all_content: String = output
+                    .files
+                    .values()
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join("\n");
                 assert!(
                     all_content.contains("architect") || all_content.contains("software"),
                     "Vendor {:?} output should reference the agent (got {} files, {} bytes)",
@@ -432,7 +490,10 @@ content: |
 
         for vendor in registry.list() {
             let adapter = registry.get(vendor).unwrap();
-            coverage.push((adapter.display_name().to_string(), adapter.supported_concepts()));
+            coverage.push((
+                adapter.display_name().to_string(),
+                adapter.supported_concepts(),
+            ));
         }
 
         // Verify minimum concept coverage
@@ -454,7 +515,11 @@ content: |
             .iter()
             .filter(|(_, concepts)| concepts.contains(&Concept::McpServer))
             .count();
-        assert!(mcp_count >= 5, "At least 5 vendors should support MCP, got {}", mcp_count);
+        assert!(
+            mcp_count >= 5,
+            "At least 5 vendors should support MCP, got {}",
+            mcp_count
+        );
     }
 
     // =========================================================================
@@ -464,8 +529,10 @@ content: |
     #[test]
     fn e2e_schema_examples_valid_yaml() {
         let schema_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent().unwrap()
-            .parent().unwrap()
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
             .join("packages/schema/examples");
 
         if !schema_dir.exists() {
@@ -476,7 +543,10 @@ content: |
         if complete_yaml.exists() {
             let content = fs::read_to_string(&complete_yaml).unwrap();
             let value: serde_yaml::Value = serde_yaml::from_str(&content).unwrap();
-            assert!(value.is_mapping(), "complete.yaml should be a valid YAML mapping");
+            assert!(
+                value.is_mapping(),
+                "complete.yaml should be a valid YAML mapping"
+            );
 
             let map = value.as_mapping().unwrap();
             assert!(map.contains_key(&serde_yaml::Value::String("apiVersion".to_string())));
@@ -488,15 +558,20 @@ content: |
         if minimal_yaml.exists() {
             let content = fs::read_to_string(&minimal_yaml).unwrap();
             let value: serde_yaml::Value = serde_yaml::from_str(&content).unwrap();
-            assert!(value.is_mapping(), "minimal.yaml should be a valid YAML mapping");
+            assert!(
+                value.is_mapping(),
+                "minimal.yaml should be a valid YAML mapping"
+            );
         }
     }
 
     #[test]
     fn e2e_schema_examples_valid_json() {
         let schema_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent().unwrap()
-            .parent().unwrap()
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
             .join("packages/schema/examples");
 
         if !schema_dir.exists() {
@@ -549,10 +624,16 @@ content: |
         }
 
         // Verify Codex output exists on disk
-        assert!(dir.path().join("AGENTS.md").exists(), "AGENTS.md should exist on disk");
+        assert!(
+            dir.path().join("AGENTS.md").exists(),
+            "AGENTS.md should exist on disk"
+        );
 
         // Verify Claude output exists on disk
-        assert!(dir.path().join("CLAUDE.md").exists(), "CLAUDE.md should exist on disk");
+        assert!(
+            dir.path().join("CLAUDE.md").exists(),
+            "CLAUDE.md should exist on disk"
+        );
 
         // Verify Copilot output exists
         assert!(
@@ -586,13 +667,19 @@ spec:
         fs::write(config_dir.join("agentweave.yaml"), main_config).unwrap();
 
         // Multiple agents
-        fs::write(config_dir.join("agents/architect.yaml"), r#"
+        fs::write(
+            config_dir.join("agents/architect.yaml"),
+            r#"
 name: architect
 role: System architect
 system_prompt: Design scalable systems
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
-        fs::write(config_dir.join("agents/developer.yaml"), r#"
+        fs::write(
+            config_dir.join("agents/developer.yaml"),
+            r#"
 name: developer
 role: Full-stack developer
 system_prompt: Write clean code with tests
@@ -601,13 +688,19 @@ tools:
     - read_file
     - write_file
     - run_tests
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
-        fs::write(config_dir.join("agents/reviewer.yaml"), r#"
+        fs::write(
+            config_dir.join("agents/reviewer.yaml"),
+            r#"
 name: reviewer
 role: Code reviewer
 system_prompt: Review for bugs, security, and performance
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         let config = AgentWeaveConfig::load(dir.path()).unwrap();
         assert_eq!(config.agents.len(), 3);
@@ -618,10 +711,17 @@ system_prompt: Review for bugs, security, and performance
 
         let agents_md = &output.files["AGENTS.md"];
         // Codex AGENTS.md should contain agent information
-        let all_content: String = output.files.values().cloned().collect::<Vec<_>>().join("\n");
+        let all_content: String = output
+            .files
+            .values()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n");
         // Should reference at least the system prompts or roles
         assert!(
-            all_content.contains("architect") || all_content.contains("System architect") || all_content.len() > 50,
+            all_content.contains("architect")
+                || all_content.contains("System architect")
+                || all_content.len() > 50,
             "Multi-agent output should contain meaningful content, got: {}...{}",
             &agents_md[..50.min(agents_md.len())],
             agents_md.len()

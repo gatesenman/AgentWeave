@@ -97,10 +97,7 @@ impl OpenclawAdapter {
                 mem_obj.insert("maxEntries".to_string(), serde_json::json!(max));
             }
             if let Some(instructions) = &mem.manual_instructions {
-                mem_obj.insert(
-                    "instructions".to_string(),
-                    serde_json::json!(instructions),
-                );
+                mem_obj.insert("instructions".to_string(), serde_json::json!(instructions));
             }
             root.insert("memory".to_string(), serde_json::Value::Object(mem_obj));
         }

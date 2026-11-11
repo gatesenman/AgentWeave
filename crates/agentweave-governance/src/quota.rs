@@ -83,11 +83,7 @@ impl QuotaManager {
     }
 
     /// Check if usage is within quota. Returns Ok(remaining) or Err.
-    pub fn check_quota(
-        &self,
-        subject: &str,
-        resource: &str,
-    ) -> Result<u64, QuotaError> {
+    pub fn check_quota(&self, subject: &str, resource: &str) -> Result<u64, QuotaError> {
         let current = self.get_usage(subject, resource);
         let applicable: Vec<&QuotaDef> = self
             .quotas

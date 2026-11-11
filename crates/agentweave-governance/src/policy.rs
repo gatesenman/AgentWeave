@@ -145,9 +145,10 @@ impl PolicyEngine {
 
         for rule in &policy.rules {
             if !self.evaluate_condition(&rule.condition, context) {
-                let message = rule.message.clone().unwrap_or_else(|| {
-                    format!("policy rule violated: {}", rule.condition)
-                });
+                let message = rule
+                    .message
+                    .clone()
+                    .unwrap_or_else(|| format!("policy rule violated: {}", rule.condition));
                 violations.push(PolicyViolation {
                     rule_condition: rule.condition.clone(),
                     message,

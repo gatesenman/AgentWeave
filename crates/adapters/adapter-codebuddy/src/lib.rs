@@ -102,10 +102,7 @@ impl CodebuddyAdapter {
             );
         }
         if let Some(role) = &agent.role {
-            obj.insert(
-                "role".to_string(),
-                serde_json::Value::String(role.clone()),
-            );
+            obj.insert("role".to_string(), serde_json::Value::String(role.clone()));
         }
         if let Some(prompt) = &agent.system_prompt {
             obj.insert(

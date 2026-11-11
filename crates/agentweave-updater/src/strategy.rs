@@ -65,11 +65,7 @@ impl UpdateStrategy {
             return true;
         }
 
-        let seed = self
-            .canary
-            .seed
-            .as_deref()
-            .unwrap_or("agentweave-canary");
+        let seed = self.canary.seed.as_deref().unwrap_or("agentweave-canary");
 
         let input = format!("{}{}", seed, machine_id);
         let hash = simple_hash(&input);
@@ -163,9 +159,7 @@ pub enum UpdateAction {
         release_url: String,
     },
     /// This instance was not selected for the canary rollout.
-    CanarySkipped {
-        version: String,
-    },
+    CanarySkipped { version: String },
 }
 
 /// Find the release asset matching the current platform.
@@ -175,18 +169,12 @@ fn find_platform_asset(
     let os = std::env::consts::OS;
     let arch = std::env::consts::ARCH;
 
-    let platform_hints: Vec<String> = vec![
-        format!("{}-{}", os, arch),
-        os.to_string(),
-        arch.to_string(),
-    ];
+    let platform_hints: Vec<String> =
+        vec![format!("{}-{}", os, arch), os.to_string(), arch.to_string()];
 
     for asset in assets {
         let name_lower = asset.name.to_lowercase();
-        if platform_hints
-            .iter()
-            .any(|hint| name_lower.contains(hint))
-        {
+        if platform_hints.iter().any(|hint| name_lower.contains(hint)) {
             return Ok(asset.clone());
         }
     }

@@ -52,7 +52,12 @@ pub fn cmd_mcp(project_dir: &PathBuf, action: McpAction) -> Result<()> {
             println!("└──────────────────┴──────────┴──────────────────────────────┘");
             println!("\n  Total: {} server(s)", config.servers.len());
         }
-        McpAction::Add { name, command, args, protocol } => {
+        McpAction::Add {
+            name,
+            command,
+            args,
+            protocol,
+        } => {
             let mut config = load_mcp_config(&mcp_file)?;
 
             if config.servers.iter().any(|s| s.name == name) {
@@ -95,7 +100,10 @@ pub fn cmd_mcp(project_dir: &PathBuf, action: McpAction) -> Result<()> {
             save_mcp_config(&mcp_file, &config)?;
 
             // Remove mcp yaml file if exists
-            let mcp_yaml = project_dir.join(".agentweave").join("mcp").join(format!("{}.mcp.yaml", name));
+            let mcp_yaml = project_dir
+                .join(".agentweave")
+                .join("mcp")
+                .join(format!("{}.mcp.yaml", name));
             let _ = std::fs::remove_file(&mcp_yaml);
 
             println!("Removed MCP server '{}'", name);
@@ -136,7 +144,9 @@ pub fn cmd_mcp(project_dir: &PathBuf, action: McpAction) -> Result<()> {
                             .output();
                         match result {
                             Ok(_) => println!("OK"),
-                            Err(_) => println!("WARN: command '{}' not found in PATH", server.command),
+                            Err(_) => {
+                                println!("WARN: command '{}' not found in PATH", server.command)
+                            }
                         }
                     }
                 }
@@ -188,19 +198,29 @@ mod tests {
     #[test]
     fn test_mcp_add_list_remove() {
         let (_dir, project) = setup();
-        cmd_mcp(&project, McpAction::Add {
-            name: "test-server".to_string(),
-            command: "npx".to_string(),
-            args: vec!["-y".to_string(), "@modelcontextprotocol/test".to_string()],
-            protocol: "stdio".to_string(),
-        }).unwrap();
+        cmd_mcp(
+            &project,
+            McpAction::Add {
+                name: "test-server".to_string(),
+                command: "npx".to_string(),
+                args: vec!["-y".to_string(), "@modelcontextprotocol/test".to_string()],
+                protocol: "stdio".to_string(),
+            },
+        )
+        .unwrap();
 
         let mcp_file = project.join(".agentweave").join("mcp-servers.yaml");
         let config = load_mcp_config(&mcp_file).unwrap();
         assert_eq!(config.servers.len(), 1);
         assert_eq!(config.servers[0].name, "test-server");
 
-        cmd_mcp(&project, McpAction::Remove { name: "test-server".to_string() }).unwrap();
+        cmd_mcp(
+            &project,
+            McpAction::Remove {
+                name: "test-server".to_string(),
+            },
+        )
+        .unwrap();
         let config = load_mcp_config(&mcp_file).unwrap();
         assert_eq!(config.servers.len(), 0);
     }

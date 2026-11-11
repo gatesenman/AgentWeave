@@ -16,19 +16,11 @@ pub enum SyncEvent {
         files_written: Vec<String>,
     },
     /// Regeneration failed for a vendor
-    RegenerateError {
-        vendor: String,
-        error: String,
-    },
+    RegenerateError { vendor: String, error: String },
     /// Conflict detected on a file
-    ConflictDetected {
-        path: PathBuf,
-        resolution: String,
-    },
+    ConflictDetected { path: PathBuf, resolution: String },
     /// Watcher started
-    WatcherStarted {
-        watch_path: PathBuf,
-    },
+    WatcherStarted { watch_path: PathBuf },
     /// Watcher stopped
     WatcherStopped,
 }
