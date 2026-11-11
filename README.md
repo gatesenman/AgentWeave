@@ -187,65 +187,67 @@ The cross-platform desktop application provides a visual interface for managing 
 
 **Supported Platforms:** Linux (deb/AppImage), macOS (dmg), Windows (msi/exe)
 
+> The screenshots below were re-captured from the current code with the UI set to English. They come from the frontend's browser dev mode (`pnpm dev` in `apps/desktop`, headless Chromium), where Vite swaps the Tauri APIs for the repo's own mocks in `src/mocks/` and opens the sample project `acme-platform`. In that mode, pages backed by local SQLite (Trace, Governance, Templates, AI Assist) show their empty states; in the desktop app they show your own data. The Chinese UI versions are in [README_zh-CN.md](README_zh-CN.md).
+
 ### Dashboard
 
 Project overview with health checks, vendor status, quick actions, migration wizard, and configuration detection.
 
-![Dashboard](docs/screenshots/01-dashboard.png)
+![Dashboard](docs/screenshots/01-dashboard-en.png)
 
 ### Config Hub
 
 Concept tree navigation (Agents, Rules, MCP, Skills, Workflows, Hooks, Tools, Models) with card-based detail view.
 
-![Config Hub](docs/screenshots/02-config-hub.png)
+![Config Hub](docs/screenshots/02-config-hub-en.png)
 
 ### Vendor Generate
 
 12 vendor selection with concept compatibility matrix — generate configs for all vendors in batch.
 
-![Generate](docs/screenshots/03-generate.png)
+![Generate](docs/screenshots/03-generate-en.png)
 
 ### Compare
 
 Side-by-side diff view — compare generated output across any two vendors with syntax highlighting.
 
-![Compare](docs/screenshots/04-compare.png)
+![Compare](docs/screenshots/04-compare-en.png)
 
 ### ACP Gateway
 
 Unified Agent Communication Protocol — vendor registry, routing strategies, concept coverage, and health monitoring.
 
-![ACP Gateway](docs/screenshots/05-acp-gateway.png)
+![ACP Gateway](docs/screenshots/05-acp-gateway-en.png)
 
 ### Trace & Observability
 
 Full-chain OTLP-compatible tracing with span list, latency tracking, logs, and alerts.
 
-![Trace](docs/screenshots/06-trace.png)
+![Trace](docs/screenshots/06-trace-en.png)
 
 ### Governance
 
 Enterprise governance — policies, RBAC roles, audit trail, and quotas management.
 
-![Governance](docs/screenshots/07-governance.png)
+![Governance](docs/screenshots/07-governance-en.png)
 
 ### Template Marketplace
 
 Community-shared Agent/Rule/Workflow templates with categories, search, downloads, and stars.
 
-![Templates](docs/screenshots/08-templates.png)
+![Templates](docs/screenshots/08-templates-en.png)
 
 ### AI Assistant
 
 AI-powered configuration suggestions with confidence scoring, code diffs, and conversational Q&A.
 
-![AI Assist](docs/screenshots/09-ai-assist.png)
+![AI Assist](docs/screenshots/09-ai-assist-en.png)
 
 ### Settings
 
 System settings (adapter defaults, notifications, security) and user preferences (theme, language) in separate tabs.
 
-![Settings](docs/screenshots/10-settings.png)
+![Settings](docs/screenshots/10-settings-en.png)
 
 ### Development
 

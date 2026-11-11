@@ -222,6 +222,8 @@ governance:
 
 **支持平台：** Linux (deb/AppImage), macOS (dmg), Windows (msi/exe)
 
+> 下面的截图按当前代码重新实拍，界面语言为中文。截图来自前端的浏览器开发模式（在 `apps/desktop` 里运行 `pnpm dev`，用无头 Chromium 打开）：这种模式下 Vite 会把 Tauri API 换成仓库自带的 `src/mocks/`，并打开示例项目 `acme-platform`。追踪、治理、模板市场、AI 助手这几页的数据存在本地 SQLite 里，所以这里显示的是空状态，桌面应用里会显示你自己的数据。英文界面的同一组截图见 [README.md](README.md)。
+
 ### 仪表盘
 
 项目概览、健康检查、快捷操作、迁移向导、配置检测。
