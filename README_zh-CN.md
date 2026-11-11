@@ -49,9 +49,11 @@ AgentWeave 定义了一套 **AI 智能体配置超集规范**，并提供完整�
 cargo install --path crates/agentweave-cli
 
 # 或下载预编译二进制
-curl -fsSL https://github.com/gaosichun888/AgentWeave/releases/latest/download/agentweave-linux-x86_64.tar.gz | tar xz
+curl -fsSL https://github.com/gatesenman/AgentWeave/releases/latest/download/agentweave-linux-x86_64.tar.gz | tar xz
 sudo mv agentweave /usr/local/bin/
 ```
+
+> 目前 [Releases](https://github.com/gatesenman/AgentWeave/releases) 页面还没有发布版本，预编译二进制下载暂不可用，请先从源码安装。
 
 ### 初始化项目
 
@@ -141,6 +143,44 @@ agentweave watch
 └─────────────────────────────────────────┘
 ```
 
+## 技术栈
+
+| 层 | 技术 |
+| --- | --- |
+| 核心 / CLI / 网关 | Rust 2021（Cargo workspace）、serde / serde_yaml / serde_json、tokio、anyhow / thiserror |
+| 桌面后端 | Tauri 2（系统托盘、`plugin-fs`、`plugin-dialog`、`plugin-notification`） |
+| 桌面前端 | React 18、TypeScript、Vite、Tailwind CSS、Zustand、React Router、i18next、CodeMirror（YAML） |
+| Schema | JSON Schema（`packages/schema/agentweave.schema.json`） |
+| CI | GitHub Actions（`.github/workflows/ci.yml`、`release.yml`） |
+
+## 项目结构
+
+```
+AgentWeave/
+├── crates/
+│   ├── agentweave-core/       # 核心引擎（配置、适配器 trait、Schema）
+│   ├── agentweave-cli/        # 命令行（init、generate、import、compare、serve）
+│   ├── agentweave-acp/        # ACP 网关（REST API、路由、健康检查）
+│   ├── agentweave-trace/      # 跨厂商追踪 + OTLP 导出
+│   ├── agentweave-sync/       # 实时文件同步引擎
+│   ├── agentweave-governance/ # RBAC、策略、审计、配额
+│   ├── agentweave-updater/    # 远程更新（检查、下载、策略）
+│   └── adapters/              # 12 个厂商适配器
+├── apps/
+│   └── desktop/               # Tauri v2 跨平台桌面应用
+│       ├── src/               # React + TypeScript + Tailwind 前端
+│       └── src-tauri/         # Rust 后端（IPC 命令、系统托盘）
+├── packages/
+│   ├── design-system/         # 共享 UI 设计组件（npm workspace）
+│   ├── schema/                # JSON Schema 定义（IDE 自动补全）
+│   └── sdk/                   # 适配器开发 SDK
+├── examples/                  # 配置示例（minimal / fullstack / enterprise）
+├── tests/e2e/                 # 端到端测试（Cargo workspace 成员）
+├── locales/                   # 共享多语言文件
+├── docs/                      # 文档
+└── .github/workflows/         # CI/CD（构建 + 跨平台发布）
+```
+
 ## 配置示例
 
 ```yaml
@@ -181,6 +221,8 @@ governance:
 跨平台桌面应用提供可视化管理界面。
 
 **支持平台：** Linux (deb/AppImage), macOS (dmg), Windows (msi/exe)
+
+> 下面的截图按当前代码重新实拍，界面语言为中文。截图来自前端的浏览器开发模式（在 `apps/desktop` 里运行 `pnpm dev`，用无头 Chromium 打开）：这种模式下 Vite 会把 Tauri API 换成仓库自带的 `src/mocks/`，并打开示例项目 `acme-platform`。追踪、治理、模板市场、AI 助手这几页的数据存在本地 SQLite 里，所以这里显示的是空状态，桌面应用里会显示你自己的数据。英文界面的同一组截图见 [README.md](README.md)。
 
 ### 仪表盘
 
@@ -275,7 +317,7 @@ AI 智能配置建议 + 对话式优化 + 代码 diff 预览。
 
 ```bash
 # 克隆仓库
-git clone https://github.com/gaosichun888/AgentWeave.git
+git clone https://github.com/gatesenman/AgentWeave.git
 cd AgentWeave
 
 # 构建所有 Rust crate

@@ -45,12 +45,11 @@ AgentWeave defines a **superset specification** for AI agent configuration and p
 ### Installation
 
 ```bash
-# Install CLI
-cargo install agentweave-cli
-
-# Or download pre-built binary
-curl -fsSL https://agentweave.dev/install.sh | bash
+# Install the CLI from source
+cargo install --path crates/agentweave-cli
 ```
+
+> `agentweave-cli` is not published on crates.io, and `agentweave.dev` is an unrelated site, so install from source. Pre-built binaries will be on [GitHub Releases](https://github.com/gatesenman/AgentWeave/releases) once a release is published (none yet).
 
 ### Initialize a Project
 
@@ -113,6 +112,16 @@ Edit `.agentweave/` files and all vendor configs auto-update.
 └─────────────────────────────────────┘
 ```
 
+## Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Core / CLI / gateway | Rust 2021 (Cargo workspace), serde / serde_yaml / serde_json, tokio, anyhow / thiserror |
+| Desktop backend | Tauri 2 (tray icon, `plugin-fs`, `plugin-dialog`, `plugin-notification`) |
+| Desktop frontend | React 18, TypeScript, Vite, Tailwind CSS, Zustand, React Router, i18next, CodeMirror (YAML) |
+| Schema | JSON Schema (`packages/schema/agentweave.schema.json`) |
+| CI | GitHub Actions (`.github/workflows/ci.yml`, `release.yml`) |
+
 ## Project Structure
 
 ```
@@ -131,9 +140,12 @@ AgentWeave/
 │       ├── src/               # React + TypeScript + Tailwind frontend
 │       └── src-tauri/         # Rust backend (16 IPC commands, system tray)
 ├── packages/
+│   ├── design-system/         # Shared UI design tokens/components (npm workspace)
 │   ├── schema/                # JSON Schema definitions for IDE auto-completion
 │   └── sdk/                   # Adapter development SDK documentation
 ├── examples/                  # Example configurations (minimal/fullstack/enterprise)
+├── tests/e2e/                 # End-to-end tests (Cargo workspace member)
+├── locales/                   # Shared locale files
 ├── docs/                      # Documentation
 │   ├── user-guide.md
 │   ├── api-reference.md
@@ -175,72 +187,75 @@ The cross-platform desktop application provides a visual interface for managing 
 
 **Supported Platforms:** Linux (deb/AppImage), macOS (dmg), Windows (msi/exe)
 
+> The screenshots below were re-captured from the current code with the UI set to English. They come from the frontend's browser dev mode (`pnpm dev` in `apps/desktop`, headless Chromium), where Vite swaps the Tauri APIs for the repo's own mocks in `src/mocks/` and opens the sample project `acme-platform`. In that mode, pages backed by local SQLite (Trace, Governance, Templates, AI Assist) show their empty states; in the desktop app they show your own data. The Chinese UI versions are in [README_zh-CN.md](README_zh-CN.md).
+
 ### Dashboard
 
 Project overview with health checks, vendor status, quick actions, migration wizard, and configuration detection.
 
-![Dashboard](docs/screenshots/01-dashboard.png)
+![Dashboard](docs/screenshots/01-dashboard-en.png)
 
 ### Config Hub
 
 Concept tree navigation (Agents, Rules, MCP, Skills, Workflows, Hooks, Tools, Models) with card-based detail view.
 
-![Config Hub](docs/screenshots/02-config-hub.png)
+![Config Hub](docs/screenshots/02-config-hub-en.png)
 
 ### Vendor Generate
 
 12 vendor selection with concept compatibility matrix — generate configs for all vendors in batch.
 
-![Generate](docs/screenshots/03-generate.png)
+![Generate](docs/screenshots/03-generate-en.png)
 
 ### Compare
 
 Side-by-side diff view — compare generated output across any two vendors with syntax highlighting.
 
-![Compare](docs/screenshots/04-compare.png)
+![Compare](docs/screenshots/04-compare-en.png)
 
 ### ACP Gateway
 
 Unified Agent Communication Protocol — vendor registry, routing strategies, concept coverage, and health monitoring.
 
-![ACP Gateway](docs/screenshots/05-acp-gateway.png)
+![ACP Gateway](docs/screenshots/05-acp-gateway-en.png)
 
 ### Trace & Observability
 
 Full-chain OTLP-compatible tracing with span list, latency tracking, logs, and alerts.
 
-![Trace](docs/screenshots/06-trace.png)
+![Trace](docs/screenshots/06-trace-en.png)
 
 ### Governance
 
 Enterprise governance — policies, RBAC roles, audit trail, and quotas management.
 
-![Governance](docs/screenshots/07-governance.png)
+![Governance](docs/screenshots/07-governance-en.png)
 
 ### Template Marketplace
 
 Community-shared Agent/Rule/Workflow templates with categories, search, downloads, and stars.
 
-![Templates](docs/screenshots/08-templates.png)
+![Templates](docs/screenshots/08-templates-en.png)
 
 ### AI Assistant
 
 AI-powered configuration suggestions with confidence scoring, code diffs, and conversational Q&A.
 
-![AI Assist](docs/screenshots/09-ai-assist.png)
+![AI Assist](docs/screenshots/09-ai-assist-en.png)
 
 ### Settings
 
 System settings (adapter defaults, notifications, security) and user preferences (theme, language) in separate tabs.
 
-![Settings](docs/screenshots/10-settings.png)
+![Settings](docs/screenshots/10-settings-en.png)
 
 ### Development
 
 ```bash
 cd apps/desktop
 npm install
-npm run tauri dev
+npm run dev          # browser-only dev mode (Vite)
+npm run tauri dev    # Tauri desktop dev mode
 
 # Build for production
 npm run tauri build
