@@ -113,6 +113,16 @@ Edit `.agentweave/` files and all vendor configs auto-update.
 └─────────────────────────────────────┘
 ```
 
+## Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Core / CLI / gateway | Rust 2021 (Cargo workspace), serde / serde_yaml / serde_json, tokio, anyhow / thiserror |
+| Desktop backend | Tauri 2 (tray icon, `plugin-fs`, `plugin-dialog`, `plugin-notification`) |
+| Desktop frontend | React 18, TypeScript, Vite, Tailwind CSS, Zustand, React Router, i18next, CodeMirror (YAML) |
+| Schema | JSON Schema (`packages/schema/agentweave.schema.json`) |
+| CI | GitHub Actions (`.github/workflows/ci.yml`, `release.yml`) |
+
 ## Project Structure
 
 ```
@@ -131,9 +141,12 @@ AgentWeave/
 │       ├── src/               # React + TypeScript + Tailwind frontend
 │       └── src-tauri/         # Rust backend (16 IPC commands, system tray)
 ├── packages/
+│   ├── design-system/         # Shared UI design tokens/components (npm workspace)
 │   ├── schema/                # JSON Schema definitions for IDE auto-completion
 │   └── sdk/                   # Adapter development SDK documentation
 ├── examples/                  # Example configurations (minimal/fullstack/enterprise)
+├── tests/e2e/                 # End-to-end tests (Cargo workspace member)
+├── locales/                   # Shared locale files
 ├── docs/                      # Documentation
 │   ├── user-guide.md
 │   ├── api-reference.md
@@ -240,7 +253,8 @@ System settings (adapter defaults, notifications, security) and user preferences
 ```bash
 cd apps/desktop
 npm install
-npm run tauri dev
+npm run dev          # browser-only dev mode (Vite)
+npm run tauri dev    # Tauri desktop dev mode
 
 # Build for production
 npm run tauri build

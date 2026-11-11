@@ -141,6 +141,44 @@ agentweave watch
 └─────────────────────────────────────────┘
 ```
 
+## 技术栈
+
+| 层 | 技术 |
+| --- | --- |
+| 核心 / CLI / 网关 | Rust 2021（Cargo workspace）、serde / serde_yaml / serde_json、tokio、anyhow / thiserror |
+| 桌面后端 | Tauri 2（系统托盘、`plugin-fs`、`plugin-dialog`、`plugin-notification`） |
+| 桌面前端 | React 18、TypeScript、Vite、Tailwind CSS、Zustand、React Router、i18next、CodeMirror（YAML） |
+| Schema | JSON Schema（`packages/schema/agentweave.schema.json`） |
+| CI | GitHub Actions（`.github/workflows/ci.yml`、`release.yml`） |
+
+## 项目结构
+
+```
+AgentWeave/
+├── crates/
+│   ├── agentweave-core/       # 核心引擎（配置、适配器 trait、Schema）
+│   ├── agentweave-cli/        # 命令行（init、generate、import、compare、serve）
+│   ├── agentweave-acp/        # ACP 网关（REST API、路由、健康检查）
+│   ├── agentweave-trace/      # 跨厂商追踪 + OTLP 导出
+│   ├── agentweave-sync/       # 实时文件同步引擎
+│   ├── agentweave-governance/ # RBAC、策略、审计、配额
+│   ├── agentweave-updater/    # 远程更新（检查、下载、策略）
+│   └── adapters/              # 12 个厂商适配器
+├── apps/
+│   └── desktop/               # Tauri v2 跨平台桌面应用
+│       ├── src/               # React + TypeScript + Tailwind 前端
+│       └── src-tauri/         # Rust 后端（IPC 命令、系统托盘）
+├── packages/
+│   ├── design-system/         # 共享 UI 设计组件（npm workspace）
+│   ├── schema/                # JSON Schema 定义（IDE 自动补全）
+│   └── sdk/                   # 适配器开发 SDK
+├── examples/                  # 配置示例（minimal / fullstack / enterprise）
+├── tests/e2e/                 # 端到端测试（Cargo workspace 成员）
+├── locales/                   # 共享多语言文件
+├── docs/                      # 文档
+└── .github/workflows/         # CI/CD（构建 + 跨平台发布）
+```
+
 ## 配置示例
 
 ```yaml
