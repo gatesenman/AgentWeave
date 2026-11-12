@@ -34,19 +34,19 @@ export default function MigrationWizard() {
         </div>
         <div>
           <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("migration.title", "迁移向导")}</h2>
-          <p className="text-[11px] text-zinc-400">从其他 AI 配置工具一键迁移</p>
+          <p className="text-[11px] text-zinc-400">{t("migration.subtitle")}</p>
         </div>
       </div>
 
       {!projectDir && (
-        <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">请先打开一个项目</div>
+        <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">{t("common.openProject")}</div>
       )}
 
       {projectDir && (
         <div className="flex-1 overflow-auto px-5 py-6">
           {/* Progress bar */}
           <div className="flex items-center gap-2 mb-8">
-            {["选择源", "扫描配置", "完成"].map((label, i) => (
+            {[t("migration.stepSource"), t("migration.stepScan"), t("migration.stepDone")].map((label, i) => (
               <div key={label} className="flex items-center gap-2">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${
                   step > i ? "bg-orange-600 text-white" : step === i ? "bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800"
@@ -59,7 +59,7 @@ export default function MigrationWizard() {
 
           {step === 0 && (
             <div className="space-y-4">
-              <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">选择迁移来源</h3>
+              <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{t("migration.chooseSource")}</h3>
               <div className="grid grid-cols-4 gap-2">
                 {VENDORS.map((v) => (
                   <button key={v} onClick={() => { setSource(v); setStep(1); }}
@@ -74,14 +74,14 @@ export default function MigrationWizard() {
           {step === 1 && (
             <div className="space-y-4">
               <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">
-                从 <span className="text-orange-600 dark:text-orange-400">{source}</span> 迁移
+                {t("migration.fromSource", { source })}
               </h3>
-              <p className="text-[12px] text-zinc-500">将扫描项目中的 {source} 配置文件并导入到 AgentWeave 超集格式</p>
+              <p className="text-[12px] text-zinc-500">{t("migration.scanHint", { source })}</p>
               <div className="flex items-center gap-3">
                 <button onClick={handleStart} disabled={loading} className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 disabled:opacity-50">
-                  {loading ? <><Loader2 size={12} className="animate-spin" /> 迁移中...</> : <><Truck size={12} /> 开始迁移</>}
+                  {loading ? <><Loader2 size={12} className="animate-spin" /> {t("migration.running")}</> : <><Truck size={12} /> {t("migration.start")}</>}
                 </button>
-                <button onClick={() => setStep(0)} className="px-3 py-2 text-[12px] text-zinc-500 hover:text-zinc-700">返回</button>
+                <button onClick={() => setStep(0)} className="px-3 py-2 text-[12px] text-zinc-500 hover:text-zinc-700">{t("common.back")}</button>
               </div>
             </div>
           )}
@@ -90,26 +90,26 @@ export default function MigrationWizard() {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 {status.success ? <CheckCircle2 size={16} className="text-emerald-500" /> : <AlertCircle size={16} className="text-red-500" />}
-                <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{status.success ? "迁移完成" : "迁移失败"}</h3>
+                <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{status.success ? t("migration.success") : t("migration.failed")}</h3>
               </div>
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-[12px]">
-                  <span className="text-zinc-500">导入概念数</span>
+                  <span className="text-zinc-500">{t("migration.imported")}</span>
                   <span className="font-semibold text-zinc-700 dark:text-zinc-200">{status.imported_count}</span>
                 </div>
                 <div className="flex justify-between text-[12px]">
-                  <span className="text-zinc-500">跳过数</span>
+                  <span className="text-zinc-500">{t("migration.skipped")}</span>
                   <span className="text-zinc-700 dark:text-zinc-200">{status.skipped_count}</span>
                 </div>
                 {status.errors.length > 0 && (
                   <div className="mt-2 space-y-1">
-                    <p className="text-[10px] font-medium text-red-500 uppercase">错误</p>
+                    <p className="text-[10px] font-medium text-red-500 uppercase">{t("common.error")}</p>
                     {status.errors.map((e, i) => <p key={i} className="text-[11px] text-red-600 dark:text-red-400">{e}</p>)}
                   </div>
                 )}
               </div>
               <button onClick={() => { setStep(0); setSource(""); setStatus(null); }} className="px-3 py-2 text-[12px] text-orange-600 hover:text-orange-700 font-medium">
-                再次迁移
+                {t("migration.again")}
               </button>
             </div>
           )}

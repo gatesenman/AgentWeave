@@ -134,8 +134,8 @@ export default function ConfigHub() {
         {showAddForm && (
           <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
             <div className="flex items-center gap-2">
-              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="名称" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-              <input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="描述 (可选)" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("common.name")} className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+              <input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder={t("common.descriptionOptional")} className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
               <button onClick={async () => {
                 if (!newName.trim() || !projectDir) return;
                 const ct = conceptSections.find(s => s.key === activeConcept)?.backendType ?? activeConcept;
@@ -144,10 +144,10 @@ export default function ConfigHub() {
                   await load();
                 } catch (e) { console.error("addConfigConcept", e); }
                 setNewName(""); setNewDesc(""); setShowAddForm(false);
-              }} className="px-3 py-1.5 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">添加</button>
-              <button onClick={() => { setShowAddForm(false); setNewName(""); setNewDesc(""); }} className="px-2 py-1.5 text-[11px] text-zinc-500 hover:text-zinc-700">取消</button>
+              }} className="px-3 py-1.5 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">{t("common.add")}</button>
+              <button onClick={() => { setShowAddForm(false); setNewName(""); setNewDesc(""); }} className="px-2 py-1.5 text-[11px] text-zinc-500 hover:text-zinc-700">{t("common.cancel")}</button>
             </div>
-            <p className="text-[10px] text-zinc-400 mt-1">将添加到当前分类: {t(conceptSections.find(s => s.key === activeConcept)?.labelKey ?? "")}</p>
+            <p className="text-[10px] text-zinc-400 mt-1">{t("config.addToSection", { section: t(conceptSections.find(s => s.key === activeConcept)?.labelKey ?? "") })}</p>
           </div>
         )}
 

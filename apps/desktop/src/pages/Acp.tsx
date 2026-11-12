@@ -79,9 +79,9 @@ export default function Acp() {
               <thead className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                 <tr className="text-left text-[11px] text-zinc-400 uppercase tracking-wider">
                   <th className="px-4 py-2 font-medium">Vendor</th>
-                  <th className="px-4 py-2 font-medium">Agent 数量</th>
-                  <th className="px-4 py-2 font-medium">概念覆盖</th>
-                  <th className="px-4 py-2 font-medium text-center">状态</th>
+                  <th className="px-4 py-2 font-medium">{t("acp.agentCount")}</th>
+                  <th className="px-4 py-2 font-medium">{t("acp.conceptCoverage")}</th>
+                  <th className="px-4 py-2 font-medium text-center">{t("common.status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -148,17 +148,17 @@ export default function Acp() {
         {activeTab === "monitor" && (
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-3">
-              <MonitorCard label="总请求" value={metrics ? String(metrics.total_requests) : "—"} />
-              <MonitorCard label="平均延迟" value={metrics ? `${Math.round(metrics.avg_latency_ms)}ms` : "—"} />
-              <MonitorCard label="成功率" value={metrics ? `${metrics.success_rate.toFixed(1)}%` : "—"} />
+              <MonitorCard label={t("acp.totalRequests")} value={metrics ? String(metrics.total_requests) : "—"} />
+              <MonitorCard label={t("acp.avgLatency")} value={metrics ? `${Math.round(metrics.avg_latency_ms)}ms` : "—"} />
+              <MonitorCard label={t("acp.successRate")} value={metrics ? `${metrics.success_rate.toFixed(1)}%` : "—"} />
             </div>
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
               <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wide mb-3">
-                近期调度
+                {t("acp.recentSchedules")}
               </h3>
               <div className="space-y-2">
                 {(!metrics || metrics.recent_logs.length === 0) ? (
-                  <p className="text-[11px] text-zinc-400">暂无调度记录。执行生成操作后会自动记录。</p>
+                  <p className="text-[11px] text-zinc-400">{t("acp.noSchedules")}</p>
                 ) : (
                   metrics.recent_logs.map((log, i) => (
                     <div key={i} className="flex items-center gap-4 text-[11px]">

@@ -50,36 +50,36 @@ export default function Webhooks() {
         </div>
         <div className="flex-1">
           <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("webhooks.title", "Webhook 集成")}</h2>
-          <p className="text-[11px] text-zinc-400">配置变更时自动通知 Slack / Discord / 钉钉</p>
+          <p className="text-[11px] text-zinc-400">{t("webhooks.subtitle")}</p>
         </div>
         <button onClick={() => setShowNew(true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700">
-          <Plus size={12} /> 新建
+          <Plus size={12} /> {t("common.new")}
         </button>
       </div>
 
       {showNew && (
         <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="名称" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("common.name")} className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
             <select value={newPlatform} onChange={(e) => setNewPlatform(e.target.value)} className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200">
               <option value="slack">Slack</option>
               <option value="discord">Discord</option>
               <option value="teams">Teams</option>
-              <option value="dingtalk">钉钉</option>
+              <option value="dingtalk">{t("webhooks.dingtalk")}</option>
             </select>
           </div>
           <input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="Webhook URL" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-          <input value={newEvents} onChange={(e) => setNewEvents(e.target.value)} placeholder="事件 (逗号分隔)" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          <input value={newEvents} onChange={(e) => setNewEvents(e.target.value)} placeholder={t("webhooks.eventsPlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
           <div className="flex gap-2">
-            <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-amber-600 rounded hover:bg-amber-700">创建</button>
-            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">取消</button>
+            <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-amber-600 rounded hover:bg-amber-700">{t("common.create")}</button>
+            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">{t("common.cancel")}</button>
           </div>
         </div>
       )}
 
       <div className="flex-1 overflow-auto px-5 py-4 space-y-2">
         {webhooks.length === 0 && !showNew && (
-          <div className="text-center py-8 text-[12px] text-zinc-400">暂无 Webhook，点击新建</div>
+          <div className="text-center py-8 text-[12px] text-zinc-400">{t("webhooks.empty")}</div>
         )}
         {webhooks.map((wh) => (
           <div key={wh.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-3 group">

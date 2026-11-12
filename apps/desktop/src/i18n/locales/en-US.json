@@ -41,7 +41,27 @@
     "cancel": "Cancel",
     "loading": "Loading...",
     "watching": "Watching",
-    "selectProject": "Please select a project from Overview first"
+    "selectProject": "Please select a project from Overview first",
+    "openProject": "Please open a project first",
+    "create": "Create",
+    "add": "Add",
+    "new": "New",
+    "name": "Name",
+    "description": "Description",
+    "descriptionOptional": "Description (optional)",
+    "back": "Back",
+    "error": "Error",
+    "status": "Status",
+    "actions": "Actions",
+    "details": "Details",
+    "time": "Time",
+    "vendor": "Vendor",
+    "vendors": "vendors",
+    "searching": "Searching...",
+    "generating": "Generating...",
+    "analyzing": "Analyzing...",
+    "record": "Record",
+    "normal": "Normal"
   },
   "dashboard": {
     "title": "Overview",
@@ -91,7 +111,8 @@
     "contextFiles": "Context Files",
     "contextDynamic": "Dynamic Context",
     "sourceHint": "Edit agentweave.yaml source directly",
-    "editorPlaceholder": "YAML Editor"
+    "editorPlaceholder": "YAML Editor",
+    "addToSection": "Will be added to this section: {{section}}"
   },
   "generate": {
     "title": "Generate",
@@ -113,20 +134,41 @@
   "trace": {
     "traces": "Traces",
     "logs": "Logs",
-    "alerts": "Alerts"
+    "alerts": "Alerts",
+    "noLogs": "No logs yet. They will be recorded after actions such as generate or validate.",
+    "noAlerts": "No alerts"
   },
   "governance": {
     "title": "Governance",
     "policies": "Policies",
     "roles": "Roles",
     "audit": "Audit",
-    "quotas": "Quotas"
+    "quotas": "Quotas",
+    "policyCount": "{{count}} policies",
+    "roleCount": "{{count}} roles",
+    "policyHeading": "Governance policies",
+    "policyName": "Policy name",
+    "policy": "Policy",
+    "level": "Level",
+    "emptyPolicies": "No policies",
+    "emptyAudit": "No records",
+    "roleHeading": "Role management",
+    "roleName": "Role name",
+    "permsPlaceholder": "Permissions (comma-separated)",
+    "emptyRoles": "No roles"
   },
   "acp": {
     "title": "ACP Runtime",
     "agents": "Agents",
     "routing": "Routing",
-    "monitor": "Monitor"
+    "monitor": "Monitor",
+    "agentCount": "Agents",
+    "conceptCoverage": "Concept coverage",
+    "totalRequests": "Total requests",
+    "avgLatency": "Average latency",
+    "successRate": "Success rate",
+    "recentSchedules": "Recent schedules",
+    "noSchedules": "No schedules yet. They will appear after a generate run."
   },
   "backup": {
     "title": "Backup & Versioning",
@@ -151,13 +193,24 @@
     "createSnapshot": "Create Snapshot",
     "restore": "Restore",
     "download": "Download",
-    "noProject": "Please select a project folder first"
+    "noProject": "Please select a project folder first",
+    "subtitle": "Snapshot management, export, and import",
+    "labelPlaceholder": "Snapshot label (optional)",
+    "create": "Create snapshot",
+    "empty": "No snapshots",
+    "autoName": "Automatic snapshot",
+    "snapshotMeta": "{{date}} · {{size}} · {{count}} vendors",
+    "exportHint": "Export the project configuration as a ZIP file",
+    "importHint": "Import configuration from a ZIP file",
+    "zipPath": "ZIP file path",
+    "importing": "Importing..."
   },
   "search": {
     "placeholder": "Search Agents, Rules, MCP Servers, Skills...",
     "hint": "Type keywords to search all concepts in your config",
     "noResults": "No matching results found",
-    "results": "results"
+    "results": "results",
+    "typeCount": "{{count}} types"
   },
   "settings": {
     "title": "Settings",
@@ -199,10 +252,211 @@
     "checkUpdate": "Check for Updates",
     "checking": "Checking...",
     "newVersion": "New version available",
-    "upToDate": "You're up to date"
+    "upToDate": "You're up to date",
+    "uiLanguage": "Interface language",
+    "adapters": "Adapters",
+    "platform": "Platform",
+    "langZh": "中文",
+    "langEn": "English"
   },
   "statusbar": {
     "syncing": "Syncing",
     "adapters": "adapters ready"
+  },
+  "ai": {
+    "title": "AI Assistant",
+    "subtitle": "Smart configuration suggestions and optimizations",
+    "reanalyze": "Reanalyze",
+    "thinking": "Thinking...",
+    "empty": "No suggestions yet. AI will recommend optimizations after the config is parsed.",
+    "analyzingConfig": "Analyzing configuration...",
+    "confidence": "Confidence: {{value}}%",
+    "placeholder": "Ask the AI a question about the configuration...",
+    "error": "Error: {{message}}"
+  },
+  "analytics": {
+    "title": "Config Analytics",
+    "subtitle": "Concept usage, vendor coverage, and gap analysis",
+    "totalConcepts": "Total concepts",
+    "coveredVendors": "Vendors covered",
+    "avgCoverage": "Average coverage",
+    "gapCount": "Gaps",
+    "distribution": "Concept distribution",
+    "vendorCoverage": "Vendor coverage",
+    "coverageGaps": "Coverage gaps",
+    "missing": "Missing"
+  },
+  "conflict": {
+    "title": "Conflict Resolution",
+    "scan": "Scan for config conflicts",
+    "empty": "No conflicts",
+    "resolved": "Resolved",
+    "pending": "Unresolved",
+    "localVersion": "Local version",
+    "remoteVersion": "Remote version",
+    "useLocal": "Use local",
+    "useRemote": "Use remote",
+    "manualMerge": "Merge manually",
+    "selectHint": "Select a conflict to see details"
+  },
+  "context": {
+    "title": "Context Optimizer",
+    "subtitle": "Analyze and optimize against vendor token limits",
+    "reanalyze": "Reanalyze",
+    "autoHint": "Open a project to automatically analyze each vendor's context usage",
+    "overLimit": "Over limit",
+    "tokensUsed": "Tokens used:",
+    "suggestions": "Suggestions"
+  },
+  "cost": {
+    "title": "Cost Dashboard",
+    "subtitle": "API usage tracking and cost analysis",
+    "requests": "Requests",
+    "amount": "Cost ($)",
+    "totalCost": "Total cost",
+    "totalTokens": "Total tokens",
+    "vendorCount": "Vendors",
+    "distribution": "Vendor breakdown",
+    "records": "Records",
+    "empty": "No cost records",
+    "recordMeta": "{{tokens}} tokens · {{requests}} requests"
+  },
+  "dryrun": {
+    "title": "Generation Preview",
+    "clickToRun": "Click to run a preview",
+    "complete": "Complete",
+    "missing": "{{count}} missing",
+    "lineStatus": "{{lines}} lines",
+    "vendorPreview": "{{vendor}} preview",
+    "outputFile": "{{lines}} lines · output file: {{path}}",
+    "selectVendor": "Select a vendor to preview"
+  },
+  "env": {
+    "title": "Environments",
+    "subtitle": "dev / staging / prod configuration variants",
+    "namePlaceholder": "Name (e.g. dev)",
+    "labelPlaceholder": "Label (e.g. Development)",
+    "empty": "No environments yet. Click to add one.",
+    "lastDeployed": "Last deployed: {{time}}",
+    "overrides": "Overrides ({{count}})",
+    "concept": "Concept",
+    "field": "Field",
+    "value": "Value"
+  },
+  "graph": {
+    "title": "Concept Graph",
+    "subtitle": "Visualize Agent -> MCP -> Rule dependencies",
+    "stats": "{{nodes}} nodes · {{edges}} edges",
+    "empty": "No concept data",
+    "connections": "{{count}} connections"
+  },
+  "inherit": {
+    "title": "Inheritance Chain",
+    "empty": "No inheritance relationships",
+    "fields": "{{count}} fields",
+    "path": "Path: {{path}} · {{count}} fields",
+    "fieldTrace": "Field provenance (effective values)",
+    "noFields": "No field information",
+    "inheritedFrom": "Inherited from",
+    "selectNode": "Select a node to see details"
+  },
+  "lint": {
+    "title": "Config Lint",
+    "subtitle": "Custom rules to keep configurations consistent",
+    "newRule": "New rule",
+    "ruleName": "Rule name",
+    "pattern": "Match pattern (regex)",
+    "message": "Message",
+    "empty": "No lint rules yet. Click to create one."
+  },
+  "migration": {
+    "title": "Migration Wizard",
+    "subtitle": "Migrate from other AI configuration tools in one step",
+    "stepSource": "Choose source",
+    "stepScan": "Scan config",
+    "stepDone": "Done",
+    "chooseSource": "Choose a migration source",
+    "fromSource": "Migrate from {{source}}",
+    "scanHint": "Scan {{source}} config files in the project and import them into the AgentWeave superset format",
+    "running": "Migrating...",
+    "start": "Start migration",
+    "success": "Migration complete",
+    "failed": "Migration failed",
+    "imported": "Concepts imported",
+    "skipped": "Skipped",
+    "again": "Migrate again"
+  },
+  "perf": {
+    "title": "A/B Experiments",
+    "namePlaceholder": "Experiment name",
+    "empty": "No experiments yet. Click + to create one.",
+    "running": "Running",
+    "completed": "Completed",
+    "pending": "Not started",
+    "runs": "{{count}} runs",
+    "winner": "Winner: Config {{id}}",
+    "start": "Start experiment",
+    "metrics": "Metric comparison",
+    "latency": "Latency (ms)",
+    "lowerBetter": "Lower is better",
+    "accuracy": "Accuracy (%)",
+    "higherBetter": "Higher is better",
+    "tokens": "Token usage",
+    "successRate": "Success rate (%)",
+    "selectHint": "Select or create an A/B experiment"
+  },
+  "promptTest": {
+    "title": "Prompt Testing",
+    "namePlaceholder": "Test name",
+    "promptPlaceholder": "Prompt content",
+    "expectedPlaceholder": "Expected behavior",
+    "vendorsPlaceholder": "Vendors (comma-separated)",
+    "empty": "No tests yet. Click + to create one.",
+    "vendorCount": "{{count}} vendors",
+    "passRate": "Pass rate {{rate}}",
+    "running": "Running...",
+    "runAll": "Run all",
+    "expected": "Expected behavior",
+    "vendorResults": "Vendor results",
+    "noResults": "No results yet. Click \"Run all\" to start.",
+    "selectHint": "Select or create a test case"
+  },
+  "team": {
+    "title": "Team",
+    "subtitle": "Members, configuration branches, and locks",
+    "members": "Members",
+    "branches": "Branches",
+    "locks": "Locks",
+    "memberCount": "{{count}} members",
+    "namePlaceholder": "Name",
+    "emailPlaceholder": "Email",
+    "roleAdmin": "Admin",
+    "roleEditor": "Editor",
+    "roleViewer": "Viewer",
+    "empty": "No members yet. Click to add one.",
+    "branchesSoon": "Configuration branches will be available in multi-user collaboration mode.",
+    "locksSoon": "Concept locks will be available in multi-user collaboration mode."
+  },
+  "templates": {
+    "title": "Template Marketplace",
+    "subtitle": "Community-shared Agent / Rule / Workflow templates",
+    "search": "Search templates...",
+    "catAll": "All",
+    "catWeb": "Web",
+    "catMl": "Data / ML",
+    "catDevops": "DevOps",
+    "catMobile": "Mobile",
+    "catEnterprise": "Enterprise",
+    "catSystems": "Systems",
+    "namePlaceholder": "Template name",
+    "empty": "No templates yet. Click + to add one.",
+    "noMatch": "No matching templates"
+  },
+  "webhooks": {
+    "title": "Webhook Integrations",
+    "subtitle": "Notify Slack, Discord, or DingTalk when configuration changes",
+    "eventsPlaceholder": "Events (comma-separated)",
+    "dingtalk": "DingTalk",
+    "empty": "No webhooks yet. Click to create one."
   }
 }
