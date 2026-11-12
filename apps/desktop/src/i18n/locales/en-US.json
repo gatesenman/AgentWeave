@@ -200,5 +200,9 @@
     "checking": "Checking...",
     "newVersion": "New version available",
     "upToDate": "You're up to date"
+  },
+  "statusbar": {
+    "syncing": "Syncing",
+    "adapters": "adapters ready"
   }
 }
