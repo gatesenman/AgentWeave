@@ -37,9 +37,9 @@ export default function DryRun() {
           </button>
         </div>
         <div className="flex-1 overflow-auto">
-          {!projectDir && <p className="p-4 text-[12px] text-zinc-400 text-center">请先打开一个项目</p>}
-          {loading && <p className="p-4 text-[12px] text-zinc-400 text-center">生成中...</p>}
-          {results.length === 0 && !loading && projectDir && <p className="p-4 text-[12px] text-zinc-400 text-center">点击运行预览</p>}
+          {!projectDir && <p className="p-4 text-[12px] text-zinc-400 text-center">{t("common.openProject")}</p>}
+          {loading && <p className="p-4 text-[12px] text-zinc-400 text-center">{t("common.generating")}</p>}
+          {results.length === 0 && !loading && projectDir && <p className="p-4 text-[12px] text-zinc-400 text-center">{t("dryrun.clickToRun")}</p>}
           {results.map((r) => (
             <button
               key={r.vendor}
@@ -52,7 +52,7 @@ export default function DryRun() {
                 {r.missing_concepts === 0 ? <CheckCircle2 size={11} className="text-emerald-500" /> : <AlertTriangle size={11} className="text-amber-500" />}
                 <span className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{r.vendor}</span>
               </div>
-              <p className="text-[10px] text-zinc-400 mt-0.5">{r.output_lines} 行 · {r.missing_concepts > 0 ? `${r.missing_concepts} 丢失` : "完整"}</p>
+              <p className="text-[10px] text-zinc-400 mt-0.5">{t("dryrun.lineStatus", { lines: r.output_lines })} · {r.missing_concepts > 0 ? t("dryrun.missing", { count: r.missing_concepts }) : t("dryrun.complete")}</p>
             </button>
           ))}
         </div>
@@ -61,15 +61,15 @@ export default function DryRun() {
         {current ? (
           <>
             <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800">
-              <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{current.vendor} 预览</h2>
-              <p className="text-[11px] text-zinc-400">{current.output_lines} 行 · 输出文件: {current.output_path}</p>
+              <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("dryrun.vendorPreview", { vendor: current.vendor })}</h2>
+              <p className="text-[11px] text-zinc-400">{t("dryrun.outputFile", { lines: current.output_lines, path: current.output_path })}</p>
             </div>
             <div className="flex-1 overflow-auto px-5 py-4">
               <pre className="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-4 whitespace-pre-wrap">{current.preview_content}</pre>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">选择厂商查看预览</div>
+          <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">{t("dryrun.selectVendor")}</div>
         )}
       </div>
     </div>

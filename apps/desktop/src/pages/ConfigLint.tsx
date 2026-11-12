@@ -48,35 +48,35 @@ export default function ConfigLint() {
         </div>
         <div className="flex-1">
           <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("lint.title", "配置 Lint")}</h2>
-          <p className="text-[11px] text-zinc-400">自定义检查规则，保证配置质量</p>
+          <p className="text-[11px] text-zinc-400">{t("lint.subtitle")}</p>
         </div>
         <button onClick={() => setShowNew(true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700">
-          <Plus size={12} /> 新建规则
+          <Plus size={12} /> {t("lint.newRule")}
         </button>
       </div>
 
       {showNew && (
         <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="规则名称" className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("lint.ruleName")} className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
             <select value={newSeverity} onChange={(e) => setNewSeverity(e.target.value)} className="px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200">
               <option value="error">Error</option>
               <option value="warning">Warning</option>
               <option value="info">Info</option>
             </select>
           </div>
-          <input value={newPattern} onChange={(e) => setNewPattern(e.target.value)} placeholder="匹配模式 (regex)" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-          <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="提示信息" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          <input value={newPattern} onChange={(e) => setNewPattern(e.target.value)} placeholder={t("lint.pattern")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={t("lint.message")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
           <div className="flex gap-2">
-            <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-orange-600 rounded hover:bg-orange-700">创建</button>
-            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">取消</button>
+            <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-orange-600 rounded hover:bg-orange-700">{t("common.create")}</button>
+            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">{t("common.cancel")}</button>
           </div>
         </div>
       )}
 
       <div className="flex-1 overflow-auto px-5 py-4 space-y-2">
         {rules.length === 0 && !showNew && (
-          <div className="text-center py-8 text-[12px] text-zinc-400">暂无 Lint 规则，点击新建</div>
+          <div className="text-center py-8 text-[12px] text-zinc-400">{t("lint.empty")}</div>
         )}
         {rules.map((rule) => (
           <div key={rule.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-3 group">

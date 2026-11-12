@@ -48,9 +48,9 @@ export default function Backup() {
   };
 
   const tabs = [
-    { key: "snapshots" as const, label: "快照", icon: Camera },
-    { key: "export" as const, label: "导出", icon: Download },
-    { key: "import" as const, label: "导入", icon: Upload },
+    { key: "snapshots" as const, label: t("backup.snapshots"), icon: Camera },
+    { key: "export" as const, label: t("backup.export"), icon: Download },
+    { key: "import" as const, label: t("backup.import"), icon: Upload },
   ];
 
   return (
@@ -62,7 +62,7 @@ export default function Backup() {
           </div>
           <div>
             <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("backup.title", "版本备份")}</h2>
-            <p className="text-[11px] text-zinc-400">快照管理、配置导出与导入</p>
+            <p className="text-[11px] text-zinc-400">{t("backup.subtitle")}</p>
           </div>
         </div>
         <div className="flex gap-1">
@@ -76,7 +76,7 @@ export default function Backup() {
       </div>
 
       {!projectDir && (
-        <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">请先打开一个项目</div>
+        <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">{t("common.openProject")}</div>
       )}
 
       {projectDir && (
@@ -84,18 +84,18 @@ export default function Backup() {
           {activeTab === "snapshots" && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <input value={snapshotLabel} onChange={(e) => setSnapshotLabel(e.target.value)} placeholder="快照标签 (可选)" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                <input value={snapshotLabel} onChange={(e) => setSnapshotLabel(e.target.value)} placeholder={t("backup.labelPlaceholder")} className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
                 <button onClick={handleSnapshot} className="inline-flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700">
-                  <Camera size={12} /> 创建快照
+                  <Camera size={12} /> {t("backup.create")}
                 </button>
               </div>
-              {snapshots.length === 0 && <p className="text-center text-[12px] text-zinc-400 py-4">暂无快照</p>}
+              {snapshots.length === 0 && <p className="text-center text-[12px] text-zinc-400 py-4">{t("backup.empty")}</p>}
               {snapshots.map((s) => (
                 <div key={s.id} className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-3 group">
                   <Clock size={14} className="text-zinc-400 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{s.name || "自动快照"}</p>
-                    <p className="text-[10px] text-zinc-400">{s.date} · {s.size_bytes ? `${(s.size_bytes / 1024).toFixed(1)} KB` : ""} · {s.vendors_count} 厂商</p>
+                    <p className="text-[12px] font-medium text-zinc-700 dark:text-zinc-200">{s.name || t("backup.autoName")}</p>
+                    <p className="text-[10px] text-zinc-400">{t("backup.snapshotMeta", { date: s.date, size: s.size_bytes ? `${(s.size_bytes / 1024).toFixed(1)} KB` : "", count: s.vendors_count })}</p>
                   </div>
                   <button onClick={() => handleDelete(s.id)} className="p-1 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100">
                     <Trash2 size={12} />
@@ -107,20 +107,20 @@ export default function Backup() {
 
           {activeTab === "export" && (
             <div className="space-y-3">
-              <p className="text-[12px] text-zinc-500">将项目配置导出为 ZIP 文件</p>
+              <p className="text-[12px] text-zinc-500">{t("backup.exportHint")}</p>
               <button onClick={handleExport} disabled={exporting} className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 disabled:opacity-50">
-                <Download size={14} /> {exporting ? "导出中..." : "导出 ZIP"}
+                <Download size={14} /> {exporting ? t("backup.exporting") : t("backup.exportZip")}
               </button>
             </div>
           )}
 
           {activeTab === "import" && (
             <div className="space-y-3">
-              <p className="text-[12px] text-zinc-500">从 ZIP 文件导入配置</p>
+              <p className="text-[12px] text-zinc-500">{t("backup.importHint")}</p>
               <div className="flex items-center gap-2">
-                <input value={importPath} onChange={(e) => setImportPath(e.target.value)} placeholder="ZIP 文件路径" className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                <input value={importPath} onChange={(e) => setImportPath(e.target.value)} placeholder={t("backup.zipPath")} className="flex-1 px-2 py-1.5 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
                 <button onClick={handleImport} disabled={importing} className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white bg-sky-600 rounded-md hover:bg-sky-700 disabled:opacity-50">
-                  <Upload size={14} /> {importing ? "导入中..." : "导入"}
+                  <Upload size={14} /> {importing ? t("backup.importing") : t("backup.import")}
                 </button>
               </div>
             </div>

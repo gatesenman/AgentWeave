@@ -18,13 +18,13 @@ import {
 } from "../lib/tauri";
 
 const categories = [
-  { key: "all", label: "全部" },
-  { key: "web", label: "Web 开发" },
-  { key: "ml", label: "数据/ML" },
-  { key: "devops", label: "DevOps" },
-  { key: "mobile", label: "移动端" },
-  { key: "enterprise", label: "企业级" },
-  { key: "systems", label: "系统编程" },
+  { key: "all", labelKey: "templates.catAll" },
+  { key: "web", labelKey: "templates.catWeb" },
+  { key: "ml", labelKey: "templates.catMl" },
+  { key: "devops", labelKey: "templates.catDevops" },
+  { key: "mobile", labelKey: "templates.catMobile" },
+  { key: "enterprise", labelKey: "templates.catEnterprise" },
+  { key: "systems", labelKey: "templates.catSystems" },
 ];
 
 export default function Templates() {
@@ -110,7 +110,7 @@ export default function Templates() {
                     : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 }`}
               >
-                {cat.label}
+                {t(cat.labelKey)}
               </button>
             ))}
           </div>
@@ -119,14 +119,14 @@ export default function Templates() {
 
       {showNew && (
         <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 space-y-2">
-          <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="模板名称" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-          <input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="描述" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("templates.namePlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+          <input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder={t("common.description")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
           <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200">
-            {categories.filter((c) => c.key !== "all").map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+            {categories.filter((c) => c.key !== "all").map((c) => <option key={c.key} value={c.key}>{t(c.labelKey)}</option>)}
           </select>
           <div className="flex gap-2">
-            <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">创建</button>
-            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">取消</button>
+            <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">{t("common.create")}</button>
+            <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">{t("common.cancel")}</button>
           </div>
         </div>
       )}
@@ -163,7 +163,7 @@ export default function Templates() {
         </div>
         {filtered.length === 0 && (
           <div className="flex items-center justify-center h-[200px]">
-            <p className="text-[13px] text-zinc-400">{templates.length === 0 ? "暂无模板，点击 + 添加" : "没有找到匹配的模板"}</p>
+            <p className="text-[13px] text-zinc-400">{templates.length === 0 ? t("templates.empty") : t("templates.noMatch")}</p>
           </div>
         )}
       </div>

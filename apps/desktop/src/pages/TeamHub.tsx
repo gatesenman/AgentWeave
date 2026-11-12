@@ -108,30 +108,30 @@ export default function TeamHub() {
         {activeTab === "members" && (
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300">{members.length} 成员</span>
+              <span className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300">{t("team.memberCount", { count: members.length })}</span>
               <button onClick={() => setShowNew(true)} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded">
-                <Plus size={12} /> 添加
+                <Plus size={12} /> {t("common.add")}
               </button>
             </div>
 
             {showNew && (
               <div className="bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 space-y-2 mb-3">
-                <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="姓名" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-                <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="邮箱" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("team.namePlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+                <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder={t("team.emailPlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
                 <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200">
-                  <option value="admin">管理员</option>
-                  <option value="editor">编辑者</option>
-                  <option value="viewer">只读</option>
+                  <option value="admin">{t("team.roleAdmin")}</option>
+                  <option value="editor">{t("team.roleEditor")}</option>
+                  <option value="viewer">{t("team.roleViewer")}</option>
                 </select>
                 <div className="flex gap-2">
-                  <button onClick={handleAdd} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-blue-600 rounded hover:bg-blue-700">添加</button>
-                  <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">取消</button>
+                  <button onClick={handleAdd} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-blue-600 rounded hover:bg-blue-700">{t("common.add")}</button>
+                  <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500">{t("common.cancel")}</button>
                 </div>
               </div>
             )}
 
             {members.length === 0 && !showNew && (
-              <p className="text-center text-[12px] text-zinc-400 py-8">暂无成员，点击添加</p>
+              <p className="text-center text-[12px] text-zinc-400 py-8">{t("team.empty")}</p>
             )}
 
             {members.map((m) => (
@@ -165,13 +165,13 @@ export default function TeamHub() {
 
         {activeTab === "branches" && (
           <div className="text-center py-8 text-[12px] text-zinc-400">
-            配置分支功能将在多人网络协作模式中启用
+            {t("team.branchesSoon")}
           </div>
         )}
 
         {activeTab === "locks" && (
           <div className="text-center py-8 text-[12px] text-zinc-400">
-            概念锁定功能将在多人协作模式中启用
+            {t("team.locksSoon")}
           </div>
         )}
       </div>

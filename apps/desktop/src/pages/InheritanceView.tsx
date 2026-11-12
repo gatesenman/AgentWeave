@@ -35,7 +35,7 @@ export default function InheritanceView() {
         <FileCode2 size={12} className={node.is_remote ? "text-orange-400" : "text-zinc-400"} />
         <span className="font-medium">{node.name}</span>
         {node.is_remote && <span className="text-[9px] px-1 py-0.5 rounded bg-orange-50 dark:bg-orange-500/10 text-orange-500">remote</span>}
-        <span className="text-[10px] text-zinc-400 ml-auto">{node.field_count} 字段</span>
+        <span className="text-[10px] text-zinc-400 ml-auto">{t("inherit.fields", { count: node.field_count })}</span>
       </button>
       {node.children.map((childId) => {
         const child = findNode(childId);
@@ -58,9 +58,9 @@ export default function InheritanceView() {
           <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{t("inherit.title", "继承链")}</span>
         </div>
         <div className="flex-1 overflow-auto p-3">
-          {!projectDir && <p className="text-[12px] text-zinc-400 text-center py-4">请先打开一个项目</p>}
-          {projectDir && !data && <p className="text-[12px] text-zinc-400 text-center py-4">加载中...</p>}
-          {nodes.length === 0 && data && <p className="text-[12px] text-zinc-400 text-center py-4">暂无继承关系</p>}
+          {!projectDir && <p className="text-[12px] text-zinc-400 text-center py-4">{t("common.openProject")}</p>}
+          {projectDir && !data && <p className="text-[12px] text-zinc-400 text-center py-4">{t("common.loading")}</p>}
+          {nodes.length === 0 && data && <p className="text-[12px] text-zinc-400 text-center py-4">{t("inherit.empty")}</p>}
           {rootNodes.map((n) => renderNode(n))}
         </div>
       </div>
@@ -68,11 +68,11 @@ export default function InheritanceView() {
         {selectedNode ? (
           <div className="flex-1 overflow-auto px-5 py-4">
             <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100 mb-1">{selectedNode.name}</h2>
-            <p className="text-[11px] text-zinc-400 mb-3">路径: {selectedNode.path} · {selectedNode.field_count} 个字段</p>
+            <p className="text-[11px] text-zinc-400 mb-3">{t("inherit.path", { path: selectedNode.path, count: selectedNode.field_count })}</p>
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-              <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 mb-2">字段溯源（最终生效值）</h3>
+              <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 mb-2">{t("inherit.fieldTrace")}</h3>
               {selectedFields.length === 0 ? (
-                <p className="text-[11px] text-zinc-400">无字段信息</p>
+                <p className="text-[11px] text-zinc-400">{t("inherit.noFields")}</p>
               ) : (
                 <div className="space-y-1">
                   {selectedFields.map((f) => (
@@ -88,7 +88,7 @@ export default function InheritanceView() {
             </div>
             {selectedNode.children.length > 0 && (
               <div className="mt-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-                <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 mb-2">继承自</h3>
+                <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300 mb-2">{t("inherit.inheritedFrom")}</h3>
                 <div className="space-y-1">
                   {selectedNode.children.map((cid) => {
                     const child = findNode(cid);
@@ -104,7 +104,7 @@ export default function InheritanceView() {
             )}
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">选择节点查看详情</div>
+          <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">{t("inherit.selectNode")}</div>
         )}
       </div>
     </div>

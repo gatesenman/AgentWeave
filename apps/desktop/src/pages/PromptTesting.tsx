@@ -104,20 +104,20 @@ export default function PromptTesting() {
 
         {showNew && (
           <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 space-y-2 bg-zinc-50/50 dark:bg-zinc-900/50">
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="测试名称" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-            <textarea value={newPrompt} onChange={(e) => setNewPrompt(e.target.value)} placeholder="Prompt 内容" rows={2} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 resize-none" />
-            <input value={newExpected} onChange={(e) => setNewExpected(e.target.value)} placeholder="期望行为" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
-            <input value={newVendors} onChange={(e) => setNewVendors(e.target.value)} placeholder="厂商 (逗号分隔)" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("promptTest.namePlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <textarea value={newPrompt} onChange={(e) => setNewPrompt(e.target.value)} placeholder={t("promptTest.promptPlaceholder")} rows={2} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 resize-none" />
+            <input value={newExpected} onChange={(e) => setNewExpected(e.target.value)} placeholder={t("promptTest.expectedPlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newVendors} onChange={(e) => setNewVendors(e.target.value)} placeholder={t("promptTest.vendorsPlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
             <div className="flex gap-2">
-              <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-violet-600 rounded hover:bg-violet-700">创建</button>
-              <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">取消</button>
+              <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-violet-600 rounded hover:bg-violet-700">{t("common.create")}</button>
+              <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">{t("common.cancel")}</button>
             </div>
           </div>
         )}
 
         <div className="flex-1 overflow-auto">
           {testCases.length === 0 && !showNew && (
-            <div className="p-4 text-center text-[12px] text-zinc-400">暂无测试，点击 + 创建</div>
+            <div className="p-4 text-center text-[12px] text-zinc-400">{t("promptTest.empty")}</div>
           )}
           {testCases.map((tc) => (
             <button
@@ -129,10 +129,10 @@ export default function PromptTesting() {
             >
               <p className="text-[12px] text-zinc-700 dark:text-zinc-200 font-medium">{tc.name}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] text-zinc-400">{tc.vendors.length} 厂商</span>
+                <span className="text-[10px] text-zinc-400">{t("promptTest.vendorCount", { count: tc.vendors.length })}</span>
                 <span className="text-[10px] text-zinc-300">·</span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  通过 {getPassRate(tc)}
+                  {t("promptTest.passRate", { rate: getPassRate(tc) })}
                 </span>
               </div>
             </button>
@@ -148,7 +148,7 @@ export default function PromptTesting() {
                 <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{currentTest.name}</h2>
                 <div className="flex items-center gap-2">
                   <button onClick={() => currentTest && handleRun(currentTest.id)} disabled={running} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50">
-                    <Play size={12} /> {running ? "运行中..." : "运行全部"}
+                    <Play size={12} /> {running ? t("promptTest.running") : t("promptTest.runAll")}
                   </button>
                   <button onClick={() => handleDelete(currentTest.id)} className="p-1.5 text-zinc-400 hover:text-red-500 rounded">
                     <Trash2 size={13} />
@@ -169,16 +169,16 @@ export default function PromptTesting() {
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
                   <div className="flex items-center gap-1.5 mb-2">
                     <CheckCircle2 size={11} className="text-zinc-400" />
-                    <span className="text-[10px] font-semibold text-zinc-500 uppercase">期望行为</span>
+                    <span className="text-[10px] font-semibold text-zinc-500 uppercase">{t("promptTest.expected")}</span>
                   </div>
                   <p className="text-[11px] text-zinc-600 dark:text-zinc-300">{currentTest.expected_behavior}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300">厂商结果</h3>
+                <h3 className="text-[12px] font-semibold text-zinc-600 dark:text-zinc-300">{t("promptTest.vendorResults")}</h3>
                 {currentTest.results.length === 0 && (
-                  <p className="text-[11px] text-zinc-400">尚无运行结果，点击"运行全部"开始测试</p>
+                  <p className="text-[11px] text-zinc-400">{t("promptTest.noResults")}</p>
                 )}
                 {currentTest.results.map((result) => (
                   <div key={result.vendor} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
@@ -201,7 +201,7 @@ export default function PromptTesting() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">
-            选择或创建一个测试用例
+            {t("promptTest.selectHint")}
           </div>
         )}
       </div>
