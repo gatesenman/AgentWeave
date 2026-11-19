@@ -16,6 +16,10 @@
 
 ---
 
+## What's new in 0.2.0
+
+Portable `.weave.json` packs: export, validate, and re-import a project config without a vendor-specific file tree. A starter pack is available from `agentweave_core::pack`.
+
 ## Overview
 
 AgentWeave defines a **superset specification** for AI agent configuration and provides a complete toolchain to:
