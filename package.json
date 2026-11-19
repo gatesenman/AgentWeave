@@ -13,7 +13,7 @@
     "desktop": "cd apps/desktop && npm run tauri dev",
     "desktop:build": "cd apps/desktop && npm run tauri build",
     "lint": "cargo clippy --workspace && cd apps/desktop && npx tsc --noEmit",
-    "test": "cargo test --workspace",
+    "test": "./scripts/verify-workspace.sh",
     "clean": "cargo clean && rm -rf apps/desktop/dist"
   },
   "repository": {

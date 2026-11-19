@@ -1,0 +1,4 @@
+# Desktop (Tauri 2) dependencies require rustc 1.90 or newer.
+# rustup users in this repo are pinned automatically; without rustup, install 1.90+ yourself.
+[toolchain]
+channel = "1.90.0"
