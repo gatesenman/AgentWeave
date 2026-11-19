@@ -6,8 +6,8 @@ help: ## Show this help
 build: ## Build all crates
 	cargo build --workspace
 
-test: ## Run all tests
-	cargo test --workspace
+test: ## Run workspace tests (skips the Tauri crate if GTK/glib is missing)
+	./scripts/verify-workspace.sh
 
 lint: ## Run clippy and format check
 	cargo clippy --workspace -- -D warnings

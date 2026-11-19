@@ -6,7 +6,7 @@ Thank you for your interest in contributing to AgentWeave!
 
 ### Prerequisites
 
-- Rust 1.75+ (install via [rustup](https://rustup.rs))
+- Rust 1.90+ (install via [rustup](https://rustup.rs); this repo pins `1.90.0` in `rust-toolchain.toml`)
 - Node.js 20+ (for desktop app frontend)
 - pnpm 9+ (package manager)
 
@@ -14,14 +14,14 @@ Thank you for your interest in contributing to AgentWeave!
 
 ```bash
 # Clone the repository
-git clone https://github.com/gaosichun888/AgentWeave.git
+git clone https://github.com/gatesenman/AgentWeave.git
 cd AgentWeave
 
 # Build all Rust crates
 cargo build
 
-# Run tests
-cargo test
+# Run tests (skips the Tauri crate if GTK/glib is not installed)
+./scripts/verify-workspace.sh
 
 # Run the CLI
 cargo run -p agentweave-cli -- --help
@@ -58,7 +58,7 @@ cargo run -p agentweave-cli -- --help
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes with tests
-4. Run `cargo test && cargo clippy && cargo fmt --check`
+4. Run `./scripts/verify-workspace.sh && cargo clippy && cargo fmt --check`
 5. Submit a pull request with a clear description
 
 ## License
