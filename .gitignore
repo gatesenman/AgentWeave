@@ -33,3 +33,13 @@ apps/desktop/src-tauri/target/
 apps/desktop/dist/
 release-artifacts/
 package-lock.json
+
+# Additional hygiene
+.env.*.local
+logs/
+*.log
+.venv/
+__pycache__/
+coverage/
+!.env.example
+!.env.example.*
