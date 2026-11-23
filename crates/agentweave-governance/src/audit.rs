@@ -103,7 +103,9 @@ impl AuditLogger {
 
     /// Query audit logs with optional filters.
     pub fn query(&self, filter: &AuditQuery) -> Result<Vec<AuditEntry>, AuditError> {
-        let mut sql = String::from("SELECT id, timestamp, user, action, resource, diff, metadata FROM audit_log WHERE 1=1");
+        let mut sql = String::from(
+            "SELECT id, timestamp, user, action, resource, diff, metadata FROM audit_log WHERE 1=1",
+        );
         let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
 
         if let Some(ref user) = filter.user {

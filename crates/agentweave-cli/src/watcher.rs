@@ -35,9 +35,10 @@ pub async fn watch_and_regenerate(project_dir: &PathBuf, registry: &AdapterRegis
     loop {
         match rx.recv_timeout(Duration::from_millis(100)) {
             Ok(Ok(event)) => {
-                let dominated_by_history = event.paths.iter().all(|p| {
-                    p.to_string_lossy().contains(".history")
-                });
+                let dominated_by_history = event
+                    .paths
+                    .iter()
+                    .all(|p| p.to_string_lossy().contains(".history"));
                 if dominated_by_history {
                     continue;
                 }

@@ -23,12 +23,11 @@ impl I18n {
             _ => ("en-US", EN_US_FTL),
         };
 
-        let langid: LanguageIdentifier = resolved_locale.parse().unwrap_or_else(|_| {
-            "en-US".parse().expect("en-US is a valid locale")
-        });
+        let langid: LanguageIdentifier = resolved_locale
+            .parse()
+            .unwrap_or_else(|_| "en-US".parse().expect("en-US is a valid locale"));
 
-        let resource =
-            FluentResource::try_new(ftl_source.to_string()).expect("valid FTL resource");
+        let resource = FluentResource::try_new(ftl_source.to_string()).expect("valid FTL resource");
 
         let mut bundle = FluentBundle::new(vec![langid]);
         bundle

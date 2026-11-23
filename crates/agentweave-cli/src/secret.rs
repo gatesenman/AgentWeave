@@ -209,7 +209,9 @@ fn base64_decode(s: &str) -> Vec<u8> {
     let mut result = Vec::new();
     let chars: Vec<u8> = s.bytes().collect();
     for chunk in chars.chunks(4) {
-        if chunk.len() < 4 { break; }
+        if chunk.len() < 4 {
+            break;
+        }
         let vals: Vec<u32> = chunk.iter().map(|&c| decode_b64_char(c) as u32).collect();
         let triple = (vals[0] << 18) | (vals[1] << 12) | (vals[2] << 6) | vals[3];
         result.push(((triple >> 16) & 0xFF) as u8);

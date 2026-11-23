@@ -181,10 +181,7 @@ impl TraceCollector {
     }
 
     pub fn get_logs_for_vendor(&self, vendor: &str) -> Vec<&LogEntry> {
-        self.logs
-            .iter()
-            .filter(|l| l.vendor == vendor)
-            .collect()
+        self.logs.iter().filter(|l| l.vendor == vendor).collect()
     }
 
     pub fn all_spans(&self) -> &[Span] {
@@ -197,11 +194,7 @@ impl TraceCollector {
 
     /// Flush completed spans to all exporters
     fn flush_completed(&self) {
-        let completed: Vec<&Span> = self
-            .spans
-            .iter()
-            .filter(|s| s.end_time.is_some())
-            .collect();
+        let completed: Vec<&Span> = self.spans.iter().filter(|s| s.end_time.is_some()).collect();
 
         if completed.is_empty() {
             return;
@@ -228,9 +221,8 @@ impl TraceCollector {
         let total_duration = spans
             .iter()
             .filter_map(|s| {
-                s.end_time.map(|end| {
-                    (end - s.start_time).num_milliseconds() as u64
-                })
+                s.end_time
+                    .map(|end| (end - s.start_time).num_milliseconds() as u64)
             })
             .max()
             .unwrap_or(0);
@@ -288,8 +280,20 @@ mod tests {
     fn test_log_capture() {
         let mut collector = TraceCollector::new();
         let trace_id = TraceCollector::new_trace_id();
-        collector.capture_log("codex", LogLevel::Info, "Generating AGENTS.md", Some(&trace_id), None);
-        collector.capture_log("cursor", LogLevel::Warn, "Rule file too large", Some(&trace_id), None);
+        collector.capture_log(
+            "codex",
+            LogLevel::Info,
+            "Generating AGENTS.md",
+            Some(&trace_id),
+            None,
+        );
+        collector.capture_log(
+            "cursor",
+            LogLevel::Warn,
+            "Rule file too large",
+            Some(&trace_id),
+            None,
+        );
         collector.capture_log("claude", LogLevel::Error, "API timeout", None, None);
 
         assert_eq!(collector.get_logs_for_trace(&trace_id).len(), 2);

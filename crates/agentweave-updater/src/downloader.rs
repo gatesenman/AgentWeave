@@ -17,12 +17,11 @@ impl UpdateDownloader {
         // Placeholder: generate a throwaway keypair for structural completeness.
         // Real deployments must embed the actual public key bytes.
         let placeholder_bytes = [0u8; 32];
-        let public_key = VerifyingKey::from_bytes(&placeholder_bytes)
-            .unwrap_or_else(|_| {
-                // Fallback: use a valid identity point key
-                let secret = ed25519_dalek::SigningKey::from_bytes(&[1u8; 32]);
-                secret.verifying_key()
-            });
+        let public_key = VerifyingKey::from_bytes(&placeholder_bytes).unwrap_or_else(|_| {
+            // Fallback: use a valid identity point key
+            let secret = ed25519_dalek::SigningKey::from_bytes(&[1u8; 32]);
+            secret.verifying_key()
+        });
         Self { public_key }
     }
 
@@ -34,11 +33,7 @@ impl UpdateDownloader {
     }
 
     /// Download a release asset to a temporary file, returning the path.
-    pub async fn download_asset(
-        &self,
-        asset: &ReleaseAsset,
-        dest_dir: &Path,
-    ) -> Result<PathBuf> {
+    pub async fn download_asset(&self, asset: &ReleaseAsset, dest_dir: &Path) -> Result<PathBuf> {
         let client = reqwest::Client::builder()
             .user_agent("agentweave-updater")
             .build()
@@ -205,7 +200,8 @@ mod tests {
         // is structurally valid but does not match the file content.
         let signing_key = ed25519_dalek::SigningKey::from_bytes(&[42u8; 32]);
         let wrong_sig = signing_key.sign(b"completely different data");
-        let dl = UpdateDownloader::with_public_key(&signing_key.verifying_key().to_bytes()).unwrap();
+        let dl =
+            UpdateDownloader::with_public_key(&signing_key.verifying_key().to_bytes()).unwrap();
         let result = dl.verify_signature(&file_path, &wrong_sig.to_bytes());
         assert!(result.is_err());
     }
@@ -219,7 +215,8 @@ mod tests {
 
         let signing_key = ed25519_dalek::SigningKey::from_bytes(&[42u8; 32]);
         let sig = signing_key.sign(data);
-        let dl = UpdateDownloader::with_public_key(&signing_key.verifying_key().to_bytes()).unwrap();
+        let dl =
+            UpdateDownloader::with_public_key(&signing_key.verifying_key().to_bytes()).unwrap();
         let result = dl.verify_signature(&file_path, &sig.to_bytes());
         assert!(result.is_ok());
     }

@@ -70,8 +70,7 @@ impl SyncEngine {
         let (debounced_tx, mut debounced_rx) = mpsc::unbounded_channel::<DebouncedChange>();
 
         // Start debounce task
-        let debounce_handle =
-            spawn_debounce_task(self.config.debounce_ms, raw_rx, debounced_tx);
+        let debounce_handle = spawn_debounce_task(self.config.debounce_ms, raw_rx, debounced_tx);
 
         // Start file watcher
         let mut watcher = match FileWatcher::new(watch_path.clone(), raw_tx) {

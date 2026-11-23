@@ -113,7 +113,8 @@ impl OtlpExporter {
         let resource_spans: Vec<ResourceSpan> = vendor_groups
             .into_iter()
             .map(|(vendor, spans)| {
-                let otlp_spans: Vec<OtlpSpan> = spans.iter().map(|s| self.to_otlp_span(s)).collect();
+                let otlp_spans: Vec<OtlpSpan> =
+                    spans.iter().map(|s| self.to_otlp_span(s)).collect();
                 ResourceSpan {
                     resource: OtlpResource {
                         attributes: vec![

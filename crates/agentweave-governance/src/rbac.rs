@@ -123,11 +123,7 @@ impl RbacManager {
         }
     }
 
-    pub fn require_permission(
-        &self,
-        user: &str,
-        permission: Permission,
-    ) -> Result<(), RbacError> {
+    pub fn require_permission(&self, user: &str, permission: Permission) -> Result<(), RbacError> {
         if self.check_permission(user, permission) {
             Ok(())
         } else {

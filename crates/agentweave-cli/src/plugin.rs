@@ -39,7 +39,9 @@ pub fn cmd_plugin(project_dir: &PathBuf, action: PluginAction) -> Result<()> {
             for plugin in &registry.plugins {
                 println!(
                     "│ {:<24} │ {:<7} │ {:<26} │",
-                    plugin.name, plugin.version, truncate(&plugin.source, 26)
+                    plugin.name,
+                    plugin.version,
+                    truncate(&plugin.source, 26)
                 );
             }
             println!("└──────────────────────────┴─────────┴────────────────────────────┘");
@@ -54,7 +56,10 @@ pub fn cmd_plugin(project_dir: &PathBuf, action: PluginAction) -> Result<()> {
             let (name, version) = parse_plugin_source(&source);
 
             if registry.plugins.iter().any(|p| p.name == name) {
-                anyhow::bail!("Plugin '{}' already installed. Remove it first to reinstall.", name);
+                anyhow::bail!(
+                    "Plugin '{}' already installed. Remove it first to reinstall.",
+                    name
+                );
             }
 
             // If source is a local path, copy it

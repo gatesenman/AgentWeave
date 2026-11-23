@@ -338,8 +338,18 @@ async fn main() -> Result<()> {
         Commands::Secret { action } => {
             secret::cmd_secret(&project_dir, action)?;
         }
-        Commands::Debug { prompt, vendors, dry_run } => {
-            debug::cmd_debug(&project_dir, &registry, prompt.as_deref(), vendors.as_deref(), dry_run)?;
+        Commands::Debug {
+            prompt,
+            vendors,
+            dry_run,
+        } => {
+            debug::cmd_debug(
+                &project_dir,
+                &registry,
+                prompt.as_deref(),
+                vendors.as_deref(),
+                dry_run,
+            )?;
         }
         Commands::Health => {
             cmd_health(&project_dir, &registry)?;
@@ -525,7 +535,10 @@ fn cmd_validate(project_dir: &PathBuf, i18n: &I18n) -> Result<()> {
                     errors.push("Agent with empty name found".to_string());
                 }
                 if agent.name.contains(' ') {
-                    warnings.push(format!("Agent '{}': name contains spaces (may cause issues)", agent.name));
+                    warnings.push(format!(
+                        "Agent '{}': name contains spaces (may cause issues)",
+                        agent.name
+                    ));
                 }
             }
 
@@ -541,9 +554,18 @@ fn cmd_validate(project_dir: &PathBuf, i18n: &I18n) -> Result<()> {
 
             // Check targets
             let known_vendors = [
-                "codex", "claude-code", "cursor", "windsurf", "gemini-cli",
-                "github-copilot", "devin", "cline", "codebuddy", "qoder",
-                "grok-build", "openclaw",
+                "codex",
+                "claude-code",
+                "cursor",
+                "windsurf",
+                "gemini-cli",
+                "github-copilot",
+                "devin",
+                "cline",
+                "codebuddy",
+                "qoder",
+                "grok-build",
+                "openclaw",
             ];
             for target in &config.targets {
                 let target_str = target.to_string();
@@ -568,7 +590,10 @@ fn cmd_validate(project_dir: &PathBuf, i18n: &I18n) -> Result<()> {
                 if skills_dir.exists() {
                     let skill_file = skills_dir.join(format!("{}.skill.yaml", skill.name));
                     if !skill_file.exists() {
-                        warnings.push(format!("Skill '{}': no file at skills/{}.skill.yaml", skill.name, skill.name));
+                        warnings.push(format!(
+                            "Skill '{}': no file at skills/{}.skill.yaml",
+                            skill.name, skill.name
+                        ));
                     }
                 }
             }
@@ -655,7 +680,12 @@ fn cmd_status(project_dir: &PathBuf, i18n: &I18n) -> Result<()> {
     let mcp_count = config.mcp_servers.len().to_string();
     args.insert("count", mcp_count.as_str());
     println!("  {}", i18n.t_args("status-mcp", &args));
-    let targets_str = config.targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(", ");
+    let targets_str = config
+        .targets
+        .iter()
+        .map(|t| t.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
     args.insert("targets", targets_str.as_str());
     println!("  {}", i18n.t_args("status-targets", &args));
 
@@ -806,15 +836,28 @@ fn cmd_diff(
                     let to_len = to_out.files[**f].lines().count();
                     let diff = to_len as i64 - from_len as i64;
                     let sign = if diff >= 0 { "+" } else { "" };
-                    println!("│   {} ({} lines → {} lines, {}{})", f, from_len, to_len, sign, diff);
+                    println!(
+                        "│   {} ({} lines → {} lines, {}{})",
+                        f, from_len, to_len, sign, diff
+                    );
                 }
             }
 
             let from_total: usize = from_out.files.values().map(|c| c.len()).sum();
             let to_total: usize = to_out.files.values().map(|c| c.len()).sum();
             println!("├──────────────────────────────────────────────┤");
-            println!("│ {} │ {} files │ {} bytes", from_vendor, from_out.files.len(), from_total);
-            println!("│ {} │ {} files │ {} bytes", to_vendor, to_out.files.len(), to_total);
+            println!(
+                "│ {} │ {} files │ {} bytes",
+                from_vendor,
+                from_out.files.len(),
+                from_total
+            );
+            println!(
+                "│ {} │ {} files │ {} bytes",
+                to_vendor,
+                to_out.files.len(),
+                to_total
+            );
         }
         _ => {
             println!("│ Error: Could not generate output for one or both vendors");
@@ -1017,13 +1060,19 @@ fn cmd_export(project_dir: &PathBuf, format: &str, output: Option<&PathBuf>) -> 
             md.push_str("\n## MCP Servers\n\n");
             for mcp in &config.mcp_servers {
                 let transport = mcp.transport.as_deref().unwrap_or("stdio");
-                md.push_str(&format!("- **{}** ({}): `{}`\n", mcp.name, transport, mcp.command));
+                md.push_str(&format!(
+                    "- **{}** ({}): `{}`\n",
+                    mcp.name, transport, mcp.command
+                ));
             }
 
             md
         }
         _ => {
-            anyhow::bail!("Unsupported format: '{}'. Use: yaml, json, markdown", format);
+            anyhow::bail!(
+                "Unsupported format: '{}'. Use: yaml, json, markdown",
+                format
+            );
         }
     };
 
@@ -1049,7 +1098,10 @@ fn cmd_completions(shell: &str) -> Result<()> {
         "fish" => Shell::Fish,
         "powershell" | "ps" => Shell::PowerShell,
         _ => {
-            anyhow::bail!("Unsupported shell: '{}'. Use: bash, zsh, fish, powershell", shell);
+            anyhow::bail!(
+                "Unsupported shell: '{}'. Use: bash, zsh, fish, powershell",
+                shell
+            );
         }
     };
 
@@ -1058,7 +1110,12 @@ fn cmd_completions(shell: &str) -> Result<()> {
     Ok(())
 }
 
-async fn cmd_daemon(project_dir: &PathBuf, registry: &AdapterRegistry, port: u16, no_serve: bool) -> Result<()> {
+async fn cmd_daemon(
+    project_dir: &PathBuf,
+    registry: &AdapterRegistry,
+    port: u16,
+    no_serve: bool,
+) -> Result<()> {
     println!("AgentWeave Daemon starting...");
     println!("  Project: {}", project_dir.display());
     println!("  Watch:   .agentweave/ → auto-regenerate");

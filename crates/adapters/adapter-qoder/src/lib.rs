@@ -35,10 +35,7 @@ impl QoderAdapter {
         }
 
         if let Some(role) = &agent.role {
-            obj.insert(
-                "role".to_string(),
-                serde_json::Value::String(role.clone()),
-            );
+            obj.insert("role".to_string(), serde_json::Value::String(role.clone()));
         }
 
         if let Some(prompt) = &agent.system_prompt {
@@ -73,10 +70,7 @@ impl QoderAdapter {
 
         // Sub-agents
         if !agent.sub_agents.is_empty() {
-            obj.insert(
-                "subAgents".to_string(),
-                serde_json::json!(agent.sub_agents),
-            );
+            obj.insert("subAgents".to_string(), serde_json::json!(agent.sub_agents));
         }
 
         if let Some(max_turns) = agent.max_turns {
@@ -310,7 +304,10 @@ mod tests {
             serde_json::from_str(output.files.get("agents/planner.json").unwrap()).unwrap();
         assert_eq!(planner["name"], "planner");
         assert_eq!(planner["maxTurns"], 10);
-        assert!(planner["subAgents"].as_array().unwrap().contains(&serde_json::json!("coder")));
+        assert!(planner["subAgents"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!("coder")));
     }
 
     #[test]

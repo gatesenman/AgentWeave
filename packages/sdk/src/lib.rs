@@ -41,7 +41,10 @@ pub use agentweave_core::config;
 pub use agentweave_core::schema;
 
 /// Helper to create an AdapterOutput with a single file
-pub fn single_file_output(path: impl Into<String>, content: impl Into<String>) -> adapter::AdapterOutput {
+pub fn single_file_output(
+    path: impl Into<String>,
+    content: impl Into<String>,
+) -> adapter::AdapterOutput {
     let mut files = std::collections::HashMap::new();
     files.insert(path.into(), content.into());
     adapter::AdapterOutput { files }

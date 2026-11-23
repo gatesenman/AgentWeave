@@ -21,7 +21,14 @@ pub fn cmd_debug(
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("  Project:  {}", config.metadata.name);
     println!("  Prompt:   {}", test_prompt);
-    println!("  Vendors:  {}", if filter.is_empty() { "all" } else { vendors_filter.unwrap_or("all") });
+    println!(
+        "  Vendors:  {}",
+        if filter.is_empty() {
+            "all"
+        } else {
+            vendors_filter.unwrap_or("all")
+        }
+    );
     println!("  Dry-run:  {}", dry_run);
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
@@ -84,9 +91,20 @@ pub fn cmd_debug(
     // Print summary
     println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("Debug Summary:");
-    let success = debug_results.iter().filter(|r| matches!(r.status, DebugStatus::Success)).count();
-    let failed = debug_results.iter().filter(|r| matches!(r.status, DebugStatus::Failed(_))).count();
-    println!("  Success: {}  Failed: {}  Total: {}", success, failed, debug_results.len());
+    let success = debug_results
+        .iter()
+        .filter(|r| matches!(r.status, DebugStatus::Success))
+        .count();
+    let failed = debug_results
+        .iter()
+        .filter(|r| matches!(r.status, DebugStatus::Failed(_)))
+        .count();
+    println!(
+        "  Success: {}  Failed: {}  Total: {}",
+        success,
+        failed,
+        debug_results.len()
+    );
 
     // Show agent context comparison
     if !dry_run && debug_results.iter().any(|r| r.agent_context.is_some()) {

@@ -92,7 +92,10 @@ content: |
                 .collect::<Vec<_>>()
                 .join("\n")
         );
-        std::fs::write(config_dir.join("rules/claude-imported.rule.yaml"), rule_yaml)?;
+        std::fs::write(
+            config_dir.join("rules/claude-imported.rule.yaml"),
+            rule_yaml,
+        )?;
         result.rules_imported += 1;
     }
 
@@ -114,7 +117,10 @@ content: |
 "#,
                     serde_json::to_string_pretty(permissions).unwrap_or_default()
                 );
-                std::fs::write(config_dir.join("rules/claude-permissions.rule.yaml"), perm_yaml)?;
+                std::fs::write(
+                    config_dir.join("rules/claude-permissions.rule.yaml"),
+                    perm_yaml,
+                )?;
                 result.rules_imported += 1;
             }
         }
@@ -241,7 +247,10 @@ content: |
                 .collect::<Vec<_>>()
                 .join("\n")
         );
-        std::fs::write(config_dir.join("rules/windsurf-global.rule.yaml"), rule_yaml)?;
+        std::fs::write(
+            config_dir.join("rules/windsurf-global.rule.yaml"),
+            rule_yaml,
+        )?;
         result.rules_imported += 1;
     }
 
@@ -315,7 +324,10 @@ content: |
                 .collect::<Vec<_>>()
                 .join("\n")
         );
-        std::fs::write(config_dir.join("rules/gemini-imported.rule.yaml"), rule_yaml)?;
+        std::fs::write(
+            config_dir.join("rules/gemini-imported.rule.yaml"),
+            rule_yaml,
+        )?;
         result.rules_imported += 1;
     }
 
@@ -349,7 +361,10 @@ content: |
                 .collect::<Vec<_>>()
                 .join("\n")
         );
-        std::fs::write(config_dir.join("rules/copilot-imported.rule.yaml"), rule_yaml)?;
+        std::fs::write(
+            config_dir.join("rules/copilot-imported.rule.yaml"),
+            rule_yaml,
+        )?;
         result.rules_imported += 1;
     }
 

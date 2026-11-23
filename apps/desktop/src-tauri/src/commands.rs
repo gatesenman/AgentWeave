@@ -32,7 +32,10 @@ fn build_registry() -> AdapterRegistry {
 
 fn gen_id(prefix: &str) -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis();
+    let ts = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
     format!("{}-{}", prefix, ts)
 }
 
@@ -119,7 +122,11 @@ pub async fn get_project_status(project_dir: String) -> Result<ProjectStatus, St
 
     Ok(ProjectStatus {
         name: config.metadata.name.clone(),
-        version: config.metadata.version.clone().unwrap_or_else(|| "0.1.0".to_string()),
+        version: config
+            .metadata
+            .version
+            .clone()
+            .unwrap_or_else(|| "0.1.0".to_string()),
         targets: config.targets.iter().map(|t| t.to_string()).collect(),
         agents_count: config.agents.len(),
         rules_count: config.rules.len(),
@@ -162,8 +169,18 @@ pub async fn generate_configs(
                     let _ = std::fs::write(&full, content);
                     files.push(file_path.clone());
                 }
-                let _ = db.add_trace_span(&span_id, &format!("generate:{}", vendor_name), &vendor_name, 0, "ok", &project_dir);
-                let _ = db.log_audit("generate", &format!("Generated {} files for {}", files.len(), vendor_name));
+                let _ = db.add_trace_span(
+                    &span_id,
+                    &format!("generate:{}", vendor_name),
+                    &vendor_name,
+                    0,
+                    "ok",
+                    &project_dir,
+                );
+                let _ = db.log_audit(
+                    "generate",
+                    &format!("Generated {} files for {}", files.len(), vendor_name),
+                );
                 output.push(GenerateResult {
                     vendor: vendor_name,
                     files,
@@ -172,7 +189,14 @@ pub async fn generate_configs(
                 });
             }
             Err(e) => {
-                let _ = db.add_trace_span(&span_id, &format!("generate:{}", vendor_name), &vendor_name, 0, "error", &project_dir);
+                let _ = db.add_trace_span(
+                    &span_id,
+                    &format!("generate:{}", vendor_name),
+                    &vendor_name,
+                    0,
+                    "error",
+                    &project_dir,
+                );
                 output.push(GenerateResult {
                     vendor: vendor_name,
                     files: Vec::new(),
@@ -269,7 +293,8 @@ pub async fn load_config(path: String) -> Result<String, String> {
 pub async fn save_config(path: String, content: String) -> Result<(), String> {
     let config_path = PathBuf::from(&path);
     if let Some(parent) = config_path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory: {}", e))?;
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create directory: {}", e))?;
     }
     std::fs::write(&config_path, &content).map_err(|e| format!("Failed to write config: {}", e))
 }
@@ -312,21 +337,33 @@ pub async fn health_check(project_dir: String) -> Result<HealthStatus, String> {
     checks.push(HealthCheck {
         name: "Config Directory".to_string(),
         status: if config_dir.exists() { "ok" } else { "error" }.to_string(),
-        detail: if config_dir.exists() { format!("{}", config_dir.display()) } else { "Not found".to_string() },
+        detail: if config_dir.exists() {
+            format!("{}", config_dir.display())
+        } else {
+            "Not found".to_string()
+        },
     });
 
     let main_file = config_dir.join("agentweave.yaml");
     checks.push(HealthCheck {
         name: "Main Config".to_string(),
         status: if main_file.exists() { "ok" } else { "error" }.to_string(),
-        detail: if main_file.exists() { "agentweave.yaml present".to_string() } else { "Missing agentweave.yaml".to_string() },
+        detail: if main_file.exists() {
+            "agentweave.yaml present".to_string()
+        } else {
+            "Missing agentweave.yaml".to_string()
+        },
     });
 
     let parse_ok = AgentWeaveConfig::load(&path).is_ok();
     checks.push(HealthCheck {
         name: "Config Parsing".to_string(),
         status: if parse_ok { "ok" } else { "error" }.to_string(),
-        detail: if parse_ok { "Valid YAML".to_string() } else { "Parse error".to_string() },
+        detail: if parse_ok {
+            "Valid YAML".to_string()
+        } else {
+            "Parse error".to_string()
+        },
     });
 
     let registry = build_registry();
@@ -336,7 +373,11 @@ pub async fn health_check(project_dir: String) -> Result<HealthStatus, String> {
         detail: format!("{} adapters loaded", registry.list().len()),
     });
 
-    let overall = if checks.iter().all(|c| c.status == "ok") { "healthy".to_string() } else { "degraded".to_string() };
+    let overall = if checks.iter().all(|c| c.status == "ok") {
+        "healthy".to_string()
+    } else {
+        "degraded".to_string()
+    };
     Ok(HealthStatus { overall, checks })
 }
 
@@ -357,13 +398,19 @@ pub async fn import_vendor(project_dir: String, vendor: String) -> Result<String
     let detected = match vendor.as_str() {
         "codex" => {
             let agents_md = path.join("AGENTS.md");
-            if agents_md.exists() { std::fs::read_to_string(agents_md).unwrap_or_default() }
-            else { return Err("No AGENTS.md found".to_string()); }
+            if agents_md.exists() {
+                std::fs::read_to_string(agents_md).unwrap_or_default()
+            } else {
+                return Err("No AGENTS.md found".to_string());
+            }
         }
         "claude-code" => {
             let claude_md = path.join("CLAUDE.md");
-            if claude_md.exists() { std::fs::read_to_string(claude_md).unwrap_or_default() }
-            else { return Err("No CLAUDE.md found".to_string()); }
+            if claude_md.exists() {
+                std::fs::read_to_string(claude_md).unwrap_or_default()
+            } else {
+                return Err("No CLAUDE.md found".to_string());
+            }
         }
         "cursor" => {
             let cursor_dir = path.join(".cursor").join("rules");
@@ -378,7 +425,9 @@ pub async fn import_vendor(project_dir: String, vendor: String) -> Result<String
                     }
                 }
                 content
-            } else { return Err("No .cursor/rules/ found".to_string()); }
+            } else {
+                return Err("No .cursor/rules/ found".to_string());
+            }
         }
         _ => return Err(format!("Import not supported for: {}", vendor)),
     };
@@ -431,15 +480,38 @@ pub async fn check_update() -> Result<UpdateInfo, String> {
     match resp {
         Ok(r) if r.status().is_success() => {
             if let Ok(json) = r.json::<serde_json::Value>().await {
-                let latest = json["tag_name"].as_str().unwrap_or("").trim_start_matches('v').to_string();
+                let latest = json["tag_name"]
+                    .as_str()
+                    .unwrap_or("")
+                    .trim_start_matches('v')
+                    .to_string();
                 let notes = json["body"].as_str().map(|s| s.to_string());
                 let update_available = !latest.is_empty() && latest != current;
-                Ok(UpdateInfo { current_version: current, latest_version: if latest.is_empty() { None } else { Some(latest) }, update_available, release_notes: notes })
+                Ok(UpdateInfo {
+                    current_version: current,
+                    latest_version: if latest.is_empty() {
+                        None
+                    } else {
+                        Some(latest)
+                    },
+                    update_available,
+                    release_notes: notes,
+                })
             } else {
-                Ok(UpdateInfo { current_version: current, latest_version: None, update_available: false, release_notes: None })
+                Ok(UpdateInfo {
+                    current_version: current,
+                    latest_version: None,
+                    update_available: false,
+                    release_notes: None,
+                })
             }
         }
-        _ => Ok(UpdateInfo { current_version: current, latest_version: None, update_available: false, release_notes: None }),
+        _ => Ok(UpdateInfo {
+            current_version: current,
+            latest_version: None,
+            update_available: false,
+            release_notes: None,
+        }),
     }
 }
 
@@ -465,9 +537,17 @@ pub struct TraceSpan {
 #[tauri::command]
 pub async fn get_trace_spans(db: State<'_, Arc<Database>>) -> Result<Vec<TraceSpan>, String> {
     let rows = db.list_trace_spans(100)?;
-    Ok(rows.into_iter().map(|(id, name, vendor, dur, status, ts)| {
-        TraceSpan { id, name, vendor, duration_ms: dur as u64, status, timestamp: ts }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, vendor, dur, status, ts)| TraceSpan {
+            id,
+            name,
+            vendor,
+            duration_ms: dur as u64,
+            status,
+            timestamp: ts,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -496,13 +576,20 @@ pub struct GovernanceStatus {
 }
 
 #[tauri::command]
-pub async fn get_governance_status(db: State<'_, Arc<Database>>, project_dir: String) -> Result<GovernanceStatus, String> {
+pub async fn get_governance_status(
+    db: State<'_, Arc<Database>>,
+    project_dir: String,
+) -> Result<GovernanceStatus, String> {
     let policies = db.list_governance_policies()?;
     let roles = db.list_governance_roles()?;
     let audits = db.get_audit_log(1000)?;
 
     let _path = PathBuf::from(&project_dir);
-    let compliance = if policies.is_empty() { "not configured" } else { "compliant" };
+    let compliance = if policies.is_empty() {
+        "not configured"
+    } else {
+        "compliant"
+    };
 
     Ok(GovernanceStatus {
         policies_count: policies.len(),
@@ -522,11 +609,20 @@ pub struct GovernancePolicyInfo {
 }
 
 #[tauri::command]
-pub async fn list_governance_policies(db: State<'_, Arc<Database>>) -> Result<Vec<GovernancePolicyInfo>, String> {
+pub async fn list_governance_policies(
+    db: State<'_, Arc<Database>>,
+) -> Result<Vec<GovernancePolicyInfo>, String> {
     let rows = db.list_governance_policies()?;
-    Ok(rows.into_iter().map(|(id, name, desc, sev, enabled, _)| {
-        GovernancePolicyInfo { id, name, description: desc, severity: sev, enabled }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, desc, sev, enabled, _)| GovernancePolicyInfo {
+            id,
+            name,
+            description: desc,
+            severity: sev,
+            enabled,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -538,17 +634,27 @@ pub async fn create_governance_policy(
 ) -> Result<String, String> {
     let id = gen_id("policy");
     db.create_governance_policy(&id, &name, &description, &severity, "{}")?;
-    db.log_audit("governance.policy.create", &format!("Created policy: {}", name))?;
+    db.log_audit(
+        "governance.policy.create",
+        &format!("Created policy: {}", name),
+    )?;
     Ok(id)
 }
 
 #[tauri::command]
-pub async fn toggle_governance_policy_cmd(db: State<'_, Arc<Database>>, id: String, enabled: bool) -> Result<(), String> {
+pub async fn toggle_governance_policy_cmd(
+    db: State<'_, Arc<Database>>,
+    id: String,
+    enabled: bool,
+) -> Result<(), String> {
     db.toggle_governance_policy(&id, enabled)
 }
 
 #[tauri::command]
-pub async fn delete_governance_policy_cmd(db: State<'_, Arc<Database>>, id: String) -> Result<(), String> {
+pub async fn delete_governance_policy_cmd(
+    db: State<'_, Arc<Database>>,
+    id: String,
+) -> Result<(), String> {
     db.delete_governance_policy(&id)
 }
 
@@ -560,12 +666,21 @@ pub struct GovernanceRoleInfo {
 }
 
 #[tauri::command]
-pub async fn list_governance_roles(db: State<'_, Arc<Database>>) -> Result<Vec<GovernanceRoleInfo>, String> {
+pub async fn list_governance_roles(
+    db: State<'_, Arc<Database>>,
+) -> Result<Vec<GovernanceRoleInfo>, String> {
     let rows = db.list_governance_roles()?;
-    Ok(rows.into_iter().map(|(id, name, perms_json)| {
-        let permissions: Vec<String> = serde_json::from_str(&perms_json).unwrap_or_default();
-        GovernanceRoleInfo { id, name, permissions }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, perms_json)| {
+            let permissions: Vec<String> = serde_json::from_str(&perms_json).unwrap_or_default();
+            GovernanceRoleInfo {
+                id,
+                name,
+                permissions,
+            }
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -582,7 +697,10 @@ pub async fn create_governance_role(
 }
 
 #[tauri::command]
-pub async fn delete_governance_role_cmd(db: State<'_, Arc<Database>>, id: String) -> Result<(), String> {
+pub async fn delete_governance_role_cmd(
+    db: State<'_, Arc<Database>>,
+    id: String,
+) -> Result<(), String> {
     db.delete_governance_role(&id)
 }
 
@@ -615,12 +733,32 @@ pub struct ExperimentMetrics {
 #[tauri::command]
 pub async fn list_experiments(db: State<'_, Arc<Database>>) -> Result<Vec<Experiment>, String> {
     let rows = db.list_experiments()?;
-    Ok(rows.into_iter().map(|(id, name, status, ca, cb, vendor, runs, winner, created, metrics_json)| {
-        let metrics: ExperimentMetrics = serde_json::from_str(&metrics_json).unwrap_or(ExperimentMetrics {
-            response_time: [0.0, 0.0], accuracy: [0.0, 0.0], token_usage: [0, 0], success_rate: [0.0, 0.0],
-        });
-        Experiment { id, name, status, config_a: ca, config_b: cb, vendor, runs: runs as u32, winner, created_at: created, metrics }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(
+            |(id, name, status, ca, cb, vendor, runs, winner, created, metrics_json)| {
+                let metrics: ExperimentMetrics =
+                    serde_json::from_str(&metrics_json).unwrap_or(ExperimentMetrics {
+                        response_time: [0.0, 0.0],
+                        accuracy: [0.0, 0.0],
+                        token_usage: [0, 0],
+                        success_rate: [0.0, 0.0],
+                    });
+                Experiment {
+                    id,
+                    name,
+                    status,
+                    config_a: ca,
+                    config_b: cb,
+                    vendor,
+                    runs: runs as u32,
+                    winner,
+                    created_at: created,
+                    metrics,
+                }
+            },
+        )
+        .collect())
 }
 
 #[tauri::command]
@@ -633,7 +771,10 @@ pub async fn create_experiment(
 ) -> Result<String, String> {
     let id = gen_id("exp");
     db.create_experiment(&id, &name, &config_a, &config_b, &vendor)?;
-    db.log_audit("experiment.create", &format!("Created experiment: {}", name))?;
+    db.log_audit(
+        "experiment.create",
+        &format!("Created experiment: {}", name),
+    )?;
     Ok(id)
 }
 
@@ -645,7 +786,10 @@ pub async fn update_experiment_status(
     winner: Option<String>,
 ) -> Result<(), String> {
     db.update_experiment_status(&id, &status, winner.as_deref())?;
-    db.log_audit("experiment.update", &format!("Updated experiment {} to {}", id, status))?;
+    db.log_audit(
+        "experiment.update",
+        &format!("Updated experiment {} to {}", id, status),
+    )?;
     Ok(())
 }
 
@@ -679,13 +823,26 @@ pub struct PromptTestResult {
 }
 
 #[tauri::command]
-pub async fn list_prompt_tests(db: State<'_, Arc<Database>>) -> Result<Vec<PromptTestCase>, String> {
+pub async fn list_prompt_tests(
+    db: State<'_, Arc<Database>>,
+) -> Result<Vec<PromptTestCase>, String> {
     let rows = db.list_prompt_tests()?;
-    Ok(rows.into_iter().map(|(id, name, prompt, expected, vendors_json, results_json)| {
-        let vendors: Vec<String> = serde_json::from_str(&vendors_json).unwrap_or_default();
-        let results: Vec<PromptTestResult> = serde_json::from_str(&results_json).unwrap_or_default();
-        PromptTestCase { id, name, prompt, expected_behavior: expected, vendors, results }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, prompt, expected, vendors_json, results_json)| {
+            let vendors: Vec<String> = serde_json::from_str(&vendors_json).unwrap_or_default();
+            let results: Vec<PromptTestResult> =
+                serde_json::from_str(&results_json).unwrap_or_default();
+            PromptTestCase {
+                id,
+                name,
+                prompt,
+                expected_behavior: expected,
+                vendors,
+                results,
+            }
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -830,24 +987,78 @@ pub async fn get_config_analytics(project_dir: String) -> Result<AnalyticsData, 
     let total_concept_types = 6u32; // Agent, Rule, MCP, Skill, Workflow, Hook
 
     let concepts = vec![
-        ConceptUsage { concept: "Agent".into(), count: config.agents.len() as u32, coverage: if config.agents.is_empty() { 0.0 } else { 1.0 }, trend: "stable".into() },
-        ConceptUsage { concept: "Rule".into(), count: config.rules.len() as u32, coverage: if config.rules.is_empty() { 0.0 } else { 1.0 }, trend: "stable".into() },
-        ConceptUsage { concept: "MCP Server".into(), count: config.mcp_servers.len() as u32, coverage: if config.mcp_servers.is_empty() { 0.0 } else { 1.0 }, trend: "stable".into() },
-        ConceptUsage { concept: "Skill".into(), count: config.skills.len() as u32, coverage: if config.skills.is_empty() { 0.0 } else { 1.0 }, trend: "stable".into() },
-        ConceptUsage { concept: "Workflow".into(), count: config.workflows.len() as u32, coverage: if config.workflows.is_empty() { 0.0 } else { 1.0 }, trend: "stable".into() },
-        ConceptUsage { concept: "Hook".into(), count: config.hooks.len() as u32, coverage: if config.hooks.is_empty() { 0.0 } else { 1.0 }, trend: "stable".into() },
+        ConceptUsage {
+            concept: "Agent".into(),
+            count: config.agents.len() as u32,
+            coverage: if config.agents.is_empty() { 0.0 } else { 1.0 },
+            trend: "stable".into(),
+        },
+        ConceptUsage {
+            concept: "Rule".into(),
+            count: config.rules.len() as u32,
+            coverage: if config.rules.is_empty() { 0.0 } else { 1.0 },
+            trend: "stable".into(),
+        },
+        ConceptUsage {
+            concept: "MCP Server".into(),
+            count: config.mcp_servers.len() as u32,
+            coverage: if config.mcp_servers.is_empty() {
+                0.0
+            } else {
+                1.0
+            },
+            trend: "stable".into(),
+        },
+        ConceptUsage {
+            concept: "Skill".into(),
+            count: config.skills.len() as u32,
+            coverage: if config.skills.is_empty() { 0.0 } else { 1.0 },
+            trend: "stable".into(),
+        },
+        ConceptUsage {
+            concept: "Workflow".into(),
+            count: config.workflows.len() as u32,
+            coverage: if config.workflows.is_empty() {
+                0.0
+            } else {
+                1.0
+            },
+            trend: "stable".into(),
+        },
+        ConceptUsage {
+            concept: "Hook".into(),
+            count: config.hooks.len() as u32,
+            coverage: if config.hooks.is_empty() { 0.0 } else { 1.0 },
+            trend: "stable".into(),
+        },
     ];
 
     let vendor_ids = registry.list();
-    let vendors: Vec<VendorCoverage> = vendor_ids.iter().map(|vid| {
-        let adapter = registry.get(vid);
-        let supported = adapter.map(|a| a.supported_concepts().len() as u32).unwrap_or(0);
-        let total = 46u32;
-        VendorCoverage { vendor: vid.to_string(), supported, total, gaps: vec![] }
-    }).collect();
+    let vendors: Vec<VendorCoverage> = vendor_ids
+        .iter()
+        .map(|vid| {
+            let adapter = registry.get(vid);
+            let supported = adapter
+                .map(|a| a.supported_concepts().len() as u32)
+                .unwrap_or(0);
+            let total = 46u32;
+            VendorCoverage {
+                vendor: vid.to_string(),
+                supported,
+                total,
+                gaps: vec![],
+            }
+        })
+        .collect();
 
-    let avg = if vendors.is_empty() { 0.0 } else {
-        vendors.iter().map(|v| v.supported as f64 / v.total as f64).sum::<f64>() / vendors.len() as f64
+    let avg = if vendors.is_empty() {
+        0.0
+    } else {
+        vendors
+            .iter()
+            .map(|v| v.supported as f64 / v.total as f64)
+            .sum::<f64>()
+            / vendors.len() as f64
     };
 
     let active_rules = config.rules.len() as u32;
@@ -886,12 +1097,26 @@ pub struct EnvironmentInfo {
 }
 
 #[tauri::command]
-pub async fn list_environments(db: State<'_, Arc<Database>>, project_dir: String) -> Result<Vec<EnvironmentInfo>, String> {
+pub async fn list_environments(
+    db: State<'_, Arc<Database>>,
+    project_dir: String,
+) -> Result<Vec<EnvironmentInfo>, String> {
     let rows = db.list_environments(Some(&project_dir))?;
-    Ok(rows.into_iter().map(|(id, name, label, active, deployed, overrides_json)| {
-        let overrides: Vec<EnvironmentOverride> = serde_json::from_str(&overrides_json).unwrap_or_default();
-        EnvironmentInfo { id, name, label, is_active: active, last_deployed: deployed, overrides }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, label, active, deployed, overrides_json)| {
+            let overrides: Vec<EnvironmentOverride> =
+                serde_json::from_str(&overrides_json).unwrap_or_default();
+            EnvironmentInfo {
+                id,
+                name,
+                label,
+                is_active: active,
+                last_deployed: deployed,
+                overrides,
+            }
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -961,7 +1186,12 @@ pub async fn get_inheritance_tree(project_dir: String) -> Result<InheritanceData
     let mut resolved = Vec::new();
 
     // Root node from main config
-    let field_count = config.agents.len() + config.rules.len() + config.mcp_servers.len() + config.skills.len() + config.workflows.len() + config.hooks.len();
+    let field_count = config.agents.len()
+        + config.rules.len()
+        + config.mcp_servers.len()
+        + config.skills.len()
+        + config.workflows.len()
+        + config.hooks.len();
 
     // Detect any extends-like references from the YAML file directly
     let yaml_path = path.join(".agentweave").join("agentweave.yaml");
@@ -980,7 +1210,11 @@ pub async fn get_inheritance_tree(project_dir: String) -> Result<InheritanceData
         }
     }
 
-    let child_ids: Vec<String> = extends.iter().enumerate().map(|(i, _)| format!("ext-{}", i)).collect();
+    let child_ids: Vec<String> = extends
+        .iter()
+        .enumerate()
+        .map(|(i, _)| format!("ext-{}", i))
+        .collect();
 
     nodes.push(InheritanceNode {
         id: "root".into(),
@@ -1048,12 +1282,30 @@ pub struct TemplateInfo {
 }
 
 #[tauri::command]
-pub async fn list_templates(db: State<'_, Arc<Database>>, category: Option<String>) -> Result<Vec<TemplateInfo>, String> {
+pub async fn list_templates(
+    db: State<'_, Arc<Database>>,
+    category: Option<String>,
+) -> Result<Vec<TemplateInfo>, String> {
     let rows = db.list_templates(category.as_deref())?;
-    Ok(rows.into_iter().map(|(id, name, cat, desc, author, downloads, tags_json, config_json, created)| {
-        let tags: Vec<String> = serde_json::from_str(&tags_json).unwrap_or_default();
-        TemplateInfo { id, name, category: cat, description: desc, author, downloads, tags, config_json, created_at: created }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(
+            |(id, name, cat, desc, author, downloads, tags_json, config_json, created)| {
+                let tags: Vec<String> = serde_json::from_str(&tags_json).unwrap_or_default();
+                TemplateInfo {
+                    id,
+                    name,
+                    category: cat,
+                    description: desc,
+                    author,
+                    downloads,
+                    tags,
+                    config_json,
+                    created_at: created,
+                }
+            },
+        )
+        .collect())
 }
 
 #[tauri::command]
@@ -1068,7 +1320,15 @@ pub async fn create_template(
 ) -> Result<String, String> {
     let id = gen_id("tmpl");
     let tags_json = serde_json::to_string(&tags).map_err(|e| e.to_string())?;
-    db.create_template(&id, &name, &category, &description, &author, &tags_json, &config_json)?;
+    db.create_template(
+        &id,
+        &name,
+        &category,
+        &description,
+        &author,
+        &tags_json,
+        &config_json,
+    )?;
     db.log_audit("template.create", &format!("Created template: {}", name))?;
     Ok(id)
 }
@@ -1094,11 +1354,20 @@ pub struct TeamMemberInfo {
 }
 
 #[tauri::command]
-pub async fn list_team_members(db: State<'_, Arc<Database>>) -> Result<Vec<TeamMemberInfo>, String> {
+pub async fn list_team_members(
+    db: State<'_, Arc<Database>>,
+) -> Result<Vec<TeamMemberInfo>, String> {
     let rows = db.list_team_members()?;
-    Ok(rows.into_iter().map(|(id, name, email, role, joined)| {
-        TeamMemberInfo { id, name, email, role, joined_at: joined }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, email, role, joined)| TeamMemberInfo {
+            id,
+            name,
+            email,
+            role,
+            joined_at: joined,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -1149,10 +1418,21 @@ pub struct WebhookInfo {
 #[tauri::command]
 pub async fn list_webhooks(db: State<'_, Arc<Database>>) -> Result<Vec<WebhookInfo>, String> {
     let rows = db.list_webhooks()?;
-    Ok(rows.into_iter().map(|(id, name, url, platform, events_json, enabled, created)| {
-        let events: Vec<String> = serde_json::from_str(&events_json).unwrap_or_default();
-        WebhookInfo { id, name, url, platform, events, enabled, created_at: created }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, url, platform, events_json, enabled, created)| {
+            let events: Vec<String> = serde_json::from_str(&events_json).unwrap_or_default();
+            WebhookInfo {
+                id,
+                name,
+                url,
+                platform,
+                events,
+                enabled,
+                created_at: created,
+            }
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -1171,7 +1451,11 @@ pub async fn create_webhook(
 }
 
 #[tauri::command]
-pub async fn toggle_webhook(db: State<'_, Arc<Database>>, id: String, enabled: bool) -> Result<(), String> {
+pub async fn toggle_webhook(
+    db: State<'_, Arc<Database>>,
+    id: String,
+    enabled: bool,
+) -> Result<(), String> {
     db.toggle_webhook(&id, enabled)
 }
 
@@ -1199,9 +1483,17 @@ pub struct LintRuleInfo {
 #[tauri::command]
 pub async fn list_lint_rules(db: State<'_, Arc<Database>>) -> Result<Vec<LintRuleInfo>, String> {
     let rows = db.list_lint_rules()?;
-    Ok(rows.into_iter().map(|(id, name, desc, sev, pattern, enabled)| {
-        LintRuleInfo { id, name, description: desc, severity: sev, pattern, enabled }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, desc, sev, pattern, enabled)| LintRuleInfo {
+            id,
+            name,
+            description: desc,
+            severity: sev,
+            pattern,
+            enabled,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -1219,7 +1511,11 @@ pub async fn create_lint_rule(
 }
 
 #[tauri::command]
-pub async fn toggle_lint_rule(db: State<'_, Arc<Database>>, id: String, enabled: bool) -> Result<(), String> {
+pub async fn toggle_lint_rule(
+    db: State<'_, Arc<Database>>,
+    id: String,
+    enabled: bool,
+) -> Result<(), String> {
     db.toggle_lint_rule(&id, enabled)
 }
 
@@ -1244,11 +1540,21 @@ pub struct SnapshotInfo {
 }
 
 #[tauri::command]
-pub async fn list_snapshots(db: State<'_, Arc<Database>>, project_dir: Option<String>) -> Result<Vec<SnapshotInfo>, String> {
+pub async fn list_snapshots(
+    db: State<'_, Arc<Database>>,
+    project_dir: Option<String>,
+) -> Result<Vec<SnapshotInfo>, String> {
     let rows = db.list_snapshots(project_dir.as_deref())?;
-    Ok(rows.into_iter().map(|(id, name, date, size, vendors, _)| {
-        SnapshotInfo { id, name, date, size_bytes: size, vendors_count: vendors }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, name, date, size, vendors, _)| SnapshotInfo {
+            id,
+            name,
+            date,
+            size_bytes: size,
+            vendors_count: vendors,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -1262,11 +1568,12 @@ pub async fn create_snapshot(
     let config_dir = path.join(".agentweave");
 
     // Create a real zip backup of the .agentweave directory
-    let backup_dir = if let Some(dirs) = directories::ProjectDirs::from("dev", "agentweave", "AgentWeave") {
-        dirs.data_dir().join("snapshots")
-    } else {
-        PathBuf::from("snapshots")
-    };
+    let backup_dir =
+        if let Some(dirs) = directories::ProjectDirs::from("dev", "agentweave", "AgentWeave") {
+            dirs.data_dir().join("snapshots")
+        } else {
+            PathBuf::from("snapshots")
+        };
     std::fs::create_dir_all(&backup_dir).map_err(|e| e.to_string())?;
     let snapshot_path = backup_dir.join(format!("{}.tar", id));
 
@@ -1278,7 +1585,11 @@ pub async fn create_snapshot(
             if let Ok(entries) = std::fs::read_dir(dir) {
                 for entry in entries.flatten() {
                     let p = entry.path();
-                    if p.is_dir() { walk_dir(&p, out); } else { out.push(p); }
+                    if p.is_dir() {
+                        walk_dir(&p, out);
+                    } else {
+                        out.push(p);
+                    }
                 }
             }
         }
@@ -1302,10 +1613,22 @@ pub async fn create_snapshot(
 
     let vendors_count = if let Ok(config) = AgentWeaveConfig::load(&path) {
         config.targets.len() as i32
-    } else { 0 };
+    } else {
+        0
+    };
 
-    db.create_snapshot(&id, &name, &project_dir, total_size, vendors_count, &snapshot_path.to_string_lossy())?;
-    db.log_audit("snapshot.create", &format!("Created snapshot: {} ({} files)", name, file_count))?;
+    db.create_snapshot(
+        &id,
+        &name,
+        &project_dir,
+        total_size,
+        vendors_count,
+        &snapshot_path.to_string_lossy(),
+    )?;
+    db.log_audit(
+        "snapshot.create",
+        &format!("Created snapshot: {} ({} files)", name, file_count),
+    )?;
     Ok(id)
 }
 
@@ -1331,11 +1654,22 @@ pub struct CostRecord {
 }
 
 #[tauri::command]
-pub async fn list_cost_records(db: State<'_, Arc<Database>>, vendor: Option<String>) -> Result<Vec<CostRecord>, String> {
+pub async fn list_cost_records(
+    db: State<'_, Arc<Database>>,
+    vendor: Option<String>,
+) -> Result<Vec<CostRecord>, String> {
     let rows = db.list_cost_records(vendor.as_deref())?;
-    Ok(rows.into_iter().map(|(id, v, d, r, t, c)| {
-        CostRecord { id, vendor: v, date: d, requests: r, tokens: t, cost_usd: c }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, v, d, r, t, c)| CostRecord {
+            id,
+            vendor: v,
+            date: d,
+            requests: r,
+            tokens: t,
+            cost_usd: c,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -1348,7 +1682,10 @@ pub async fn add_cost_record(
     cost_usd: f64,
 ) -> Result<(), String> {
     db.add_cost_record(&vendor, &date, requests, tokens, cost_usd)?;
-    db.log_audit("cost.record", &format!("Recorded cost for {}: ${:.4}", vendor, cost_usd))?;
+    db.log_audit(
+        "cost.record",
+        &format!("Recorded cost for {}: ${:.4}", vendor, cost_usd),
+    )?;
     Ok(())
 }
 
@@ -1369,9 +1706,17 @@ pub struct ConflictInfo {
 #[tauri::command]
 pub async fn list_conflicts(db: State<'_, Arc<Database>>) -> Result<Vec<ConflictInfo>, String> {
     let rows = db.list_conflicts()?;
-    Ok(rows.into_iter().map(|(id, fp, local, remote, status, detected)| {
-        ConflictInfo { id, file_path: fp, local_content: local, remote_content: remote, status, detected_at: detected }
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(id, fp, local, remote, status, detected)| ConflictInfo {
+            id,
+            file_path: fp,
+            local_content: local,
+            remote_content: remote,
+            status,
+            detected_at: detected,
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -1381,7 +1726,10 @@ pub async fn resolve_conflict(
     resolution: String,
 ) -> Result<(), String> {
     db.resolve_conflict(&id, &resolution)?;
-    db.log_audit("conflict.resolve", &format!("Resolved conflict {} with {}", id, resolution))?;
+    db.log_audit(
+        "conflict.resolve",
+        &format!("Resolved conflict {} with {}", id, resolution),
+    )?;
     Ok(())
 }
 
@@ -1400,19 +1748,16 @@ pub async fn detect_conflicts(
 
     for vid in registry.list() {
         if let Some(adapter) = registry.get(vid) {
-            let output = adapter.generate(&config, &path).map_err(|e| e.to_string())?;
+            let output = adapter
+                .generate(&config, &path)
+                .map_err(|e| e.to_string())?;
             for (file_name, generated_content) in &output.files {
                 let file_path = path.join(file_name);
                 if file_path.exists() {
                     if let Ok(disk_content) = std::fs::read_to_string(&file_path) {
                         if disk_content.trim() != generated_content.trim() {
                             let id = gen_id("conflict");
-                            db.create_conflict(
-                                &id,
-                                file_name,
-                                &disk_content,
-                                generated_content,
-                            )?;
+                            db.create_conflict(&id, file_name, &disk_content, generated_content)?;
                             count += 1;
                         }
                     }
@@ -1421,7 +1766,10 @@ pub async fn detect_conflicts(
         }
     }
     if count > 0 {
-        db.log_audit("conflict.detect", &format!("Detected {} config conflicts", count))?;
+        db.log_audit(
+            "conflict.detect",
+            &format!("Detected {} config conflicts", count),
+        )?;
     }
     Ok(count)
 }
@@ -1438,16 +1786,29 @@ pub struct RecentProject {
 }
 
 #[tauri::command]
-pub async fn add_recent_project(db: State<'_, Arc<Database>>, path: String, name: String) -> Result<(), String> {
+pub async fn add_recent_project(
+    db: State<'_, Arc<Database>>,
+    path: String,
+    name: String,
+) -> Result<(), String> {
     db.add_recent_project(&path, &name)?;
     db.log_audit("project.open", &format!("Opened project: {}", name))?;
     Ok(())
 }
 
 #[tauri::command]
-pub async fn list_recent_projects(db: State<'_, Arc<Database>>) -> Result<Vec<RecentProject>, String> {
+pub async fn list_recent_projects(
+    db: State<'_, Arc<Database>>,
+) -> Result<Vec<RecentProject>, String> {
     let rows = db.list_recent_projects()?;
-    Ok(rows.into_iter().map(|(path, name, last_opened)| RecentProject { path, name, last_opened }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(path, name, last_opened)| RecentProject {
+            path,
+            name,
+            last_opened,
+        })
+        .collect())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1460,21 +1821,39 @@ pub struct AuditEntry {
 #[tauri::command]
 pub async fn get_audit_log(db: State<'_, Arc<Database>>) -> Result<Vec<AuditEntry>, String> {
     let rows = db.get_audit_log(100)?;
-    Ok(rows.into_iter().map(|(timestamp, action, detail)| AuditEntry { timestamp, action, detail }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|(timestamp, action, detail)| AuditEntry {
+            timestamp,
+            action,
+            detail,
+        })
+        .collect())
 }
 
 #[tauri::command]
-pub async fn log_audit_event(db: State<'_, Arc<Database>>, action: String, detail: String) -> Result<(), String> {
+pub async fn log_audit_event(
+    db: State<'_, Arc<Database>>,
+    action: String,
+    detail: String,
+) -> Result<(), String> {
     db.log_audit(&action, &detail)
 }
 
 #[tauri::command]
-pub async fn set_preference(db: State<'_, Arc<Database>>, key: String, value: String) -> Result<(), String> {
+pub async fn set_preference(
+    db: State<'_, Arc<Database>>,
+    key: String,
+    value: String,
+) -> Result<(), String> {
     db.set_preference(&key, &value)
 }
 
 #[tauri::command]
-pub async fn get_preference(db: State<'_, Arc<Database>>, key: String) -> Result<Option<String>, String> {
+pub async fn get_preference(
+    db: State<'_, Arc<Database>>,
+    key: String,
+) -> Result<Option<String>, String> {
     db.get_preference(&key)
 }
 
@@ -1504,7 +1883,14 @@ pub async fn get_config_concepts(project_dir: String) -> Result<Vec<ConceptItem>
             description: agent.description.clone().unwrap_or_default(),
             fields: vec![
                 format!("role: {}", agent.role.as_deref().unwrap_or("-")),
-                format!("model: {}", agent.model.as_ref().map(|m| m.model.as_str()).unwrap_or("-")),
+                format!(
+                    "model: {}",
+                    agent
+                        .model
+                        .as_ref()
+                        .map(|m| m.model.as_str())
+                        .unwrap_or("-")
+                ),
                 format!("skills: {}", agent.skills.len()),
             ],
         });
@@ -1652,10 +2038,7 @@ pub async fn add_config_concept(
             std::fs::create_dir_all(&wf_dir).map_err(|e| e.to_string())?;
             let slug = name.to_lowercase().replace(' ', "-");
             let file = wf_dir.join(format!("{}.yaml", slug));
-            let yaml = format!(
-                "name: {}\ndescription: {}\nsteps: []\n",
-                name, description
-            );
+            let yaml = format!("name: {}\ndescription: {}\nsteps: []\n", name, description);
             std::fs::write(&file, &yaml).map_err(|e| e.to_string())?;
         }
         _ => {
@@ -1697,7 +2080,10 @@ pub async fn run_experiment(db: State<'_, Arc<Database>>, id: String) -> Result<
     let winner = if acc_a >= acc_b { "A" } else { "B" };
 
     db.complete_experiment(&id, winner, &metrics.to_string())?;
-    db.log_audit("experiment.run", &format!("Ran experiment {}, winner: {}", id, winner))?;
+    db.log_audit(
+        "experiment.run",
+        &format!("Ran experiment {}, winner: {}", id, winner),
+    )?;
     Ok(())
 }
 
@@ -1727,7 +2113,13 @@ pub async fn global_search(
         let path = PathBuf::from(&project_dir);
         if let Ok(config) = AgentWeaveConfig::load(&path) {
             for a in &config.agents {
-                if a.name.to_lowercase().contains(&q) || a.description.as_deref().unwrap_or("").to_lowercase().contains(&q) {
+                if a.name.to_lowercase().contains(&q)
+                    || a.description
+                        .as_deref()
+                        .unwrap_or("")
+                        .to_lowercase()
+                        .contains(&q)
+                {
                     results.push(SearchResult {
                         entity_type: "Agent".into(),
                         id: a.name.clone(),
@@ -1737,7 +2129,13 @@ pub async fn global_search(
                 }
             }
             for r in &config.rules {
-                if r.name.to_lowercase().contains(&q) || r.description.as_deref().unwrap_or("").to_lowercase().contains(&q) {
+                if r.name.to_lowercase().contains(&q)
+                    || r.description
+                        .as_deref()
+                        .unwrap_or("")
+                        .to_lowercase()
+                        .contains(&q)
+                {
                     results.push(SearchResult {
                         entity_type: "Rule".into(),
                         id: r.name.clone(),
@@ -1773,7 +2171,12 @@ pub async fn global_search(
     if let Ok(templates) = db.list_templates(None) {
         for (id, name, _cat, desc, _author, _dl, _tags, _config, _created) in templates {
             if name.to_lowercase().contains(&q) || desc.to_lowercase().contains(&q) {
-                results.push(SearchResult { entity_type: "Template".into(), id, name, detail: desc });
+                results.push(SearchResult {
+                    entity_type: "Template".into(),
+                    id,
+                    name,
+                    detail: desc,
+                });
             }
         }
     }
@@ -1782,7 +2185,12 @@ pub async fn global_search(
     if let Ok(members) = db.list_team_members() {
         for (id, name, email, role, _joined) in members {
             if name.to_lowercase().contains(&q) || email.to_lowercase().contains(&q) {
-                results.push(SearchResult { entity_type: "Team Member".into(), id, name, detail: format!("{} ({})", email, role) });
+                results.push(SearchResult {
+                    entity_type: "Team Member".into(),
+                    id,
+                    name,
+                    detail: format!("{} ({})", email, role),
+                });
             }
         }
     }
@@ -1791,7 +2199,12 @@ pub async fn global_search(
     if let Ok(webhooks) = db.list_webhooks() {
         for (id, name, url, platform, _events, _enabled, _created) in webhooks {
             if name.to_lowercase().contains(&q) || url.to_lowercase().contains(&q) {
-                results.push(SearchResult { entity_type: "Webhook".into(), id, name, detail: format!("{} ({})", url, platform) });
+                results.push(SearchResult {
+                    entity_type: "Webhook".into(),
+                    id,
+                    name,
+                    detail: format!("{} ({})", url, platform),
+                });
             }
         }
     }
@@ -1800,16 +2213,28 @@ pub async fn global_search(
     if let Ok(policies) = db.list_governance_policies() {
         for (id, name, desc, _sev, _enabled, _rule) in policies {
             if name.to_lowercase().contains(&q) || desc.to_lowercase().contains(&q) {
-                results.push(SearchResult { entity_type: "Policy".into(), id, name, detail: desc });
+                results.push(SearchResult {
+                    entity_type: "Policy".into(),
+                    id,
+                    name,
+                    detail: desc,
+                });
             }
         }
     }
 
     // Search DB entities: experiments
     if let Ok(experiments) = db.list_experiments() {
-        for (id, name, _status, _ca, _cb, _vendor, _runs, _winner, _created, _metrics) in experiments {
+        for (id, name, _status, _ca, _cb, _vendor, _runs, _winner, _created, _metrics) in
+            experiments
+        {
             if name.to_lowercase().contains(&q) {
-                results.push(SearchResult { entity_type: "Experiment".into(), id, name, detail: String::new() });
+                results.push(SearchResult {
+                    entity_type: "Experiment".into(),
+                    id,
+                    name,
+                    detail: String::new(),
+                });
             }
         }
     }
@@ -1828,7 +2253,10 @@ pub async fn update_env_overrides(
     overrides_json: String,
 ) -> Result<(), String> {
     db.update_environment_overrides(&id, &overrides_json)?;
-    db.log_audit("environment.update_overrides", &format!("Updated overrides for env {}", id))?;
+    db.log_audit(
+        "environment.update_overrides",
+        &format!("Updated overrides for env {}", id),
+    )?;
     Ok(())
 }
 
@@ -1838,11 +2266,16 @@ pub async fn update_env_overrides(
 
 #[tauri::command]
 pub async fn emit_config_changed(app: tauri::AppHandle, project_dir: String) -> Result<(), String> {
-    app.emit("config-changed", &project_dir).map_err(|e| e.to_string())
+    app.emit("config-changed", &project_dir)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn emit_watch_event(app: tauri::AppHandle, event_type: String, detail: String) -> Result<(), String> {
+pub async fn emit_watch_event(
+    app: tauri::AppHandle,
+    event_type: String,
+    detail: String,
+) -> Result<(), String> {
     let payload = serde_json::json!({ "type": event_type, "detail": detail });
     app.emit("watch-event", payload).map_err(|e| e.to_string())
 }
@@ -1859,11 +2292,12 @@ pub async fn export_project_zip(project_dir: String) -> Result<String, String> {
         return Err("No .agentweave directory found".to_string());
     }
 
-    let export_dir = if let Some(dirs) = directories::ProjectDirs::from("dev", "agentweave", "AgentWeave") {
-        dirs.data_dir().join("exports")
-    } else {
-        PathBuf::from("exports")
-    };
+    let export_dir =
+        if let Some(dirs) = directories::ProjectDirs::from("dev", "agentweave", "AgentWeave") {
+            dirs.data_dir().join("exports")
+        } else {
+            PathBuf::from("exports")
+        };
     std::fs::create_dir_all(&export_dir).map_err(|e| e.to_string())?;
 
     let timestamp = chrono::Utc::now().format("%Y%m%d-%H%M%S");
@@ -1874,8 +2308,9 @@ pub async fn export_project_zip(project_dir: String) -> Result<String, String> {
         if let Ok(entries) = std::fs::read_dir(dir) {
             for entry in entries.flatten() {
                 let p = entry.path();
-                if p.is_dir() { walk(&p, base, out); }
-                else if let Ok(content) = std::fs::read_to_string(&p) {
+                if p.is_dir() {
+                    walk(&p, base, out);
+                } else if let Ok(content) = std::fs::read_to_string(&p) {
                     let rel = p.strip_prefix(base).unwrap_or(&p);
                     out.push((rel.to_string_lossy().to_string(), content));
                 }
@@ -1895,7 +2330,10 @@ pub async fn export_project_zip(project_dir: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn import_project_zip(project_dir: String, import_path: String) -> Result<String, String> {
+pub async fn import_project_zip(
+    project_dir: String,
+    import_path: String,
+) -> Result<String, String> {
     let content = std::fs::read_to_string(&import_path).map_err(|e| e.to_string())?;
 
     let path = PathBuf::from(&project_dir);
@@ -1918,7 +2356,7 @@ pub async fn import_project_zip(project_dir: String, import_path: String) -> Res
                 let _ = std::fs::write(&file_path, &current_content);
                 imported += 1;
             }
-            current_file = Some(line[4..line.len()-4].to_string());
+            current_file = Some(line[4..line.len() - 4].to_string());
             current_content.clear();
         } else {
             current_content.push_str(line);
@@ -1968,16 +2406,23 @@ pub async fn get_dry_run_preview(project_dir: String) -> Result<Vec<DryRunResult
     let config = AgentWeaveConfig::load(&config_path).map_err(|e| e.to_string())?;
     let registry = build_registry();
     let mut results = Vec::new();
-    let total_concepts = config.agents.len() + config.rules.len()
-        + config.mcp_servers.len() + config.skills.len()
-        + config.workflows.len() + config.hooks.len();
+    let total_concepts = config.agents.len()
+        + config.rules.len()
+        + config.mcp_servers.len()
+        + config.skills.len()
+        + config.workflows.len()
+        + config.hooks.len();
     for vid in registry.list() {
         if let Some(adapter) = registry.get(vid) {
             let name = vid.to_string();
             match adapter.generate(&config, &path) {
                 Ok(output) => {
                     let supported = adapter.supported_concepts().len();
-                    let missing = if total_concepts > supported { total_concepts - supported } else { 0 };
+                    let missing = if total_concepts > supported {
+                        total_concepts - supported
+                    } else {
+                        0
+                    };
                     let mut preview = String::new();
                     let mut line_count = 0;
                     for (file, content) in &output.files {
@@ -1995,8 +2440,11 @@ pub async fn get_dry_run_preview(project_dir: String) -> Result<Vec<DryRunResult
                 }
                 Err(e) => {
                     results.push(DryRunResult {
-                        vendor: name, output_lines: 0, missing_concepts: total_concepts,
-                        output_path: String::new(), preview_content: format!("Error: {}", e),
+                        vendor: name,
+                        output_lines: 0,
+                        missing_concepts: total_concepts,
+                        output_path: String::new(),
+                        preview_content: format!("Error: {}", e),
                     });
                 }
             }
@@ -2016,7 +2464,9 @@ pub struct ContextOptResult {
 }
 
 #[tauri::command]
-pub async fn get_context_optimization(project_dir: String) -> Result<Vec<ContextOptResult>, String> {
+pub async fn get_context_optimization(
+    project_dir: String,
+) -> Result<Vec<ContextOptResult>, String> {
     let path = PathBuf::from(&project_dir);
     let config_path = path.join("agentweave.yaml");
     if !config_path.exists() {
@@ -2026,10 +2476,18 @@ pub async fn get_context_optimization(project_dir: String) -> Result<Vec<Context
     let registry = build_registry();
     let mut results = Vec::new();
     let vendor_limits: Vec<(&str, usize)> = vec![
-        ("cursor", 128000), ("windsurf", 128000), ("copilot", 128000),
-        ("claude-code", 200000), ("codex", 128000), ("gemini", 1000000),
-        ("cline", 128000), ("devin", 128000), ("codebuddy", 128000),
-        ("qoder", 128000), ("grok-build", 128000), ("openclaw", 128000),
+        ("cursor", 128000),
+        ("windsurf", 128000),
+        ("copilot", 128000),
+        ("claude-code", 200000),
+        ("codex", 128000),
+        ("gemini", 1000000),
+        ("cline", 128000),
+        ("devin", 128000),
+        ("codebuddy", 128000),
+        ("qoder", 128000),
+        ("grok-build", 128000),
+        ("openclaw", 128000),
     ];
     for vid in registry.list() {
         if let Some(adapter) = registry.get(vid) {
@@ -2038,12 +2496,24 @@ pub async fn get_context_optimization(project_dir: String) -> Result<Vec<Context
                 Ok(output) => {
                     let total_chars: usize = output.files.values().map(|c| c.len()).sum();
                     let approx_tokens = total_chars / 4;
-                    let max = vendor_limits.iter().find(|(n, _)| *n == name).map(|(_, l)| *l).unwrap_or(128000);
-                    let pct = if max > 0 { (approx_tokens as f64 / max as f64) * 100.0 } else { 0.0 };
+                    let max = vendor_limits
+                        .iter()
+                        .find(|(n, _)| *n == name)
+                        .map(|(_, l)| *l)
+                        .unwrap_or(128000);
+                    let pct = if max > 0 {
+                        (approx_tokens as f64 / max as f64) * 100.0
+                    } else {
+                        0.0
+                    };
                     let over = approx_tokens > max;
                     let mut suggestions = Vec::new();
-                    if pct > 80.0 { suggestions.push("考虑精简 rules 或 skills 描述".to_string()); }
-                    if over { suggestions.push(format!("超出 {} 限制，建议移除低优先级概念", name)); }
+                    if pct > 80.0 {
+                        suggestions.push("考虑精简 rules 或 skills 描述".to_string());
+                    }
+                    if over {
+                        suggestions.push(format!("超出 {} 限制，建议移除低优先级概念", name));
+                    }
                     results.push(ContextOptResult {
                         vendor: name,
                         current_tokens: approx_tokens,
@@ -2055,8 +2525,12 @@ pub async fn get_context_optimization(project_dir: String) -> Result<Vec<Context
                 }
                 Err(_) => {
                     results.push(ContextOptResult {
-                        vendor: name, current_tokens: 0, max_tokens: 128000,
-                        usage_percent: 0.0, is_over_limit: false, suggestions: vec![],
+                        vendor: name,
+                        current_tokens: 0,
+                        max_tokens: 128000,
+                        usage_percent: 0.0,
+                        is_over_limit: false,
+                        suggestions: vec![],
                     });
                 }
             }
@@ -2105,7 +2579,12 @@ fn import_vendor_internal(path: &PathBuf, vendor: &str) -> Result<MigrationStatu
     if imported == 0 && skipped == 0 {
         errors.push(format!("No known config files found for {}", vendor));
     }
-    Ok(MigrationStatus { success: errors.is_empty(), imported_count: imported, skipped_count: skipped, errors })
+    Ok(MigrationStatus {
+        success: errors.is_empty(),
+        imported_count: imported,
+        skipped_count: skipped,
+        errors,
+    })
 }
 
 #[tauri::command]
@@ -2148,20 +2627,42 @@ pub async fn get_config_analytics_ex(project_dir: String) -> Result<ConfigAnalyt
     let config_path = path.join("agentweave.yaml");
     if !config_path.exists() {
         return Ok(ConfigAnalyticsData {
-            total_concepts: 0, vendor_count: 0, avg_coverage: 0.0,
-            concept_distribution: vec![], vendor_coverage: vec![], gaps: vec![],
+            total_concepts: 0,
+            vendor_count: 0,
+            avg_coverage: 0.0,
+            concept_distribution: vec![],
+            vendor_coverage: vec![],
+            gaps: vec![],
         });
     }
     let config = AgentWeaveConfig::load(&config_path).map_err(|e| e.to_string())?;
     let registry = build_registry();
 
     let dist = vec![
-        ConceptDist { r#type: "agents".into(), count: config.agents.len() },
-        ConceptDist { r#type: "rules".into(), count: config.rules.len() },
-        ConceptDist { r#type: "mcp_servers".into(), count: config.mcp_servers.len() },
-        ConceptDist { r#type: "skills".into(), count: config.skills.len() },
-        ConceptDist { r#type: "workflows".into(), count: config.workflows.len() },
-        ConceptDist { r#type: "hooks".into(), count: config.hooks.len() },
+        ConceptDist {
+            r#type: "agents".into(),
+            count: config.agents.len(),
+        },
+        ConceptDist {
+            r#type: "rules".into(),
+            count: config.rules.len(),
+        },
+        ConceptDist {
+            r#type: "mcp_servers".into(),
+            count: config.mcp_servers.len(),
+        },
+        ConceptDist {
+            r#type: "skills".into(),
+            count: config.skills.len(),
+        },
+        ConceptDist {
+            r#type: "workflows".into(),
+            count: config.workflows.len(),
+        },
+        ConceptDist {
+            r#type: "hooks".into(),
+            count: config.hooks.len(),
+        },
     ];
     let total: usize = dist.iter().map(|d| d.count).sum();
 
@@ -2173,24 +2674,49 @@ pub async fn get_config_analytics_ex(project_dir: String) -> Result<ConfigAnalyt
             let supported = adapter.supported_concepts();
             let supported_count = supported.len();
             let max_concepts = 17usize; // total concept types in schema
-            let coverage = if max_concepts > 0 { (supported_count as f64 / max_concepts as f64 * 100.0).min(100.0) } else { 0.0 };
-            vc.push(VendorCov { vendor: name.clone(), coverage: (coverage * 10.0).round() / 10.0 });
+            let coverage = if max_concepts > 0 {
+                (supported_count as f64 / max_concepts as f64 * 100.0).min(100.0)
+            } else {
+                0.0
+            };
+            vc.push(VendorCov {
+                vendor: name.clone(),
+                coverage: (coverage * 10.0).round() / 10.0,
+            });
             // Check coverage gaps by concept type
-            let concept_names: Vec<String> = supported.iter().map(|c| format!("{:?}", c).to_lowercase()).collect();
+            let concept_names: Vec<String> = supported
+                .iter()
+                .map(|c| format!("{:?}", c).to_lowercase())
+                .collect();
             let check_types = vec![
-                ("agents", "agent"), ("rules", "rule"), ("mcp_servers", "mcpserver"),
-                ("skills", "skill"), ("workflows", "workflow"), ("hooks", "hook"),
+                ("agents", "agent"),
+                ("rules", "rule"),
+                ("mcp_servers", "mcpserver"),
+                ("skills", "skill"),
+                ("workflows", "workflow"),
+                ("hooks", "hook"),
             ];
             for (label, concept_str) in &check_types {
-                let type_count = dist.iter().find(|d| d.r#type == *label).map(|d| d.count).unwrap_or(0);
+                let type_count = dist
+                    .iter()
+                    .find(|d| d.r#type == *label)
+                    .map(|d| d.count)
+                    .unwrap_or(0);
                 if type_count > 0 && !concept_names.iter().any(|s| s.contains(concept_str)) {
-                    gaps.push(CoverageGap { vendor: name.clone(), missing_concept: label.to_string() });
+                    gaps.push(CoverageGap {
+                        vendor: name.clone(),
+                        missing_concept: label.to_string(),
+                    });
                 }
             }
         }
     }
     let vendor_count = vc.len();
-    let avg = if vendor_count > 0 { vc.iter().map(|v| v.coverage).sum::<f64>() / vendor_count as f64 } else { 0.0 };
+    let avg = if vendor_count > 0 {
+        vc.iter().map(|v| v.coverage).sum::<f64>() / vendor_count as f64
+    } else {
+        0.0
+    };
 
     Ok(ConfigAnalyticsData {
         total_concepts: total,
@@ -2211,7 +2737,9 @@ pub struct DetectedVendorConfig {
 }
 
 #[tauri::command]
-pub async fn detect_vendor_configs(project_dir: String) -> Result<Vec<DetectedVendorConfig>, String> {
+pub async fn detect_vendor_configs(
+    project_dir: String,
+) -> Result<Vec<DetectedVendorConfig>, String> {
     let path = PathBuf::from(&project_dir);
     let known_files: Vec<(&str, &str)> = vec![
         ("cursor", ".cursorrules"),
@@ -2277,7 +2805,9 @@ pub async fn get_vendor_support_matrix() -> Result<Vec<VendorConceptSupport>, St
     let mut results = Vec::new();
     for vid in registry.list() {
         if let Some(adapter) = registry.get(vid) {
-            let supported: Vec<String> = adapter.supported_concepts().iter()
+            let supported: Vec<String> = adapter
+                .supported_concepts()
+                .iter()
                 .map(|c| {
                     let raw = format!("{:?}", c);
                     // Convert CamelCase to snake_case for consistent frontend keys
@@ -2327,7 +2857,15 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
             if config.agents.is_empty() {
                 "建议添加至少一个 Agent 来开始配置。".to_string()
             } else {
-                format!("包括: {}", config.agents.iter().map(|a| a.name.as_str()).collect::<Vec<_>>().join(", "))
+                format!(
+                    "包括: {}",
+                    config
+                        .agents
+                        .iter()
+                        .map(|a| a.name.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
             }
         )
     } else if q.contains("rule") || q.contains("规则") {
@@ -2337,7 +2875,15 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
             if config.rules.is_empty() {
                 "规则可以强制所有厂商遵循相同行为规范。".to_string()
             } else {
-                format!("规则列表: {}", config.rules.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(", "))
+                format!(
+                    "规则列表: {}",
+                    config
+                        .rules
+                        .iter()
+                        .map(|r| r.name.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
             }
         )
     } else if q.contains("mcp") || q.contains("server") || q.contains("插件") {
@@ -2386,7 +2932,10 @@ pub async fn ask_ai_question(project_dir: String, question: String) -> Result<Ai
         )
     };
 
-    Ok(AiAnswer { answer, related_suggestions: suggestions })
+    Ok(AiAnswer {
+        answer,
+        related_suggestions: suggestions,
+    })
 }
 
 // ============================================================
@@ -2403,22 +2952,25 @@ pub struct TraceLogEntry {
 #[tauri::command]
 pub async fn get_trace_logs(db: State<'_, Arc<Database>>) -> Result<Vec<TraceLogEntry>, String> {
     let rows = db.get_audit_log(100)?;
-    let results: Vec<TraceLogEntry> = rows.into_iter().map(|(ts, action, detail)| {
-        let level = if action.contains("error") || action.contains("fail") {
-            "error"
-        } else if action.contains("warn") {
-            "warn"
-        } else if action.contains("debug") {
-            "debug"
-        } else {
-            "info"
-        };
-        TraceLogEntry {
-            timestamp: ts,
-            level: level.to_string(),
-            message: format!("[{}] {}", action, detail),
-        }
-    }).collect();
+    let results: Vec<TraceLogEntry> = rows
+        .into_iter()
+        .map(|(ts, action, detail)| {
+            let level = if action.contains("error") || action.contains("fail") {
+                "error"
+            } else if action.contains("warn") {
+                "warn"
+            } else if action.contains("debug") {
+                "debug"
+            } else {
+                "info"
+            };
+            TraceLogEntry {
+                timestamp: ts,
+                level: level.to_string(),
+                message: format!("[{}] {}", action, detail),
+            }
+        })
+        .collect();
     Ok(results)
 }
 
@@ -2510,7 +3062,10 @@ pub async fn run_prompt_tests(db: State<'_, Arc<Database>>, test_id: String) -> 
     }
     let results_json = serde_json::to_string(&results).map_err(|e| e.to_string())?;
     db.update_prompt_test_results(&test_id, &results_json)?;
-    db.log_audit("prompt_test.run", &format!("Ran test {} across {} vendors", test_id, vendors.len()))?;
+    db.log_audit(
+        "prompt_test.run",
+        &format!("Ran test {} across {} vendors", test_id, vendors.len()),
+    )?;
     Ok(())
 }
 
@@ -2519,9 +3074,15 @@ pub async fn run_prompt_tests(db: State<'_, Arc<Database>>, test_id: String) -> 
 // ============================================================
 
 #[tauri::command]
-pub async fn set_routing_strategy(db: State<'_, Arc<Database>>, strategy: String) -> Result<(), String> {
+pub async fn set_routing_strategy(
+    db: State<'_, Arc<Database>>,
+    strategy: String,
+) -> Result<(), String> {
     db.set_preference("routing_strategy", &strategy)?;
-    db.log_audit("acp.routing.change", &format!("Set routing strategy to {}", strategy))?;
+    db.log_audit(
+        "acp.routing.change",
+        &format!("Set routing strategy to {}", strategy),
+    )?;
     Ok(())
 }
 
@@ -2563,9 +3124,18 @@ pub async fn get_acp_metrics(db: State<'_, Arc<Database>>) -> Result<AcpMetrics,
 
     // Recent logs from trace_spans
     let spans = db.list_trace_spans(20)?;
-    let recent_logs: Vec<AcpLogEntry> = spans.into_iter().map(|(_, name, vendor, duration_ms, status, timestamp)| {
-        AcpLogEntry { timestamp, vendor, name, latency_ms: duration_ms, status }
-    }).collect();
+    let recent_logs: Vec<AcpLogEntry> = spans
+        .into_iter()
+        .map(
+            |(_, name, vendor, duration_ms, status, timestamp)| AcpLogEntry {
+                timestamp,
+                vendor,
+                name,
+                latency_ms: duration_ms,
+                status,
+            },
+        )
+        .collect();
 
     Ok(AcpMetrics {
         total_requests,
