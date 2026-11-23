@@ -137,7 +137,7 @@ export default function Trace() {
       {activeTab === "logs" && (
         <div className="flex-1 overflow-auto font-mono text-[11px] px-5 py-3 space-y-0.5">
           {logs.length === 0 ? (
-            <div className="text-center py-8 text-[12px] text-zinc-400">暂无日志记录。执行操作（生成、验证等）后日志会自动记录。</div>
+            <div className="text-center py-8 text-[12px] text-zinc-400">{t("trace.noLogs")}</div>
           ) : (
             logs.map((log, i) => (
               <LogLine key={i} level={log.level as "info" | "debug" | "warn" | "error"} text={`${log.timestamp} ${log.message}`} />
@@ -149,7 +149,7 @@ export default function Trace() {
       {activeTab === "alerts" && (
         <div className="flex-1 overflow-auto px-5 py-4 space-y-2">
           {alerts.length === 0 ? (
-            <div className="text-center py-8 text-[12px] text-zinc-400">暂无告警</div>
+            <div className="text-center py-8 text-[12px] text-zinc-400">{t("trace.noAlerts")}</div>
           ) : (
             alerts.map((alert) => (
               <div key={alert.id} className={`bg-white dark:bg-zinc-900 border rounded-lg p-3 ${

@@ -122,20 +122,20 @@ export default function PerformanceAB() {
 
         {showNew && (
           <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 space-y-2 bg-zinc-50/50 dark:bg-zinc-900/50">
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="实验名称" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("perf.namePlaceholder")} className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
             <input value={newA} onChange={(e) => setNewA(e.target.value)} placeholder="Config A" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
             <input value={newB} onChange={(e) => setNewB(e.target.value)} placeholder="Config B" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
             <input value={newVendor} onChange={(e) => setNewVendor(e.target.value)} placeholder="Vendor" className="w-full px-2 py-1 text-[12px] rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200" />
             <div className="flex gap-2">
-              <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">创建</button>
-              <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">取消</button>
+              <button onClick={handleCreate} className="flex-1 px-2 py-1 text-[11px] font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">{t("common.create")}</button>
+              <button onClick={() => setShowNew(false)} className="px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">{t("common.cancel")}</button>
             </div>
           </div>
         )}
 
         <div className="flex-1 overflow-auto">
           {experiments.length === 0 && !showNew && (
-            <div className="p-4 text-center text-[12px] text-zinc-400">暂无实验，点击 + 创建</div>
+            <div className="p-4 text-center text-[12px] text-zinc-400">{t("perf.empty")}</div>
           )}
           {experiments.map((exp) => (
             <button
@@ -147,12 +147,12 @@ export default function PerformanceAB() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${statusColors[exp.status] || statusColors.pending}`}>
-                  {exp.status === "running" ? "运行中" : exp.status === "completed" ? "已完成" : "待启动"}
+                  {exp.status === "running" ? t("perf.running") : exp.status === "completed" ? t("perf.completed") : t("perf.pending")}
                 </span>
                 <span className="text-[10px] text-zinc-400">{exp.vendor}</span>
               </div>
               <p className="text-[12px] text-zinc-700 dark:text-zinc-200 font-medium line-clamp-2">{exp.name}</p>
-              <p className="text-[10px] text-zinc-400 mt-1">{exp.runs} 次运行 · {exp.created_at}</p>
+              <p className="text-[10px] text-zinc-400 mt-1">{t("perf.runs", { count: exp.runs })} · {exp.created_at}</p>
             </button>
           ))}
         </div>
@@ -167,14 +167,14 @@ export default function PerformanceAB() {
                 <div>
                   <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{selectedExp.name}</h2>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    {selectedExp.vendor} · {selectedExp.runs} 次运行
-                    {selectedExp.winner && ` · 胜者: Config ${selectedExp.winner}`}
+                    {selectedExp.vendor} · {t("perf.runs", { count: selectedExp.runs })}
+                    {selectedExp.winner && ` · ${t("perf.winner", { id: selectedExp.winner })}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedExp.status === "pending" && (
                     <button onClick={() => handleStart(selectedExp.id)} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
-                      <Play size={12} /> 开始实验
+                      <Play size={12} /> {t("perf.start")}
                     </button>
                   )}
                   <button onClick={() => handleDelete(selectedExp.id)} className="p-1.5 text-zinc-400 hover:text-red-500 rounded">
@@ -207,34 +207,34 @@ export default function PerformanceAB() {
               {selectedExp.status !== "pending" && (
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-4">
                   <h3 className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
-                    <BarChart3 size={13} /> 指标对比
+                    <BarChart3 size={13} /> {t("perf.metrics")}
                   </h3>
                   <div className="space-y-3">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><Clock size={10} /> 响应时间 (ms)</span>
-                        <span className="text-[9px] text-zinc-400">越低越好</span>
+                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><Clock size={10} /> {t("perf.latency")}</span>
+                        <span className="text-[9px] text-zinc-400">{t("perf.lowerBetter")}</span>
                       </div>
                       {metricBar(selectedExp.metrics.response_time[0], selectedExp.metrics.response_time[1], true)}
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><CheckCircle2 size={10} /> 准确率 (%)</span>
-                        <span className="text-[9px] text-zinc-400">越高越好</span>
+                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><CheckCircle2 size={10} /> {t("perf.accuracy")}</span>
+                        <span className="text-[9px] text-zinc-400">{t("perf.higherBetter")}</span>
                       </div>
                       {metricBar(selectedExp.metrics.accuracy[0], selectedExp.metrics.accuracy[1], false)}
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><ArrowUpDown size={10} /> Token 用量</span>
-                        <span className="text-[9px] text-zinc-400">越低越好</span>
+                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><ArrowUpDown size={10} /> {t("perf.tokens")}</span>
+                        <span className="text-[9px] text-zinc-400">{t("perf.lowerBetter")}</span>
                       </div>
                       {metricBar(selectedExp.metrics.token_usage[0], selectedExp.metrics.token_usage[1], true)}
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><TrendingUp size={10} /> 成功率 (%)</span>
-                        <span className="text-[9px] text-zinc-400">越高越好</span>
+                        <span className="text-[11px] text-zinc-500 flex items-center gap-1"><TrendingUp size={10} /> {t("perf.successRate")}</span>
+                        <span className="text-[9px] text-zinc-400">{t("perf.higherBetter")}</span>
                       </div>
                       {metricBar(selectedExp.metrics.success_rate[0], selectedExp.metrics.success_rate[1], false)}
                     </div>
@@ -245,7 +245,7 @@ export default function PerformanceAB() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">
-            选择或创建一个 A/B 实验
+            {t("perf.selectHint")}
           </div>
         )}
       </div>

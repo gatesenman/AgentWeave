@@ -138,7 +138,7 @@ export default function ConceptGraph() {
           </p>
         </div>
         <div className="flex-1" />
-        <span className="text-[11px] text-zinc-400">{nodes.length} 节点 · {edges.length} 连接</span>
+        <span className="text-[11px] text-zinc-400">{t("graph.stats", { nodes: nodes.length, edges: edges.length })}</span>
         <div className="flex items-center gap-1">
           <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
             <ZoomOut size={14} />
@@ -155,10 +155,10 @@ export default function ConceptGraph() {
 
       <div className="flex-1 overflow-hidden relative bg-zinc-50/50 dark:bg-zinc-900/50">
         {!projectDir && (
-          <div className="absolute inset-0 flex items-center justify-center text-[12px] text-zinc-400">请先打开一个项目</div>
+          <div className="absolute inset-0 flex items-center justify-center text-[12px] text-zinc-400">{t("common.openProject")}</div>
         )}
         {projectDir && nodes.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-[12px] text-zinc-400">暂无概念数据</div>
+          <div className="absolute inset-0 flex items-center justify-center text-[12px] text-zinc-400">{t("graph.empty")}</div>
         )}
         {nodes.length > 0 && (
           <svg
@@ -219,7 +219,7 @@ export default function ConceptGraph() {
               {nodes.find((n) => n.id === selectedNode)?.name}
             </p>
             <p className="text-[10px] text-zinc-400 mt-0.5">
-              {connectedEdges.length} 个连接
+              {t("graph.connections", { count: connectedEdges.length })}
             </p>
             <div className="mt-1.5 space-y-0.5">
               {connectedEdges.slice(0, 5).map((e, i) => (

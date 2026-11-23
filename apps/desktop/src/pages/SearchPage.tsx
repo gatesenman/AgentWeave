@@ -86,7 +86,7 @@ export default function SearchPage() {
 
       <div className="flex-1 overflow-auto px-5 py-4">
         {!projectDir && (
-          <div className="text-center py-12 text-[13px] text-zinc-400">请先打开一个项目</div>
+          <div className="text-center py-12 text-[13px] text-zinc-400">{t("common.openProject")}</div>
         )}
         {projectDir && query.trim() === "" ? (
           <div className="text-center py-12">
@@ -104,7 +104,7 @@ export default function SearchPage() {
             </div>
           </div>
         ) : searching ? (
-          <div className="text-center py-12 text-[13px] text-zinc-400">搜索中...</div>
+          <div className="text-center py-12 text-[13px] text-zinc-400">{t("common.searching")}</div>
         ) : results.length === 0 && query.trim() !== "" ? (
           <div className="text-center py-12">
             <p className="text-[13px] text-zinc-500">{t("search.noResults", "没有找到匹配的结果")}</p>
@@ -113,7 +113,7 @@ export default function SearchPage() {
           <div className="max-w-[600px] mx-auto space-y-1">
             <p className="text-[11px] text-zinc-400 mb-2">
               {results.length} {t("search.results", "个结果")}
-              {entityTypes.length > 1 && ` · ${entityTypes.length} 种类型`}
+              {entityTypes.length > 1 && ` · ${t("search.typeCount", { count: entityTypes.length })}`}
             </p>
             {results.map((result, i) => {
               const Icon = typeIcons[result.entity_type] || Search;

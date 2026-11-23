@@ -194,11 +194,11 @@ export default function Settings() {
 
             <Section icon={<Monitor size={14} className="text-zinc-400" />} title={t("settings.about")}>
               <div className="space-y-2">
-                <AboutRow label="版本" value="v0.1.0" />
-                <AboutRow label="运行时" value="Tauri v2" />
-                <AboutRow label="框架" value="React 18 + TypeScript" />
-                <AboutRow label="适配器" value="12 vendors" />
-                <AboutRow label="平台" value="Windows / macOS / Linux" />
+                <AboutRow label={t("settings.version")} value="v0.1.0" />
+                <AboutRow label={t("settings.runtime")} value="Tauri v2" />
+                <AboutRow label={t("settings.framework")} value="React 18 + TypeScript" />
+                <AboutRow label={t("settings.adapters")} value="12 vendors" />
+                <AboutRow label={t("settings.platform")} value="Windows / macOS / Linux" />
               </div>
             </Section>
           </div>

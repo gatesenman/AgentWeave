@@ -41,7 +41,27 @@
     "cancel": "取消",
     "loading": "加载中...",
     "watching": "监听中",
-    "selectProject": "请先从项目概览选择项目"
+    "selectProject": "请先从项目概览选择项目",
+    "openProject": "请先打开一个项目",
+    "create": "创建",
+    "add": "添加",
+    "new": "新建",
+    "name": "名称",
+    "description": "描述",
+    "descriptionOptional": "描述 (可选)",
+    "back": "返回",
+    "error": "错误",
+    "status": "状态",
+    "actions": "操作",
+    "details": "详情",
+    "time": "时间",
+    "vendor": "厂商",
+    "vendors": "厂商",
+    "searching": "搜索中...",
+    "generating": "生成中...",
+    "analyzing": "分析中...",
+    "record": "记录",
+    "normal": "正常"
   },
   "dashboard": {
     "title": "项目概览",
@@ -91,7 +111,8 @@
     "contextFiles": "上下文文件",
     "contextDynamic": "动态上下文",
     "sourceHint": "直接编辑 agentweave.yaml 源文件",
-    "editorPlaceholder": "YAML 编辑器"
+    "editorPlaceholder": "YAML 编辑器",
+    "addToSection": "将添加到当前分类: {{section}}"
   },
   "generate": {
     "title": "厂商生成",
@@ -113,20 +134,41 @@
   "trace": {
     "traces": "链路",
     "logs": "日志",
-    "alerts": "告警"
+    "alerts": "告警",
+    "noLogs": "暂无日志记录。执行操作（生成、验证等）后日志会自动记录。",
+    "noAlerts": "暂无告警"
   },
   "governance": {
     "title": "治理中心",
     "policies": "策略",
     "roles": "角色",
     "audit": "审计",
-    "quotas": "配额"
+    "quotas": "配额",
+    "policyCount": "{{count}} 策略",
+    "roleCount": "{{count}} 角色",
+    "policyHeading": "治理策略",
+    "policyName": "策略名",
+    "policy": "策略",
+    "level": "级别",
+    "emptyPolicies": "暂无策略",
+    "emptyAudit": "暂无记录",
+    "roleHeading": "角色管理",
+    "roleName": "角色名",
+    "permsPlaceholder": "权限 (逗号分隔)",
+    "emptyRoles": "暂无角色"
   },
   "acp": {
     "title": "调度中心",
     "agents": "Agents",
     "routing": "路由策略",
-    "monitor": "监控"
+    "monitor": "监控",
+    "agentCount": "Agent 数量",
+    "conceptCoverage": "概念覆盖",
+    "totalRequests": "总请求",
+    "avgLatency": "平均延迟",
+    "successRate": "成功率",
+    "recentSchedules": "近期调度",
+    "noSchedules": "暂无调度记录。执行生成操作后会自动记录。"
   },
   "backup": {
     "title": "版本与备份",
@@ -151,13 +193,24 @@
     "createSnapshot": "创建快照",
     "restore": "恢复",
     "download": "下载",
-    "noProject": "请先选择项目文件夹"
+    "noProject": "请先选择项目文件夹",
+    "subtitle": "快照管理、配置导出与导入",
+    "labelPlaceholder": "快照标签 (可选)",
+    "create": "创建快照",
+    "empty": "暂无快照",
+    "autoName": "自动快照",
+    "snapshotMeta": "{{date}} · {{size}} · {{count}} 厂商",
+    "exportHint": "将项目配置导出为 ZIP 文件",
+    "importHint": "从 ZIP 文件导入配置",
+    "zipPath": "ZIP 文件路径",
+    "importing": "导入中..."
   },
   "search": {
     "placeholder": "搜索 Agent、Rule、MCP Server、Skill...",
     "hint": "输入关键词搜索配置中的所有概念",
     "noResults": "没有找到匹配的结果",
-    "results": "个结果"
+    "results": "个结果",
+    "typeCount": "{{count}} 种类型"
   },
   "settings": {
     "title": "设置",
@@ -199,6 +252,211 @@
     "checkUpdate": "检查更新",
     "checking": "检查中...",
     "newVersion": "发现新版本",
-    "upToDate": "已是最新版本"
+    "upToDate": "已是最新版本",
+    "uiLanguage": "界面语言",
+    "adapters": "适配器",
+    "platform": "平台",
+    "langZh": "中文",
+    "langEn": "English"
+  },
+  "statusbar": {
+    "syncing": "同步中",
+    "adapters": "适配器就绪"
+  },
+  "ai": {
+    "title": "AI 助手",
+    "subtitle": "智能配置建议与优化推荐",
+    "reanalyze": "重新分析",
+    "thinking": "思考中...",
+    "empty": "暂无建议。配置解析后 AI 会自动提供优化建议。",
+    "analyzingConfig": "正在分析配置...",
+    "confidence": "置信度: {{value}}%",
+    "placeholder": "向 AI 提问关于配置的问题...",
+    "error": "错误: {{message}}"
+  },
+  "analytics": {
+    "title": "配置分析",
+    "subtitle": "概念使用分布、厂商覆盖率与缺口分析",
+    "totalConcepts": "总概念数",
+    "coveredVendors": "覆盖厂商",
+    "avgCoverage": "平均覆盖率",
+    "gapCount": "缺口数",
+    "distribution": "概念分布",
+    "vendorCoverage": "厂商覆盖率",
+    "coverageGaps": "覆盖缺口",
+    "missing": "缺失"
+  },
+  "conflict": {
+    "title": "冲突解决",
+    "scan": "扫描配置冲突",
+    "empty": "暂无冲突",
+    "resolved": "已解决",
+    "pending": "待解决",
+    "localVersion": "本地版本",
+    "remoteVersion": "远端版本",
+    "useLocal": "使用本地",
+    "useRemote": "使用远端",
+    "manualMerge": "手动合并",
+    "selectHint": "选择冲突项查看详情"
+  },
+  "context": {
+    "title": "上下文优化",
+    "subtitle": "按厂商 Token 限制分析与优化",
+    "reanalyze": "重新分析",
+    "autoHint": "打开项目后自动分析各厂商上下文占用",
+    "overLimit": "超出限制",
+    "tokensUsed": "已用 Token:",
+    "suggestions": "优化建议"
+  },
+  "cost": {
+    "title": "成本仪表盘",
+    "subtitle": "API 用量追踪与费用分析",
+    "requests": "请求数",
+    "amount": "费用 ($)",
+    "totalCost": "总费用",
+    "totalTokens": "总 Token",
+    "vendorCount": "厂商数",
+    "distribution": "厂商分布",
+    "records": "记录明细",
+    "empty": "暂无费用记录",
+    "recordMeta": "{{tokens}} tokens · {{requests}} 次"
+  },
+  "dryrun": {
+    "title": "生成预览",
+    "clickToRun": "点击运行预览",
+    "complete": "完整",
+    "missing": "{{count}} 丢失",
+    "lineStatus": "{{lines}} 行",
+    "vendorPreview": "{{vendor}} 预览",
+    "outputFile": "{{lines}} 行 · 输出文件: {{path}}",
+    "selectVendor": "选择厂商查看预览"
+  },
+  "env": {
+    "title": "环境管理",
+    "subtitle": "dev / staging / prod 配置变体",
+    "namePlaceholder": "环境名 (如 dev)",
+    "labelPlaceholder": "标签 (如 开发环境)",
+    "empty": "暂无环境，点击新增",
+    "lastDeployed": "上次部署: {{time}}",
+    "overrides": "覆盖 ({{count}})",
+    "concept": "概念",
+    "field": "字段",
+    "value": "值"
+  },
+  "graph": {
+    "title": "概念关联图",
+    "subtitle": "Agent -> MCP -> Rule 依赖关系可视化",
+    "stats": "{{nodes}} 节点 · {{edges}} 连接",
+    "empty": "暂无概念数据",
+    "connections": "{{count}} 个连接"
+  },
+  "inherit": {
+    "title": "继承链",
+    "empty": "暂无继承关系",
+    "fields": "{{count}} 字段",
+    "path": "路径: {{path}} · {{count}} 个字段",
+    "fieldTrace": "字段溯源（最终生效值）",
+    "noFields": "无字段信息",
+    "inheritedFrom": "继承自",
+    "selectNode": "选择节点查看详情"
+  },
+  "lint": {
+    "title": "配置 Lint",
+    "subtitle": "自定义检查规则，保证配置质量",
+    "newRule": "新建规则",
+    "ruleName": "规则名称",
+    "pattern": "匹配模式 (regex)",
+    "message": "提示信息",
+    "empty": "暂无 Lint 规则，点击新建"
+  },
+  "migration": {
+    "title": "迁移向导",
+    "subtitle": "从其他 AI 配置工具一键迁移",
+    "stepSource": "选择源",
+    "stepScan": "扫描配置",
+    "stepDone": "完成",
+    "chooseSource": "选择迁移来源",
+    "fromSource": "从 {{source}} 迁移",
+    "scanHint": "将扫描项目中的 {{source}} 配置文件并导入到 AgentWeave 超集格式",
+    "running": "迁移中...",
+    "start": "开始迁移",
+    "success": "迁移完成",
+    "failed": "迁移失败",
+    "imported": "导入概念数",
+    "skipped": "跳过数",
+    "again": "再次迁移"
+  },
+  "perf": {
+    "title": "A/B 实验",
+    "namePlaceholder": "实验名称",
+    "empty": "暂无实验，点击 + 创建",
+    "running": "运行中",
+    "completed": "已完成",
+    "pending": "待启动",
+    "runs": "{{count}} 次运行",
+    "winner": "胜者: Config {{id}}",
+    "start": "开始实验",
+    "metrics": "指标对比",
+    "latency": "响应时间 (ms)",
+    "lowerBetter": "越低越好",
+    "accuracy": "准确率 (%)",
+    "higherBetter": "越高越好",
+    "tokens": "Token 用量",
+    "successRate": "成功率 (%)",
+    "selectHint": "选择或创建一个 A/B 实验"
+  },
+  "promptTest": {
+    "title": "Prompt 测试",
+    "namePlaceholder": "测试名称",
+    "promptPlaceholder": "Prompt 内容",
+    "expectedPlaceholder": "期望行为",
+    "vendorsPlaceholder": "厂商 (逗号分隔)",
+    "empty": "暂无测试，点击 + 创建",
+    "vendorCount": "{{count}} 厂商",
+    "passRate": "通过 {{rate}}",
+    "running": "运行中...",
+    "runAll": "运行全部",
+    "expected": "期望行为",
+    "vendorResults": "厂商结果",
+    "noResults": "尚无运行结果，点击\"运行全部\"开始测试",
+    "selectHint": "选择或创建一个测试用例"
+  },
+  "team": {
+    "title": "团队协作",
+    "subtitle": "成员管理、配置分支与锁定",
+    "members": "成员",
+    "branches": "分支",
+    "locks": "锁定",
+    "memberCount": "{{count}} 成员",
+    "namePlaceholder": "姓名",
+    "emailPlaceholder": "邮箱",
+    "roleAdmin": "管理员",
+    "roleEditor": "编辑者",
+    "roleViewer": "只读",
+    "empty": "暂无成员，点击添加",
+    "branchesSoon": "配置分支功能将在多人网络协作模式中启用",
+    "locksSoon": "概念锁定功能将在多人协作模式中启用"
+  },
+  "templates": {
+    "title": "模板市场",
+    "subtitle": "社区共享的 Agent/Rule/Workflow 配置模板",
+    "search": "搜索模板...",
+    "catAll": "全部",
+    "catWeb": "Web 开发",
+    "catMl": "数据/ML",
+    "catDevops": "DevOps",
+    "catMobile": "移动端",
+    "catEnterprise": "企业级",
+    "catSystems": "系统编程",
+    "namePlaceholder": "模板名称",
+    "empty": "暂无模板，点击 + 添加",
+    "noMatch": "没有找到匹配的模板"
+  },
+  "webhooks": {
+    "title": "Webhook 集成",
+    "subtitle": "配置变更时自动通知 Slack / Discord / 钉钉",
+    "eventsPlaceholder": "事件 (逗号分隔)",
+    "dingtalk": "钉钉",
+    "empty": "暂无 Webhook，点击新建"
   }
 }

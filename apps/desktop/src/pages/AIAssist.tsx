@@ -39,7 +39,7 @@ export default function AIAssist() {
         setSuggestions((prev) => [...answer.related_suggestions, ...prev]);
       }
     } catch (e) {
-      setMessages((prev) => [...prev, { role: "assistant", content: `错误: ${e}` }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: t("ai.error", { message: String(e) }) }]);
     }
     setAsking(false);
   };
@@ -63,15 +63,15 @@ export default function AIAssist() {
         </div>
         <div className="flex-1">
           <h2 className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-100">{t("ai.title", "AI 助手")}</h2>
-          <p className="text-[11px] text-zinc-400">智能配置建议与优化推荐</p>
+          <p className="text-[11px] text-zinc-400">{t("ai.subtitle")}</p>
         </div>
         <button onClick={load} disabled={loading} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50">
-          <Sparkles size={12} /> {loading ? "分析中..." : "重新分析"}
+          <Sparkles size={12} /> {loading ? t("common.analyzing") : t("ai.reanalyze")}
         </button>
       </div>
 
       {!projectDir && (
-        <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">请先打开一个项目</div>
+        <div className="flex-1 flex items-center justify-center text-[12px] text-zinc-400">{t("common.openProject")}</div>
       )}
 
       <div className="flex-1 overflow-auto px-5 py-4 space-y-3">
@@ -89,16 +89,16 @@ export default function AIAssist() {
         ))}
         {asking && (
           <div className="flex justify-start">
-            <div className="px-3 py-2 rounded-lg text-[12px] bg-zinc-100 dark:bg-zinc-800 text-zinc-400">思考中...</div>
+            <div className="px-3 py-2 rounded-lg text-[12px] bg-zinc-100 dark:bg-zinc-800 text-zinc-400">{t("ai.thinking")}</div>
           </div>
         )}
 
         {/* Suggestions */}
         {messages.length === 0 && suggestions.length === 0 && !loading && projectDir && (
-          <div className="text-center py-8 text-[12px] text-zinc-400">暂无建议。配置解析后 AI 会自动提供优化建议。</div>
+          <div className="text-center py-8 text-[12px] text-zinc-400">{t("ai.empty")}</div>
         )}
         {loading && (
-          <div className="text-center py-8 text-[12px] text-zinc-400">正在分析配置...</div>
+          <div className="text-center py-8 text-[12px] text-zinc-400">{t("ai.analyzingConfig")}</div>
         )}
         {suggestions.map((s, i) => (
           <div key={i} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
@@ -108,7 +108,7 @@ export default function AIAssist() {
               <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">{s.suggestion_type}</span>
             </div>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{s.description}</p>
-            {s.confidence > 0 && <p className="text-[10px] text-indigo-500 mt-1">置信度: {Math.round(s.confidence * 100)}%</p>}
+            {s.confidence > 0 && <p className="text-[10px] text-indigo-500 mt-1">{t("ai.confidence", { value: Math.round(s.confidence * 100) })}</p>}
           </div>
         ))}
       </div>
@@ -119,7 +119,7 @@ export default function AIAssist() {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="向 AI 提问关于配置的问题..."
+            placeholder={t("ai.placeholder")}
             className="flex-1 px-3 py-2 text-[12px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-zinc-700 dark:text-zinc-200 placeholder-zinc-400"
           />
           <button onClick={handleAsk} disabled={asking || !question.trim()} className="p-2 text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50">
