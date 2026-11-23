@@ -4,7 +4,7 @@ AgentWeave 是跨厂商 AI Agent 配置管理平台，提供统一超集规范�
 
 ## 界面预览
 
-![主界面](../screenshots/agentweave-main.jpg)
+![主界面](../screenshots/01-dashboard.png)
 
 ## 核心特性
 
